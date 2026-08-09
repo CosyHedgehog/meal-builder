@@ -305,6 +305,10 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;}
 .history-deficit-label{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;margin-bottom:3px;white-space:nowrap;}
 
 
+
+/* Mobile-first single-page flow */
+.home{display:flex;flex-direction:column;gap:16px}.home-header{display:flex;justify-content:space-between;align-items:center;gap:12px}.home-header .eyebrow{margin:0 0 3px}.home-header .subtitle{margin:0}.header-actions{gap:6px}.header-actions .save-status,.header-actions .user-email{display:none}.icon-btn{width:38px;height:38px;border-radius:50%;background:var(--surface);border:1px solid var(--line);color:var(--ink);font-size:17px;display:flex;align-items:center;justify-content:center}.today-card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px}.today-top{display:flex;align-items:center;justify-content:space-between;gap:14px}.today-date{font-family:'Fraunces',serif;font-size:22px;font-weight:600}.today-date small{display:block;font-family:'Inter',sans-serif;font-size:11px;font-weight:500;color:var(--ink-muted);margin-top:3px}.today-kcal{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink-muted);text-align:right}.today-kcal strong{display:block;font-size:25px;color:var(--ink)}.today-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:16px}.metric{background:var(--bg);border-radius:12px;padding:10px 8px;text-align:center}.metric .value{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600}.metric .label{font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-muted);margin-top:3px}.metric.deficit .value{color:var(--green)}.metric.surplus .value{color:var(--red)}.primary-wide{width:100%;margin-top:14px;padding:13px 16px;font-size:14px}.section-block{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px}.section-block .section-head{margin-bottom:8px}.section-block .section-head h2{font-size:17px}.section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.section-head h2{font-size:18px}.section-head .muted{font-size:11px;color:var(--ink-muted)}.link-btn{background:none;color:var(--green);font-size:12px;font-weight:600;padding:5px 0}.meal-list{display:flex;flex-direction:column;gap:8px}.simple-meal{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);cursor:pointer}.simple-meal .mini-dial{width:44px;height:44px;border-radius:50%;position:relative;flex:none}.simple-meal .mini-dial:after{content:'';position:absolute;inset:6px;background:var(--bg);border-radius:50%}.simple-meal .meal-info{min-width:0;flex:1}.simple-meal .meal-info strong{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.simple-meal .meal-info span{display:block;font-size:11px;color:var(--ink-muted);margin-top:2px}.simple-meal .meal-kcal{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-muted);white-space:nowrap}.add-simple{display:flex;align-items:center;justify-content:center;gap:7px;border:1.5px dashed var(--line);border-radius:12px;padding:12px;background:transparent;color:var(--green);font-weight:600;font-size:13px;width:100%}.snack-tools{display:flex;gap:8px;margin-bottom:10px}.snack-tools input{flex:1;min-width:0;padding:10px 11px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font-size:13px}.quick-snacks{display:flex;flex-wrap:wrap;gap:7px}.quick-snack{display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid var(--line);border-radius:999px;background:var(--bg);font-size:12px;color:var(--ink)}.quick-snack .qkcal{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-muted)}.history-mini{display:flex;gap:4px;height:90px;align-items:flex-end;overflow:hidden}.history-mini .hcol{flex:1;min-width:7px;height:100%;display:flex;align-items:center;justify-content:flex-end;flex-direction:column;gap:4px}.history-mini .hbar{width:70%;max-width:16px;background:var(--green);border-radius:4px 4px 2px 2px;min-height:3px}.history-mini .hbar.neg{background:var(--red);border-radius:2px 2px 4px 4px}.history-mini .hdate{font-size:8px;color:var(--ink-muted)}.history-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:11px;color:var(--ink-muted)}.settings-row{display:flex;align-items:center;justify-content:space-between;gap:12px}.settings-row label{font-size:13px}.settings-row input{width:92px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:var(--bg);font-family:'IBM Plex Mono',monospace;text-align:right}.day-nav{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px}.day-nav .log-date-input{flex:1;max-width:180px;text-align:center}.bottom-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.bottom-actions .btn{width:100%}@media (min-width:700px){.app-shell{max-width:760px;padding:28px 24px 60px}.header-actions .save-status,.header-actions .user-email{display:flex}}
+
 @media (max-width:480px){
   .drawer{width:100vw;max-width:100vw;}
   .modal{padding:20px 18px;}
@@ -557,48 +561,29 @@ function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
-/* ===================== Render: app shell + tabs ===================== */
+/* ===================== Render: single-page home ===================== */
 function renderApp(){
-  document.getElementById('app').innerHTML = `
-    <header class="top">
-      <div>
-        <div class="eyebrow">Pantry to Plate</div>
-        <h1 class="title">Meal Builder</h1>
-        <div class="subtitle">Log your day, build meals, see the deficit add up.</div>
-      </div>
-      <div class="header-actions">
-        <div class="save-status" id="saveStatus"><span class="dot"></span><span class="txt">Saved to cloud</span></div>
-        <span class="user-email">${escapeHtml(currentUser?.username || '')}</span>
-        <button class="btn btn-secondary" id="openTransferBtn">Export / Import</button>
-        <button class="btn btn-secondary" id="signOutBtn">Log out</button>
-      </div>
-    </header>
-
-    <div class="tab-nav">
-      <button class="tab-btn ${currentTab==='history'?'active':''}" data-tab="history">History</button>
-      <button class="tab-btn ${currentTab==='log'?'active':''}" data-tab="log">Daily Log</button>
-      <button class="tab-btn ${currentTab==='meals'?'active':''}" data-tab="meals">Meals</button>
-      <button class="tab-btn ${currentTab==='snacks'?'active':''}" data-tab="snacks">Snacks</button>
-    </div>
-
-    <div id="tabContent"></div>
-  `;
-
-  document.getElementById('openTransferBtn').addEventListener('click', openTransferModal);
-  document.getElementById('signOutBtn').addEventListener('click', signOut);
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => { currentTab = btn.getAttribute('data-tab'); renderApp(); });
-  });
-
-  setSaveStatus('ok');
-
-  if(currentTab === 'history') renderHistoryTab();
-  else if(currentTab === 'log') renderLogTab();
-  else if(currentTab === 'snacks') renderSnacksTab();
-  else renderMealsTab();
+  const log=getLog(logDate), deficit=logDeficit(log);
+  const hist=computeHistory(14), max=Math.max(100,...hist.map(h=>Math.abs(h.deficit)));
+  document.getElementById('app').innerHTML=`
+    <div class="home">
+      <header class="home-header"><div><div class="eyebrow">Pantry to Plate</div><div class="subtitle">${escapeHtml(currentUser?.username||'')}</div></div><div class="header-actions"><div class="save-status" id="saveStatus"><span class="dot"></span><span class="txt">Saved to database</span></div><button class="icon-btn" id="openTransferBtn" aria-label="Backup">↥</button><button class="icon-btn" id="signOutBtn" aria-label="Log out">↪</button></div></header>
+      <section class="today-card"><div class="today-top"><div class="today-date">${prettyDate(logDate).replace(/, \d{4}$/,'')}<small>${logDate===todayStr()?'Today':'Selected day'}</small></div><div class="today-kcal"><strong>${logTotalKcal(log).toLocaleString()}</strong>of ${maintenanceCal.toLocaleString()} kcal</div></div><div class="today-metrics"><div class="metric"><div class="value">${logMealKcal(log).toLocaleString()}</div><div class="label">Meal</div></div><div class="metric"><div class="value">${logSnacksKcal(log).toLocaleString()}</div><div class="label">Snacks</div></div><div class="metric ${deficit>=0?'deficit':'surplus'}"><div class="value">${deficit>=0?'−':'+'}${Math.abs(deficit).toLocaleString()}</div><div class="label">${deficit>=0?'Deficit':'Surplus'}</div></div></div><div class="day-nav"><button class="date-arrow" id="homePrevDay">‹</button><input class="log-date-input" type="date" id="homeDateInput" value="${logDate}" max="${todayStr()}"><button class="date-arrow" id="homeNextDay" ${logDate===todayStr()?'disabled':''}>›</button></div><button class="btn btn-primary primary-wide" id="openLogFoodBtn">${logHasEntries(log)?'Edit food':'Log food'}</button></section>
+      <section class="section-block"><div class="section-head"><div><h2>Meals</h2><div class="muted">Tap a meal to edit</div></div><button class="link-btn" id="openIngredientsBtn">Ingredients</button></div><div class="meal-list">${meals.map(meal=>{const kcal=mealKcal(meal),c=kcalColor(kcal),pct=Math.min(1,kcal/(maintenanceCal||2200)),deg=Math.round(pct*360);return `<div class="simple-meal" data-open-meal="${meal.id}"><div class="mini-dial" style="background:conic-gradient(${c.solid} ${deg}deg,var(--surface-alt) ${deg}deg)"></div><div class="meal-info"><strong>${escapeHtml(meal.name)}</strong><span>${meal.items.length} ingredient${meal.items.length===1?'':'s'}</span></div><div class="meal-kcal">${kcal.toLocaleString()} kcal</div></div>`;}).join('')}<button class="add-simple" id="addMealBtn">＋ New meal</button></div></section>
+      <section class="section-block"><div class="section-head"><div><h2>Snacks</h2><div class="muted">Tap to add to ${logDate===todayStr()?'today':shortDate(logDate)}</div></div></div><div class="snack-tools"><input id="homeSnackSearch" type="search" placeholder="Find a snack…" value="${escapeHtml(snackSearchTerm)}"></div><div class="quick-snacks" id="quickSnackList"></div><button class="link-btn" id="manageSnacksBtn" style="margin-top:10px">Manage snacks</button></section>
+      <section class="section-block"><div class="section-head"><div><h2>History</h2><div class="muted">Last 14 days</div></div></div><div class="history-mini">${hist.map(h=>{const height=h.hasLog?Math.max(3,Math.round(Math.abs(h.deficit)/max*70)):3;return `<div class="hcol" title="${escapeHtml(h.hasLog?prettyDate(h.date)+': '+(h.deficit>=0?h.deficit+' deficit':Math.abs(h.deficit)+' surplus'):'Not logged')}"><div class="hbar ${h.deficit<0?'neg':''}" style="height:${height}px;opacity:${h.hasLog?'1':'.2'}"></div><div class="hdate">${parseISODate(h.date).getDate()}</div></div>`}).join('')}</div><div class="history-footer"><span>${hist.filter(h=>h.hasLog).length} days logged</span><span>${(()=>{const a=hist.filter(h=>h.hasLog),d=a.length?Math.round(a.reduce((s,h)=>s+h.deficit,0)/a.length):0;return `${d>=0?'−':'+'}${Math.abs(d).toLocaleString()} avg / day`;})()}</span></div></section>
+      <section class="section-block"><div class="section-head"><div><h2>Settings</h2></div></div><div class="settings-row"><label>Daily maintenance</label><input id="maintenanceInput" type="number" min="1" step="10" value="${maintenanceCal}"></div></section>
+      <div class="bottom-actions"><button class="btn btn-secondary" id="exportBtn">Backup data</button><button class="btn btn-secondary" id="logoutBottomBtn">Log out</button></div>
+    </div>`;
+  document.getElementById('homePrevDay').onclick=()=>setLogDateView(shiftDateStr(logDate,-1)); document.getElementById('homeNextDay').onclick=()=>{if(logDate!==todayStr())setLogDateView(shiftDateStr(logDate,1))}; document.getElementById('homeDateInput').onchange=e=>{if(e.target.value)setLogDateView(e.target.value)}; document.getElementById('openTransferBtn').onclick=openTransferModal; document.getElementById('signOutBtn').onclick=signOut; document.getElementById('logoutBottomBtn').onclick=signOut; document.getElementById('exportBtn').onclick=openTransferModal; document.getElementById('openLogFoodBtn').onclick=openLogFoodModal; document.getElementById('openIngredientsBtn').onclick=openIngredientsModal; document.getElementById('addMealBtn').onclick=addMeal; document.getElementById('maintenanceInput').onchange=e=>updateMaintenance(e.target.value); document.getElementById('manageSnacksBtn').onclick=openSnacksManager; document.getElementById('homeSnackSearch').oninput=e=>{snackSearchTerm=e.target.value;renderHomeSnackList()}; document.querySelectorAll('[data-open-meal]').forEach(el=>el.onclick=()=>openDrawer(el.dataset.openMeal)); renderHomeSnackList(); setSaveStatus('ok');
+}
+function renderHomeSnackList(){const host=document.getElementById('quickSnackList');if(!host)return;const q=snackSearchTerm.trim().toLowerCase(),arr=(q?snacks.filter(s=>s.name.toLowerCase().includes(q)):snacks).slice(0,12);host.innerHTML=arr.length?arr.map(s=>`<button class="quick-snack" data-quick-snack="${s.id}">${escapeHtml(s.name)} <span class="qkcal">${s.kcal} kcal</span></button>`).join(''):'<div class="empty-note">No snacks found.</div>';host.querySelectorAll('[data-quick-snack]').forEach(b=>b.onclick=()=>addLogSnack(logDate,b.dataset.quickSnack,1))}
+function openSnacksManager(){
+  transferModalOpen=true;const modal=document.getElementById('transferModal');modal.innerHTML=`<button class="drawer-close" id="snackMgrClose" aria-label="Close">×</button><h2>Snacks</h2><div class="subtitle">Manage your quick snacks.</div><input class="snack-search" id="snackMgrSearch" type="search" placeholder="Search snacks…"><div id="snackMgrRows"></div><div class="section-label">Add new</div><div class="add-snack-row"><span></span><input id="mgrSnackName" placeholder="Snack name"><input id="mgrSnackKcal" type="number" min="0" placeholder="kcal"><button class="btn btn-primary" id="mgrAddSnack">+</button></div>`;document.getElementById('transferModalBackdrop').classList.add('open');
+  const render=()=>{const q=document.getElementById('snackMgrSearch').value.trim().toLowerCase(),arr=q?snacks.filter(s=>s.name.toLowerCase().includes(q)):snacks;document.getElementById('snackMgrRows').innerHTML=arr.map(s=>`<div class="snack-row"><span></span><input value="${escapeHtml(s.name)}" data-name="${s.id}"><input class="kcal-input" type="number" value="${s.kcal}" data-kcal="${s.id}"><button class="snack-remove" data-remove-snack="${s.id}">×</button></div>`).join('')||'<div class="empty-note">No snacks.</div>';document.querySelectorAll('[data-name]').forEach(x=>x.onchange=async()=>{const s=snacks.find(s=>s.id===x.dataset.name);if(s){s.name=x.value.trim()||s.name;await saveData();renderApp();openSnacksManager()}});document.querySelectorAll('[data-kcal]').forEach(x=>x.onchange=async()=>{const s=snacks.find(s=>s.id===x.dataset.kcal);if(s){s.kcal=parseFloat(x.value)||0;await saveData();renderApp();openSnacksManager()}});document.querySelectorAll('[data-remove-snack]').forEach(x=>x.onclick=()=>deleteSnack(x.dataset.removeSnack))};document.getElementById('snackMgrClose').onclick=closeTransferModal;document.getElementById('snackMgrSearch').oninput=render;document.getElementById('mgrAddSnack').onclick=async()=>{await addSnack(document.getElementById('mgrSnackName').value,parseFloat(document.getElementById('mgrSnackKcal').value));render()};render();
 }
 
-/* ===================== Render: meals tab ===================== */
+/* ===================== Render: meals tab (legacy helpers retained) ===================== */
 function renderMealsTab(){
   const totalKcal = meals.reduce((s,m) => s + mealKcal(m), 0);
   const avgKcal = meals.length ? Math.round(totalKcal/meals.length) : 0;
@@ -1124,7 +1109,9 @@ function logHasEntries(log){ return !!log && (log.mode === 'custom' ? (log.manua
 
 /* ===================== Daily log: mutators ===================== */
 function refreshLog(){
-  renderLogTab();
+  // The app is now single-page; there is no #tabContent.
+  // Re-render the home screen and keep the food modal open if needed.
+  renderApp();
   if(logFoodModalOpen) renderLogFoodModal();
 }
 async function setLogMode(dateStr, mode){
@@ -1186,7 +1173,7 @@ async function clearLogDay(dateStr){
 async function setLogDateView(dateStr){
   logDate = dateStr;
   closeLogFoodModal();
-  renderLogTab();
+  renderApp();
 }
 async function setChartRange(days){
   chartRangeDays = days;
@@ -1231,7 +1218,7 @@ function renderLogFoodModal(){
   modal.innerHTML = `
     <button class="drawer-close" id="logFoodModalCloseBtn" aria-label="Close" style="position:absolute;top:18px;right:18px;">×</button>
     <h2>Log food</h2>
-    <div class="subtitle">${prettyDate(logDate)}</div>
+    <div class="subtitle">${prettyDate(logDate)} <button class="link-btn" id="modalPrevDay">←</button> <button class="link-btn" id="modalNextDay" ${logDate===todayStr()?'disabled':''}>→</button></div>
 
     <div class="section-label" style="margin-top:20px;">Main meal</div>
     <div class="mode-toggle">
@@ -1277,6 +1264,9 @@ function renderLogFoodModal(){
 
   document.getElementById('logFoodModalCloseBtn').addEventListener('click', closeLogFoodModal);
   document.getElementById('logFoodDoneBtn').addEventListener('click', closeLogFoodModal);
+  document.getElementById('modalPrevDay').addEventListener('click', () => setLogDateView(shiftDateStr(logDate,-1)));
+  const modalNextDay=document.getElementById('modalNextDay');
+  if(modalNextDay) modalNextDay.addEventListener('click', () => { if(logDate!==todayStr()) setLogDateView(shiftDateStr(logDate,1)); });
 
   document.querySelectorAll('.mode-btn').forEach(btn => {
     btn.addEventListener('click', () => setLogMode(logDate, btn.getAttribute('data-mode')));
