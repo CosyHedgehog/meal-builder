@@ -315,6 +315,62 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;}
   .ing-row,.ing-head,.add-ing-row{grid-template-columns:14px 1fr 56px 74px 26px;font-size:12px;}
   .snack-row,.snack-head,.add-snack-row{grid-template-columns:14px 1fr 66px 26px;font-size:12px;}
 }
+
+.manager-group{margin-top:22px}.manager-group-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}.manager-list{display:flex;flex-direction:column;gap:6px}.manager-item{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;text-align:left;color:var(--text);cursor:pointer}.manager-item strong,.manager-item small{display:block}.manager-item small{margin-top:3px;color:var(--muted);font-size:12px}.manage-toggle{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:15px 16px;display:flex;align-items:center;justify-content:space-between;text-align:left;color:var(--text);cursor:pointer}.manage-toggle strong{display:block;font-size:15px}.manage-toggle small{display:block;margin-top:3px;color:var(--muted);font-size:12px}.manage-chevron{font-size:24px;color:var(--muted)}
+
+/* ---------- Fresh mobile-first modal refresh ---------- */
+.drawer{width:440px;max-width:100vw;padding:0 20px 28px;border-radius:22px 0 0 22px;background:var(--bg);}
+.drawer-topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 0 8px;position:sticky;top:0;background:var(--bg);z-index:3;}
+.drawer-kicker,.modal-kicker{font-size:10px;font-weight:700;letter-spacing:.12em;color:var(--ink-muted);}
+.drawer-topbar .drawer-close{position:static;}
+.meal-name-input{font-size:30px;line-height:1.15;padding:10px 0 12px;margin-bottom:4px;border-bottom:1px solid var(--line);}
+.drawer-dial-wrap{margin:14px 0 18px;}
+.drawer-dial{width:112px;height:112px;}
+.item-head{display:none;}
+.item-row{grid-template-columns:18px minmax(0,1fr) 70px 20px 56px 20px;gap:7px;padding:14px 0;}
+.item-name{font-size:14px;font-weight:600;}
+.item-qty{padding:9px 7px!important;border:1px solid var(--line)!important;border-radius:9px!important;background:var(--surface)!important;}
+.add-item-row{display:grid;grid-template-columns:1fr 72px 48px;gap:8px;margin-top:18px;padding:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;}
+.add-item-select,.add-item-qty{width:100%;min-width:0;padding:11px 9px;}
+.add-item-row .btn{padding:10px 8px;}
+.drawer-footer{position:sticky;bottom:0;background:linear-gradient(transparent,var(--bg) 18%);padding:24px 0 4px;margin-top:20px;}
+.drawer-footer .btn{width:100%;}
+
+#logFoodModal{padding:0 18px 18px;max-height:92vh;border-radius:22px;}
+.log-modal-topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 0 4px;position:sticky;top:0;background:var(--surface);z-index:3;}
+.log-modal-topbar h2{margin:2px 0 0;font-size:25px;}
+.log-modal-topbar .drawer-close{position:static;}
+.log-date-row{display:flex;align-items:center;justify-content:space-between;margin:2px 0 16px;padding-bottom:14px;border-bottom:1px solid var(--line);}
+.log-date-row .subtitle{margin:0;}
+.log-section{padding:14px 0 16px;border-bottom:1px solid var(--line);}
+.log-section:last-of-type{border-bottom:0;}
+.log-section .section-label{margin:0 0 10px;}
+.mode-toggle{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--surface-alt);padding:4px;border-radius:12px;margin-bottom:12px;}
+.mode-btn{min-height:42px;border:0;border-radius:9px;background:transparent;color:var(--ink-muted);font-weight:600;font-size:13px;}
+.mode-btn.active{background:var(--surface);color:var(--ink);box-shadow:0 1px 5px rgba(20,28,20,.08);}
+.meal-select-row,.custom-meal-row{display:grid;grid-template-columns:1fr 78px;gap:8px;align-items:center;}
+.meal-select-row select,.custom-meal-row input,.snack-add-row select,.snack-add-row input{min-height:44px;padding:10px 11px;border-radius:10px;}
+.meal-select-row .field-note{display:none;}
+.snack-add-row{display:grid;grid-template-columns:1fr 62px 52px;gap:7px;align-items:center;}
+.snack-add-row select{min-width:0;}
+.snack-add-row input{width:100%;}
+.snack-add-row .btn{min-height:44px;padding:8px;}
+.logged-snack-list{margin-top:12px;display:flex;flex-direction:column;gap:6px;}
+.logged-snack-row{display:grid;grid-template-columns:minmax(0,1fr) 58px 55px 28px;gap:8px;padding:11px 0;border:0;border-bottom:1px solid var(--line);}
+.logged-snack-row input{width:100%;min-height:36px;padding:7px;border-radius:8px;}
+.logged-snack-row .lsr-kcal{width:auto;align-self:center;}
+.modal-footer{position:sticky;bottom:-18px;margin:16px -18px -18px;padding:14px 18px calc(14px + env(safe-area-inset-bottom));background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;z-index:4;}
+.modal-footer .btn{min-width:92px;min-height:44px;}
+@media(max-width:600px){
+ .drawer{width:100vw;max-width:100vw;border-radius:22px 22px 0 0;top:4vh;height:96vh;padding:0 16px 24px;}
+ .drawer.open{transform:translateY(0);}
+ .drawer:not(.open){transform:translateY(100%);}
+ .item-row{grid-template-columns:16px minmax(0,1fr) 62px 18px 48px 20px;}
+ .item-kcal{font-size:12px;}
+ #logFoodModal{width:100vw;max-width:100vw;max-height:96vh;border-radius:22px 22px 0 0;padding:0 16px 16px;align-self:flex-end;}
+ .meal-select-row,.custom-meal-row{grid-template-columns:1fr 72px;}
+ .snack-add-row{grid-template-columns:minmax(0,1fr) 58px 48px;}
+}
 </style>
 </head>
 <body>
@@ -567,20 +623,101 @@ function renderApp(){
   const hist=computeHistory(14), max=Math.max(100,...hist.map(h=>Math.abs(h.deficit)));
   document.getElementById('app').innerHTML=`
     <div class="home">
-      <header class="home-header"><div><div class="eyebrow">Pantry to Plate</div><div class="subtitle">${escapeHtml(currentUser?.username||'')}</div></div><div class="header-actions"><div class="save-status" id="saveStatus"><span class="dot"></span><span class="txt">Saved to database</span></div><button class="icon-btn" id="openTransferBtn" aria-label="Backup">↥</button><button class="icon-btn" id="signOutBtn" aria-label="Log out">↪</button></div></header>
+      <header class="home-header"><div><div class="eyebrow">Pantry to Plate</div><div class="subtitle">${escapeHtml(currentUser?.username||'')}</div></div><div class="header-actions"><div class="save-status" id="saveStatus"><span class="dot"></span><span class="txt">Saved to database</span></div><button class="icon-btn" id="openSettingsBtn" aria-label="Settings">⚙</button><button class="icon-btn" id="openTransferBtn" aria-label="Backup">↥</button><button class="icon-btn" id="signOutBtn" aria-label="Log out">↪</button></div></header>
       <section class="today-card"><div class="today-top"><div class="today-date">${prettyDate(logDate).replace(/, \d{4}$/,'')}<small>${logDate===todayStr()?'Today':'Selected day'}</small></div><div class="today-kcal"><strong>${logTotalKcal(log).toLocaleString()}</strong>of ${maintenanceCal.toLocaleString()} kcal</div></div><div class="today-metrics"><div class="metric"><div class="value">${logMealKcal(log).toLocaleString()}</div><div class="label">Meal</div></div><div class="metric"><div class="value">${logSnacksKcal(log).toLocaleString()}</div><div class="label">Snacks</div></div><div class="metric ${deficit>=0?'deficit':'surplus'}"><div class="value">${deficit>=0?'−':'+'}${Math.abs(deficit).toLocaleString()}</div><div class="label">${deficit>=0?'Deficit':'Surplus'}</div></div></div><div class="day-nav"><button class="date-arrow" id="homePrevDay">‹</button><input class="log-date-input" type="date" id="homeDateInput" value="${logDate}" max="${todayStr()}"><button class="date-arrow" id="homeNextDay" ${logDate===todayStr()?'disabled':''}>›</button></div><button class="btn btn-primary primary-wide" id="openLogFoodBtn">${logHasEntries(log)?'Edit food':'Log food'}</button></section>
-      <section class="section-block"><div class="section-head"><div><h2>Meals</h2><div class="muted">Tap a meal to edit</div></div><button class="link-btn" id="openIngredientsBtn">Ingredients</button></div><div class="meal-list">${meals.map(meal=>{const kcal=mealKcal(meal),c=kcalColor(kcal),pct=Math.min(1,kcal/(maintenanceCal||2200)),deg=Math.round(pct*360);return `<div class="simple-meal" data-open-meal="${meal.id}"><div class="mini-dial" style="background:conic-gradient(${c.solid} ${deg}deg,var(--surface-alt) ${deg}deg)"></div><div class="meal-info"><strong>${escapeHtml(meal.name)}</strong><span>${meal.items.length} ingredient${meal.items.length===1?'':'s'}</span></div><div class="meal-kcal">${kcal.toLocaleString()} kcal</div></div>`;}).join('')}<button class="add-simple" id="addMealBtn">＋ New meal</button></div></section>
-      <section class="section-block"><div class="section-head"><div><h2>Snacks</h2><div class="muted">Tap to add to ${logDate===todayStr()?'today':shortDate(logDate)}</div></div></div><div class="snack-tools"><input id="homeSnackSearch" type="search" placeholder="Find a snack…" value="${escapeHtml(snackSearchTerm)}"></div><div class="quick-snacks" id="quickSnackList"></div><button class="link-btn" id="manageSnacksBtn" style="margin-top:10px">Manage snacks</button></section>
-      <section class="section-block"><div class="section-head"><div><h2>History</h2><div class="muted">Last 14 days</div></div></div><div class="history-mini">${hist.map(h=>{const height=h.hasLog?Math.max(3,Math.round(Math.abs(h.deficit)/max*70)):3;return `<div class="hcol" title="${escapeHtml(h.hasLog?prettyDate(h.date)+': '+(h.deficit>=0?h.deficit+' deficit':Math.abs(h.deficit)+' surplus'):'Not logged')}"><div class="hbar ${h.deficit<0?'neg':''}" style="height:${height}px;opacity:${h.hasLog?'1':'.2'}"></div><div class="hdate">${parseISODate(h.date).getDate()}</div></div>`}).join('')}</div><div class="history-footer"><span>${hist.filter(h=>h.hasLog).length} days logged</span><span>${(()=>{const a=hist.filter(h=>h.hasLog),d=a.length?Math.round(a.reduce((s,h)=>s+h.deficit,0)/a.length):0;return `${d>=0?'−':'+'}${Math.abs(d).toLocaleString()} avg / day`;})()}</span></div></section>
-      <section class="section-block"><div class="section-head"><div><h2>Settings</h2></div></div><div class="settings-row"><label>Daily maintenance</label><input id="maintenanceInput" type="number" min="1" step="10" value="${maintenanceCal}"></div></section>
-      <div class="bottom-actions"><button class="btn btn-secondary" id="exportBtn">Backup data</button><button class="btn btn-secondary" id="logoutBottomBtn">Log out</button></div>
+
+      <section class="section-block history-section"><div class="section-head"><div><h2>History</h2><div class="muted">Last 14 days</div></div></div><div class="history-mini">${hist.map(h=>{const height=h.hasLog?Math.max(5,Math.round(Math.sqrt(Math.abs(h.deficit)/max)*70)):3;return `<div class="hcol" title="${escapeHtml(h.hasLog?prettyDate(h.date)+': '+(h.deficit>=0?h.deficit+' deficit':Math.abs(h.deficit)+' surplus'):'Not logged')}"><div class="hbar ${h.deficit<0?'neg':''}" style="height:${height}px;opacity:${h.hasLog?'1':'.2'}"></div><div class="hdate">${parseISODate(h.date).getDate()}</div></div>`}).join('')}</div><div class="history-footer"><span>${hist.filter(h=>h.hasLog).length} days logged</span><span>${(()=>{const a=hist.filter(h=>h.hasLog),d=a.length?Math.round(a.reduce((s,h)=>s+h.deficit,0)/a.length):0;return `${d>=0?'−':'+'}${Math.abs(d).toLocaleString()} avg / day`;})()}</span></div></section>
+
+      <section class="section-block manage-section"><button class="manage-toggle" id="manageFoodBtn"><span><strong>Meals &amp; snacks</strong><small>Manage your saved foods</small></span><span class="manage-chevron">›</span></button></section>
+
+      
+      
     </div>`;
-  document.getElementById('homePrevDay').onclick=()=>setLogDateView(shiftDateStr(logDate,-1)); document.getElementById('homeNextDay').onclick=()=>{if(logDate!==todayStr())setLogDateView(shiftDateStr(logDate,1))}; document.getElementById('homeDateInput').onchange=e=>{if(e.target.value)setLogDateView(e.target.value)}; document.getElementById('openTransferBtn').onclick=openTransferModal; document.getElementById('signOutBtn').onclick=signOut; document.getElementById('logoutBottomBtn').onclick=signOut; document.getElementById('exportBtn').onclick=openTransferModal; document.getElementById('openLogFoodBtn').onclick=openLogFoodModal; document.getElementById('openIngredientsBtn').onclick=openIngredientsModal; document.getElementById('addMealBtn').onclick=addMeal; document.getElementById('maintenanceInput').onchange=e=>updateMaintenance(e.target.value); document.getElementById('manageSnacksBtn').onclick=openSnacksManager; document.getElementById('homeSnackSearch').oninput=e=>{snackSearchTerm=e.target.value;renderHomeSnackList()}; document.querySelectorAll('[data-open-meal]').forEach(el=>el.onclick=()=>openDrawer(el.dataset.openMeal)); renderHomeSnackList(); setSaveStatus('ok');
+  document.getElementById('homePrevDay').onclick=()=>setLogDateView(shiftDateStr(logDate,-1));
+  document.getElementById('homeNextDay').onclick=()=>{if(logDate!==todayStr())setLogDateView(shiftDateStr(logDate,1))};
+  document.getElementById('homeDateInput').onchange=e=>{if(e.target.value)setLogDateView(e.target.value)};
+  document.getElementById('openTransferBtn').onclick=openTransferModal;
+  document.getElementById('signOutBtn').onclick=signOut;
+  document.getElementById('openSettingsBtn').onclick=openSettingsModal;
+  document.getElementById('openLogFoodBtn').onclick=openLogFoodModal;
+  document.getElementById('manageFoodBtn').onclick=openFoodManager;
+  setSaveStatus('ok');
 }
-function renderHomeSnackList(){const host=document.getElementById('quickSnackList');if(!host)return;const q=snackSearchTerm.trim().toLowerCase(),arr=(q?snacks.filter(s=>s.name.toLowerCase().includes(q)):snacks).slice(0,12);host.innerHTML=arr.length?arr.map(s=>`<button class="quick-snack" data-quick-snack="${s.id}">${escapeHtml(s.name)} <span class="qkcal">${s.kcal} kcal</span></button>`).join(''):'<div class="empty-note">No snacks found.</div>';host.querySelectorAll('[data-quick-snack]').forEach(b=>b.onclick=()=>addLogSnack(logDate,b.dataset.quickSnack,1))}
-function openSnacksManager(){
-  transferModalOpen=true;const modal=document.getElementById('transferModal');modal.innerHTML=`<button class="drawer-close" id="snackMgrClose" aria-label="Close">×</button><h2>Snacks</h2><div class="subtitle">Manage your quick snacks.</div><input class="snack-search" id="snackMgrSearch" type="search" placeholder="Search snacks…"><div id="snackMgrRows"></div><div class="section-label">Add new</div><div class="add-snack-row"><span></span><input id="mgrSnackName" placeholder="Snack name"><input id="mgrSnackKcal" type="number" min="0" placeholder="kcal"><button class="btn btn-primary" id="mgrAddSnack">+</button></div>`;document.getElementById('transferModalBackdrop').classList.add('open');
-  const render=()=>{const q=document.getElementById('snackMgrSearch').value.trim().toLowerCase(),arr=q?snacks.filter(s=>s.name.toLowerCase().includes(q)):snacks;document.getElementById('snackMgrRows').innerHTML=arr.map(s=>`<div class="snack-row"><span></span><input value="${escapeHtml(s.name)}" data-name="${s.id}"><input class="kcal-input" type="number" value="${s.kcal}" data-kcal="${s.id}"><button class="snack-remove" data-remove-snack="${s.id}">×</button></div>`).join('')||'<div class="empty-note">No snacks.</div>';document.querySelectorAll('[data-name]').forEach(x=>x.onchange=async()=>{const s=snacks.find(s=>s.id===x.dataset.name);if(s){s.name=x.value.trim()||s.name;await saveData();renderApp();openSnacksManager()}});document.querySelectorAll('[data-kcal]').forEach(x=>x.onchange=async()=>{const s=snacks.find(s=>s.id===x.dataset.kcal);if(s){s.kcal=parseFloat(x.value)||0;await saveData();renderApp();openSnacksManager()}});document.querySelectorAll('[data-remove-snack]').forEach(x=>x.onclick=()=>deleteSnack(x.dataset.removeSnack))};document.getElementById('snackMgrClose').onclick=closeTransferModal;document.getElementById('snackMgrSearch').oninput=render;document.getElementById('mgrAddSnack').onclick=async()=>{await addSnack(document.getElementById('mgrSnackName').value,parseFloat(document.getElementById('mgrSnackKcal').value));render()};render();
+
+function openFoodManager(){
+  transferModalOpen=true;
+  const modal=document.getElementById('transferModal');
+  modal.innerHTML=`
+    <button class="drawer-close" id="foodMgrClose" aria-label="Close">×</button>
+    <h2>Meals &amp; snacks</h2>
+    <div class="subtitle">Keep your saved foods tidy. Logging is done from the Log food button.</div>
+    <div class="manager-group">
+      <div class="manager-group-head"><strong>Meals</strong><button class="btn btn-primary" id="foodMgrAddMeal">＋ New meal</button></div>
+      <div class="manager-list" id="foodMgrMeals"></div>
+    </div>
+    <div class="manager-group">
+      <div class="manager-group-head"><strong>Snacks</strong><button class="btn btn-secondary" id="foodMgrAddSnack">＋ New snack</button></div>
+      <div class="manager-list" id="foodMgrSnacks"></div>
+    </div>`;
+  document.getElementById('transferModalBackdrop').classList.add('open');
+  const render=()=>{
+    const mealsHost=document.getElementById('foodMgrMeals');
+    const snacksHost=document.getElementById('foodMgrSnacks');
+    if(!mealsHost || !snacksHost) return;
+    mealsHost.innerHTML=meals.length
+      ? meals.map(m=>`<button class="manager-item" data-manager-meal="${m.id}"><span><strong>${escapeHtml(m.name)}</strong><small>${mealKcal(m).toLocaleString()} kcal · ${m.items.length} ingredient${m.items.length===1?'':'s'}</small></span><span>›</span></button>`).join('')
+      : '<div class="empty-note">No meals yet.</div>';
+    snacksHost.innerHTML=snacks.length
+      ? snacks.map(s=>`<button class="manager-item manager-snack-edit" data-manager-edit-snack="${s.id}"><span><strong>${escapeHtml(s.name)}</strong><small>${s.kcal} kcal</small></span><span>›</span></button>`).join('')
+      : '<div class="empty-note">No snacks yet.</div>';
+    document.querySelectorAll('[data-manager-meal]').forEach(b=>b.onclick=()=>{closeTransferModal();openDrawer(b.dataset.managerMeal)});
+    document.querySelectorAll('[data-manager-edit-snack]').forEach(b=>b.onclick=()=>openSnackEditor(b.dataset.managerEditSnack));
+  };
+  document.getElementById('foodMgrClose').onclick=closeTransferModal;
+  document.getElementById('foodMgrAddMeal').onclick=async()=>{closeTransferModal();await addMeal()};
+  document.getElementById('foodMgrAddSnack').onclick=()=>{
+    modal.innerHTML=`<button class="drawer-close" id="snackCreateClose" aria-label="Close">×</button><h2>New snack</h2><div class="auth-field"><label>Name</label><input id="newSnackMgrName" placeholder="e.g. Apple"></div><div class="auth-field"><label>Calories</label><input id="newSnackMgrKcal" type="number" min="0" step="1" placeholder="95"></div><button class="btn btn-primary primary-wide" id="saveNewSnackMgr">Add snack</button>`;
+    document.getElementById('snackCreateClose').onclick=()=>openFoodManager();
+    document.getElementById('saveNewSnackMgr').onclick=async()=>{
+      const name=document.getElementById('newSnackMgrName').value.trim();
+      const kcal=parseFloat(document.getElementById('newSnackMgrKcal').value);
+      if(!name || !Number.isFinite(kcal) || kcal<0) return;
+      await addSnack(name,kcal);
+      openFoodManager();
+    };
+  };
+  render();
+}
+
+function openSnackEditor(editId){
+  const snack=snacks.find(s=>s.id===editId);
+  if(!snack) return;
+  transferModalOpen=true;
+  const modal=document.getElementById('transferModal');
+  modal.innerHTML=`<button class="drawer-close" id="snackEditClose" aria-label="Close">×</button><h2>Edit snack</h2><div class="subtitle">Update this saved snack.</div><div class="auth-field"><label>Name</label><input id="editSnackName" value="${escapeHtml(snack.name)}"></div><div class="auth-field"><label>Calories</label><input id="editSnackKcal" type="number" min="0" step="1" value="${snack.kcal}"></div><button class="btn btn-primary primary-wide" id="saveSnackEdit">Save changes</button><button class="btn btn-secondary primary-wide" id="deleteSnackEdit" style="margin-top:8px;">Delete snack</button>`;
+  document.getElementById('transferModalBackdrop').classList.add('open');
+  document.getElementById('snackEditClose').onclick=()=>openFoodManager();
+  document.getElementById('saveSnackEdit').onclick=async()=>{
+    const name=document.getElementById('editSnackName').value.trim();
+    const kcal=parseFloat(document.getElementById('editSnackKcal').value);
+    if(!name || !Number.isFinite(kcal) || kcal<0) return;
+    snack.name=name; snack.kcal=Math.round(kcal);
+    await saveData(); renderApp(); openFoodManager();
+  };
+  document.getElementById('deleteSnackEdit').onclick=async()=>{
+    if(!confirm(`Delete "${snack.name}"?`)) return;
+    snacks=snacks.filter(s=>s.id!==snack.id);
+    await saveData(); renderApp(); closeTransferModal();
+  };
+}
+
+function openSettingsModal(){
+  transferModalOpen=true;
+  const modal=document.getElementById('transferModal');
+  modal.innerHTML=`<button class="drawer-close" id="settingsClose" aria-label="Close">×</button><h2>Settings</h2><div class="subtitle">A couple of account and app settings.</div><div class="section-label">Daily maintenance</div><div class="settings-row"><label>Calories</label><input id="settingsMaintenanceInput" type="number" min="1" step="10" value="${maintenanceCal}"></div><button class="btn btn-primary primary-wide" id="settingsSave">Save settings</button>`;
+  document.getElementById('transferModalBackdrop').classList.add('open');
+  document.getElementById('settingsClose').onclick=closeTransferModal;
+  document.getElementById('settingsSave').onclick=async()=>{await updateMaintenance(document.getElementById('settingsMaintenanceInput').value);closeTransferModal();};
 }
 
 /* ===================== Render: meals tab (legacy helpers retained) ===================== */
@@ -796,7 +933,7 @@ function renderDrawer(){
   }).join('');
 
   drawer.innerHTML = `
-    <button class="drawer-close" id="drawerCloseBtn" aria-label="Close">×</button>
+    <div class="drawer-topbar"><span class="drawer-kicker">MEAL</span><button class="drawer-close" id="drawerCloseBtn" aria-label="Close">×</button></div>
     <input class="meal-name-input" id="mealNameInput" value="${escapeHtml(meal.name)}" />
 
     <div class="drawer-dial-wrap">${dialHTML(kcal, true)}</div>
@@ -1216,11 +1353,10 @@ function renderLogFoodModal(){
   }).join('');
 
   modal.innerHTML = `
-    <button class="drawer-close" id="logFoodModalCloseBtn" aria-label="Close" style="position:absolute;top:18px;right:18px;">×</button>
-    <h2>Log food</h2>
-    <div class="subtitle">${prettyDate(logDate)} <button class="link-btn" id="modalPrevDay">←</button> <button class="link-btn" id="modalNextDay" ${logDate===todayStr()?'disabled':''}>→</button></div>
+    <div class="log-modal-topbar"><div><div class="modal-kicker">FOOD LOG</div><h2>Log food</h2></div><button class="drawer-close" id="logFoodModalCloseBtn" aria-label="Close" style="position:static;">×</button></div>
+    <div class="log-date-row"><div class="subtitle">${prettyDate(logDate)} <button class="link-btn" id="modalPrevDay">←</button> <button class="link-btn" id="modalNextDay" ${logDate===todayStr()?'disabled':''}>→</button></div></div>
 
-    <div class="section-label" style="margin-top:20px;">Main meal</div>
+    <div class="log-section"><div class="section-label" style="margin-top:20px;">Main meal</div>
     <div class="mode-toggle">
       <button class="mode-btn ${log.mode==='meal'?'active':''}" data-mode="meal">From my meals</button>
       <button class="mode-btn ${log.mode==='custom'?'active':''}" data-mode="custom">Custom entry</button>
@@ -1242,7 +1378,7 @@ function renderLogFoodModal(){
       </div>
     `}
 
-    <div class="section-label">Snacks</div>
+    </div><div class="log-section"><div class="section-label">Snacks</div>
     <div class="snack-add-row" style="margin-top:0;">
       <select id="logSnackSelect">
         <option value="">— choose a snack —</option>
@@ -1254,7 +1390,7 @@ function renderLogFoodModal(){
     ${!snacks.length ? '<div class="field-note">No snacks on file yet — add some on the Snacks tab.</div>' : ''}
     <div class="logged-snack-list">
       ${loggedSnackRows || '<div class="empty-note">No snacks logged for this day yet.</div>'}
-    </div>
+    </div></div>
 
     <div class="modal-footer">
       <span class="subtitle mono" style="margin:0;">${totalKcal.toLocaleString()} kcal today</span>
