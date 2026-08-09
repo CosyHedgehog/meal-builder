@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Meal Builder</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍋</text></svg>">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
@@ -170,6 +171,25 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;}
 .import-msg.ok{color:var(--green);}
 .import-msg.err{color:var(--red);}
 
+/* ---------- Auth ---------- */
+.auth-shell{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.auth-card{width:420px;max-width:100%;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:30px;box-shadow:0 14px 40px rgba(28,42,31,.08);}
+.auth-card h1{font-size:30px;margin-bottom:6px;}
+.auth-card .subtitle{margin-bottom:22px;}
+.auth-tabs{display:flex;gap:4px;background:var(--surface-alt);padding:4px;border-radius:10px;margin-bottom:18px;}
+.auth-tab{flex:1;padding:9px;border-radius:8px;background:transparent;color:var(--ink-muted);font-weight:600;font-size:13px;}
+.auth-tab.active{background:var(--surface);color:var(--ink);box-shadow:0 1px 4px rgba(28,42,31,.08);}
+.auth-field{margin-bottom:12px;}
+.auth-field label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);margin-bottom:6px;}
+.auth-field input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--bg);font-size:14px;}
+.auth-field input:focus{outline:2px solid var(--green);outline-offset:1px;}
+.auth-submit{width:100%;margin-top:6px;}
+.auth-message{font-size:12px;margin-top:12px;min-height:16px;}
+.auth-message.error{color:var(--red);}
+.auth-message.ok{color:var(--green);}
+.auth-note{font-size:11px;color:var(--ink-muted);margin-top:16px;line-height:1.5;}
+.user-email{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-muted);}
+
 /* ---------- Loading / footer ---------- */
 .loading-state{text-align:center;padding:80px 0;color:var(--ink-muted);font-size:14px;}
 
@@ -316,7 +336,6 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;}
 
 <script>
 /* ===================== Data ===================== */
-const STORAGE_KEY = 'mealbuilder-data';
 const DEFAULT_MAINTENANCE = 2200;
 
 let ingredients = [];
@@ -349,85 +368,71 @@ function defaultLogEntry(){
   return {mode:'meal', mealId:null, mealServings:1, manualMealName:'', manualMealKcal:0, snacks:[]};
 }
 
-/* ===================== Storage abstraction ===================== */
-// window.storage only exists when this file is rendered inside a Claude.ai
-// artifact panel. If it's been downloaded and opened directly in a browser,
-// we fall back to plain localStorage so saving still works.
-const hasClaudeStorage = typeof window.storage !== 'undefined' && window.storage !== null;
+/* ===================== SQLite backend ===================== */
+let currentUser = null;
 
-const storageAdapter = {
-  async get(key){
-    if(hasClaudeStorage){
-      return await window.storage.get(key, false);
-    }
-    const raw = localStorage.getItem(key);
-    if(raw === null) throw new Error('not found');
-    return {key, value: raw, shared:false};
-  },
-  async set(key, value){
-    if(hasClaudeStorage){
-      return await window.storage.set(key, value, false);
-    }
-    localStorage.setItem(key, value);
-    return {key, value, shared:false};
-  }
-};
+async function api(path, options={}){
+  const res = await fetch(path, {headers:{"Content-Type":"application/json", ...(options.headers||{})}, ...options});
+  let body=null; try{ body=await res.json(); }catch(e){}
+  if(!res.ok) throw new Error(body?.error || `Request failed (${res.status})`);
+  return body;
+}
 
-/* ===================== Persistence ===================== */
 function setSaveStatus(state){
-  const el = document.getElementById('saveStatus');
-  if(!el) return;
+  const el=document.getElementById('saveStatus'); if(!el) return;
   el.classList.remove('error','saving');
-  if(state === 'saving'){ el.classList.add('saving'); el.querySelector('.txt').textContent = 'Saving…'; }
-  else if(state === 'error'){ el.classList.add('error'); el.querySelector('.txt').textContent = 'Save failed — see below'; }
-  else { el.querySelector('.txt').textContent = 'Saved to this device'; }
+  if(state==='saving'){el.classList.add('saving');el.querySelector('.txt').textContent='Saving…';}
+  else if(state==='error'){el.classList.add('error');el.querySelector('.txt').textContent='Save failed';}
+  else el.querySelector('.txt').textContent='Saved to database';
 }
 
 async function loadData(){
+  if(!currentUser) return;
   try{
-    const res = await storageAdapter.get(STORAGE_KEY);
-    if(res && res.value){
-      const parsed = JSON.parse(res.value);
-      ingredients = Array.isArray(parsed.ingredients) ? parsed.ingredients : [];
-      meals = Array.isArray(parsed.meals) ? parsed.meals : [];
-      snacks = Array.isArray(parsed.snacks) ? parsed.snacks : DEFAULT_SNACKS.map(s => ({...s}));
-      logs = (parsed.logs && typeof parsed.logs === 'object') ? parsed.logs : {};
-      maintenanceCal = parsed.maintenanceCal || DEFAULT_MAINTENANCE;
-    } else {
-      ingredients = [];
-      meals = [];
-      snacks = DEFAULT_SNACKS.map(s => ({...s}));
-      logs = {};
-      maintenanceCal = DEFAULT_MAINTENANCE;
-      dataLoaded = true;
-      await saveData();
-    }
-  } catch(e){
-    // storage.get throws on a missing key — this is the normal path for a first-ever load
-    console.warn('No existing saved data found (or storage unavailable), starting from defaults.', e);
-    ingredients = [];
-    meals = [];
-    snacks = DEFAULT_SNACKS.map(s => ({...s}));
-    logs = {};
-    maintenanceCal = DEFAULT_MAINTENANCE;
+    const result=await api('/api/data');
+    const parsed=result.data || {};
+    ingredients=Array.isArray(parsed.ingredients)?parsed.ingredients:[];
+    meals=Array.isArray(parsed.meals)?parsed.meals:[];
+    snacks=Array.isArray(parsed.snacks)?parsed.snacks:DEFAULT_SNACKS.map(s=>({...s}));
+    logs=(parsed.logs&&typeof parsed.logs==='object')?parsed.logs:{};
+    maintenanceCal=parsed.maintenanceCal||DEFAULT_MAINTENANCE;
+  }catch(e){
+    console.error('Load failed',e);
+    ingredients=[]; meals=[]; snacks=DEFAULT_SNACKS.map(s=>({...s})); logs={}; maintenanceCal=DEFAULT_MAINTENANCE;
   }
-  dataLoaded = true;
-  renderApp();
+  dataLoaded=true; renderApp();
 }
 
 async function saveData(){
-  if(!dataLoaded) return; // never let an in-flight load get clobbered by a premature save
+  if(!dataLoaded||!currentUser) return;
   setSaveStatus('saving');
   try{
-    const result = await storageAdapter.set(STORAGE_KEY, JSON.stringify({ingredients, meals, snacks, logs, maintenanceCal}));
-    if(!result) throw new Error('storage.set returned no result');
+    await api('/api/data',{method:'PUT',body:JSON.stringify({ingredients,meals,snacks,logs,maintenanceCal})});
     setSaveStatus('ok');
-  } catch(e){
-    console.error('Save failed', e);
-    setSaveStatus('error');
-  }
+  }catch(e){console.error('Save failed',e);setSaveStatus('error');}
 }
 
+function showAuth(message='',isError=false){
+  document.getElementById('app').innerHTML=`<div class="auth-shell"><div class="auth-card"><div class="eyebrow">Pantry to Plate</div><h1>Meal Builder</h1><div class="subtitle">Sign in to keep your meals, snacks and history in your SQLite database.</div><div class="auth-tabs"><button class="auth-tab active" id="loginTab">Log in</button><button class="auth-tab" id="signupTab">Sign up</button></div><form id="authForm"><div class="auth-field"><label>Username</label><input id="authUsername" type="text" autocomplete="username" required minlength="3" placeholder="Choose a username"></div><div class="auth-field"><label>Password</label><input id="authPassword" type="password" autocomplete="current-password" minlength="6" required placeholder="At least 6 characters"></div><button class="btn btn-primary auth-submit" type="submit" id="authSubmit">Log in</button></form><div class="auth-message ${isError?'error':'ok'}" id="authMessage">${escapeHtml(message)}</div><div class="auth-note">Your account and Meal Builder data are stored in the local SQLite database on the server.</div></div></div>`;
+  let mode='login'; const loginTab=document.getElementById('loginTab'),signupTab=document.getElementById('signupTab'),submit=document.getElementById('authSubmit'),form=document.getElementById('authForm'),msg=document.getElementById('authMessage');
+  function setMode(next){mode=next;loginTab.classList.toggle('active',mode==='login');signupTab.classList.toggle('active',mode==='signup');submit.textContent=mode==='login'?'Log in':'Create account';document.getElementById('authPassword').setAttribute('autocomplete',mode==='login'?'current-password':'new-password');msg.textContent='';msg.className='auth-message';}
+  loginTab.onclick=()=>setMode('login'); signupTab.onclick=()=>setMode('signup');
+  form.onsubmit=async e=>{
+    e.preventDefault(); submit.disabled=true; msg.textContent=mode==='login'?'Signing in…':'Creating account…'; msg.className='auth-message';
+    const username=document.getElementById('authUsername').value.trim(), password=document.getElementById('authPassword').value;
+    try{
+      const result=await api(mode==='login'?'/api/login':'/api/signup',{method:'POST',body:JSON.stringify({username,password})});
+      currentUser=result.user; await loadData();
+    }catch(err){console.error(err);msg.textContent=err.message||'Authentication failed.';msg.className='auth-message error';submit.disabled=false;}
+  };
+}
+
+async function signOut(){try{await api('/api/logout',{method:'POST',body:'{}'});}catch(e){} currentUser=null;dataLoaded=false;showAuth('You have been signed out.');}
+
+async function initAuth(){
+  try{ const result=await api('/api/me'); currentUser=result.user||null; }catch(e){ currentUser=null; }
+  if(currentUser) await loadData(); else showAuth();
+}
 
 async function updateMaintenance(value){
   const v = parseFloat(value);
@@ -562,8 +567,10 @@ function renderApp(){
         <div class="subtitle">Log your day, build meals, see the deficit add up.</div>
       </div>
       <div class="header-actions">
-        <div class="save-status" id="saveStatus"><span class="dot"></span><span class="txt">Saved to this device</span></div>
+        <div class="save-status" id="saveStatus"><span class="dot"></span><span class="txt">Saved to cloud</span></div>
+        <span class="user-email">${escapeHtml(currentUser?.username || '')}</span>
         <button class="btn btn-secondary" id="openTransferBtn">Export / Import</button>
+        <button class="btn btn-secondary" id="signOutBtn">Log out</button>
       </div>
     </header>
 
@@ -578,6 +585,7 @@ function renderApp(){
   `;
 
   document.getElementById('openTransferBtn').addEventListener('click', openTransferModal);
+  document.getElementById('signOutBtn').addEventListener('click', signOut);
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => { currentTab = btn.getAttribute('data-tab'); renderApp(); });
   });
@@ -1555,7 +1563,7 @@ document.getElementById('transferModalBackdrop').addEventListener('click', e => 
 });
 
 /* ===================== Init ===================== */
-loadData();
+initAuth();
 </script>
 </body>
 </html>
