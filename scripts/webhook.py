@@ -77,7 +77,7 @@ class Handler(BaseHTTPRequestHandler):
         with LOCK:
             log(f'Received push to {ref}; running deploy script')
             try:
-                subprocess.run([DEPLOY_SCRIPT], cwd=BASE_DIR, check=True)
+                subprocess.run(['bash', DEPLOY_SCRIPT], cwd=BASE_DIR, check=True)
                 log('Deploy script completed successfully')
                 self.send_response(200)
             except subprocess.CalledProcessError as exc:
