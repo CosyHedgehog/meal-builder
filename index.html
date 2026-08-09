@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meal Builder</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+:root{
+  --bg:#F3F5EE;
+  --surface:#FFFFFF;
+  --surface-alt:#EAEFE2;
+  --ink:#1C2A1F;
+  --ink-muted:#6E7A6A;
+  --line:#DDE3D3;
+  --green:#3F6B4A;
+  --green-soft:#E4EEE3;
+  --orange:#DD8034;
+  --orange-soft:#FBEADC;
+  --red:#C1442C;
+  --red-soft:#F7E1DA;
+  --radius:16px;
+}
+
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+h1,h2,h3{font-family:'Fraunces',serif;margin:0;}
+.mono{font-family:'IBM Plex Mono',monospace;}
+
+.app-shell{max-width:1080px;margin:0 auto;padding:36px 24px 80px;}
+
+/* ---------- Header ---------- */
+header.top{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:28px;}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--green);margin-bottom:6px;}
+h1.title{font-size:34px;font-weight:600;color:var(--ink);}
+.subtitle{color:var(--ink-muted);font-size:14px;margin-top:6px;}
+.header-actions{display:flex;gap:10px;align-items:center;}
+.save-status{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-muted);display:flex;align-items:center;gap:6px;transition:color .2s ease;}
+.save-status .dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+.save-status.error{color:var(--red);}
+.save-status.error .dot{background:var(--red);}
+.save-status.saving .dot{background:var(--orange);}
+
+button{font-family:'Inter',sans-serif;cursor:pointer;border:none;}
+.btn{padding:10px 16px;border-radius:999px;font-size:13px;font-weight:600;transition:transform .12s ease, box-shadow .12s ease;}
+.btn:active{transform:scale(.97);}
+.btn-primary{background:var(--green);color:#fff;}
+.btn-primary:hover{box-shadow:0 4px 14px rgba(63,107,74,.3);}
+.btn-secondary{background:var(--surface);color:var(--ink);border:1px solid var(--line);}
+.btn-secondary:hover{background:var(--surface-alt);}
+.btn-danger{background:transparent;color:var(--red);}
+.btn-danger:hover{text-decoration:underline;}
+
+/* ---------- Summary bar ---------- */
+.summary-bar{display:flex;gap:28px;padding:14px 20px;background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:26px;flex-wrap:wrap;align-items:center;}
+.summary-stat .num{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;}
+.summary-stat .label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);margin-top:2px;}
+.summary-stat.editable .num{display:flex;align-items:center;gap:4px;}
+.maintenance-input{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:18px;width:76px;border:none;background:transparent;color:var(--ink);border-bottom:1px dashed var(--line);padding:0 0 1px;}
+.maintenance-input:focus{outline:none;border-bottom-color:var(--green);}
+.summary-spacer{flex:1;}
+.pct-tag{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:3px 8px;border-radius:999px;}
+
+/* ---------- Drag to reorder ---------- */
+.meal-card{position:relative;}
+.meal-card.dragging{opacity:.4;}
+.meal-card.drag-over{box-shadow:none;}
+.drag-handle{position:absolute;top:10px;left:10px;width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--ink-muted);cursor:grab;font-size:13px;letter-spacing:1px;line-height:1;background:transparent;}
+.drag-handle:hover{background:var(--surface-alt);color:var(--ink);}
+.drag-handle:active{cursor:grabbing;}
+.copy-handle{position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--ink-muted);font-size:13px;background:transparent;}
+.copy-handle:hover{background:var(--surface-alt);color:var(--green);}
+
+/* ---------- Meal grid ---------- */
+.meal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;}
+.meal-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px 18px 16px;cursor:pointer;transition:transform .14s ease, box-shadow .14s ease;position:relative;}
+.meal-card:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(28,42,31,.09);}
+.meal-card:focus-visible{outline:2px solid var(--green);outline-offset:2px;}
+
+.dial{width:96px;height:96px;border-radius:50%;margin:0 auto 14px;position:relative;}
+.dial-inner{position:absolute;inset:9px;background:var(--surface);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.dial-kcal{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:18px;line-height:1;}
+.dial-kcal-label{font-size:9px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;}
+
+.meal-name{text-align:center;font-size:17px;font-weight:500;margin-bottom:6px;}
+.meal-meta{text-align:center;font-size:12px;color:var(--ink-muted);}
+.chip-row{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:12px;}
+.chip{background:var(--surface-alt);color:var(--ink-muted);font-size:11px;padding:3px 9px;border-radius:999px;}
+
+.add-card{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;border:1.5px dashed var(--line);border-radius:var(--radius);color:var(--ink-muted);min-height:190px;background:transparent;transition:border-color .12s ease, color .12s ease;}
+.add-card:hover{border-color:var(--green);color:var(--green);}
+.add-card .plus{font-size:26px;line-height:1;}
+
+/* ---------- Drawer ---------- */
+.backdrop{position:fixed;inset:0;background:rgba(20,28,20,.32);opacity:0;pointer-events:none;transition:opacity .18s ease;z-index:20;}
+.backdrop.open{opacity:1;pointer-events:auto;}
+
+.drawer{position:fixed;top:0;right:0;height:100vh;width:400px;max-width:92vw;background:var(--bg);box-shadow:-12px 0 30px rgba(20,28,20,.14);transform:translateX(100%);transition:transform .22s ease;z-index:21;overflow-y:auto;padding:26px 24px 40px;}
+.drawer.open{transform:translateX(0);}
+@media (prefers-reduced-motion: reduce){.drawer,.backdrop{transition:none;}}
+
+.drawer-close{position:absolute;top:20px;right:20px;background:var(--surface);border:1px solid var(--line);width:32px;height:32px;border-radius:50%;font-size:16px;color:var(--ink-muted);display:flex;align-items:center;justify-content:center;}
+.drawer-close:hover{color:var(--ink);}
+
+.meal-name-input{font-family:'Fraunces',serif;font-size:24px;font-weight:600;border:none;background:transparent;width:100%;padding:4px 0;border-bottom:1px solid transparent;}
+.meal-name-input:hover,.meal-name-input:focus{border-bottom:1px solid var(--line);outline:none;}
+
+.drawer-dial-wrap{display:flex;justify-content:center;margin:20px 0 6px;}
+.drawer-dial{width:130px;height:130px;}
+.drawer-dial .dial-inner{inset:12px;}
+.drawer-dial .dial-kcal{font-size:24px;}
+
+.section-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);margin:22px 0 10px;}
+
+.item-row{display:grid;grid-template-columns:16px minmax(0,1fr) 60px 18px 56px 15px;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);}
+.item-drag{width:16px;color:var(--ink-muted);cursor:grab;font-size:13px;letter-spacing:1px;flex:none;}
+.item-drag:active{cursor:grabbing;}
+.item-row.dragging{opacity:.4;}
+.item-row.drag-over{box-shadow:none;}
+.item-name{flex:1;font-size:14px;}
+.item-unit{font-size:11px;color:var(--ink-muted);}
+.item-qty{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:13px;background:var(--surface);}
+.item-qty:focus{outline:2px solid var(--green);outline-offset:1px;}
+.item-kcal{width:56px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-muted);}
+.item-head{display:grid;grid-template-columns:16px 1fr 60px 18px 56px 15px;gap:8px;align-items:center;padding:0 0 6px;color:var(--ink-muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em;}
+.item-head span:nth-child(5){text-align:right;}
+.item-remove{background:none;color:var(--ink-muted);font-size:15px;padding:2px 4px;}
+.item-remove:hover{color:var(--red);}
+
+.add-item-row{display:flex;gap:8px;margin-top:12px;}
+.add-item-select{flex:1;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:13px;}
+.add-item-qty{width:60px;padding:8px;border:1px solid var(--line);border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:13px;}
+
+.empty-note{color:var(--ink-muted);font-size:13px;padding:10px 0;}
+
+.drawer-footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;}
+
+/* ---------- Ingredients modal ---------- */
+.modal-backdrop{position:fixed;inset:0;background:rgba(20,28,20,.32);opacity:0;pointer-events:none;transition:opacity .18s ease;z-index:30;display:flex;align-items:center;justify-content:center;}
+.modal-backdrop.open{opacity:1;pointer-events:auto;}
+.modal{background:var(--surface);border-radius:18px;width:560px;max-width:92vw;max-height:84vh;overflow-y:auto;padding:26px 26px 22px;position:relative;}
+.modal h2{font-size:21px;margin-bottom:4px;}
+.modal .subtitle{margin-bottom:18px;}
+
+.ing-row{display:grid;grid-template-columns:16px 1fr 70px 90px 30px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);}
+.ing-row input, .ing-row select{padding:6px 8px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;background:var(--bg);width:100%;}
+.ing-row .kcal-input{font-family:'IBM Plex Mono',monospace;}
+.ing-row.dragging{opacity:.4;}
+.ing-row.drag-over{box-shadow:none;}
+.ing-drag{color:var(--ink-muted);cursor:grab;font-size:13px;letter-spacing:1px;text-align:center;}
+.ing-drag.disabled{opacity:.25;cursor:default;}
+.ing-drag:active{cursor:grabbing;}
+.ing-head{display:grid;grid-template-columns:16px 1fr 70px 90px 30px;gap:8px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-muted);padding-bottom:6px;}
+.ing-remove{background:none;color:var(--ink-muted);font-size:15px;}
+.ing-remove:hover{color:var(--red);}
+.ing-search{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font-size:13px;margin:14px 0 12px;}
+.ing-search-note{font-size:11px;color:var(--ink-muted);margin:-6px 0 10px;}
+
+.add-ing-row{display:grid;grid-template-columns:16px 1fr 70px 90px 30px;gap:8px;margin-top:12px;align-items:center;}
+
+.modal-footer{display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:14px;border-top:1px solid var(--line);}
+
+.export-textarea{width:100%;height:140px;font-family:'IBM Plex Mono',monospace;font-size:11px;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);resize:vertical;margin-top:8px;}
+.import-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.file-label{display:inline-flex;align-items:center;padding:9px 14px;border:1px solid var(--line);border-radius:999px;font-size:13px;cursor:pointer;background:var(--surface);}
+.file-label:hover{background:var(--surface-alt);}
+.import-msg{font-size:12px;margin-top:8px;}
+.import-msg.ok{color:var(--green);}
+.import-msg.err{color:var(--red);}
+
+/* ---------- Loading / footer ---------- */
+.loading-state{text-align:center;padding:80px 0;color:var(--ink-muted);font-size:14px;}
+
+@media (max-width:480px){
+  .drawer{width:100vw;max-width:100vw;}
+  .modal{padding:20px 18px;}
+  .ing-row,.ing-head,.add-ing-row{grid-template-columns:14px 1fr 56px 74px 26px;font-size:12px;}
+}
+</style>
+</head>
+<body>
+
+<div class="app-shell" id="app">
+  <div class="loading-state" id="loading">Loading your pantry…</div>
+</div>
+
+<div class="backdrop" id="drawerBackdrop"></div>
+<div class="drawer" id="drawer"></div>
+
+<div class="modal-backdrop" id="ingModalBackdrop">
+  <div class="modal" id="ingModal"></div>
+</div>
+
+<div class="modal-backdrop" id="transferModalBackdrop">
+  <div class="modal" id="transferModal"></div>
+</div>
+
+<script>
+/* ===================== Data ===================== */
+const STORAGE_KEY = 'mealbuilder-data';
+const DEFAULT_MAINTENANCE = 2200;
+
+let ingredients = [];
+let meals = [];
+let maintenanceCal = DEFAULT_MAINTENANCE;
+let openMealId = null;
+let ingModalOpen = false;
+let transferModalOpen = false;
+let dataLoaded = false;
+let ingSearchTerm = '';
+let ingDragFromId = null;
+let itemDragFromId = null;
+
+/* ===================== Storage abstraction ===================== */
+// window.storage only exists when this file is rendered inside a Claude.ai
+// artifact panel. If it's been downloaded and opened directly in a browser,
+// we fall back to plain localStorage so saving still works.
+const hasClaudeStorage = typeof window.storage !== 'undefined' && window.storage !== null;
+
+const storageAdapter = {
+  async get(key){
+    if(hasClaudeStorage){
+      return await window.storage.get(key, false);
+    }
+    const raw = localStorage.getItem(key);
+    if(raw === null) throw new Error('not found');
+    return {key, value: raw, shared:false};
+  },
+  async set(key, value){
+    if(hasClaudeStorage){
+      return await window.storage.set(key, value, false);
+    }
+    localStorage.setItem(key, value);
+    return {key, value, shared:false};
+  }
+};
+
+/* ===================== Persistence ===================== */
+function setSaveStatus(state){
+  const el = document.getElementById('saveStatus');
+  if(!el) return;
+  el.classList.remove('error','saving');
+  if(state === 'saving'){ el.classList.add('saving'); el.querySelector('.txt').textContent = 'Saving…'; }
+  else if(state === 'error'){ el.classList.add('error'); el.querySelector('.txt').textContent = 'Save failed — see below'; }
+  else { el.querySelector('.txt').textContent = 'Saved to this device'; }
+}
+
+async function loadData(){
+  try{
+    const res = await storageAdapter.get(STORAGE_KEY);
+    if(res && res.value){
+      const parsed = JSON.parse(res.value);
+      ingredients = Array.isArray(parsed.ingredients) ? parsed.ingredients : [];
+      meals = Array.isArray(parsed.meals) ? parsed.meals : [];
+      maintenanceCal = parsed.maintenanceCal || DEFAULT_MAINTENANCE;
+    } else {
+      ingredients = [];
+      meals = [];
+      maintenanceCal = DEFAULT_MAINTENANCE;
+      dataLoaded = true;
+      await saveData();
+    }
+  } catch(e){
+    // storage.get throws on a missing key — this is the normal path for a first-ever load
+    console.warn('No existing saved data found (or storage unavailable), starting from defaults.', e);
+    ingredients = [];
+    meals = [];
+    maintenanceCal = DEFAULT_MAINTENANCE;
+  }
+  dataLoaded = true;
+  renderApp();
+}
+
+async function saveData(){
+  if(!dataLoaded) return; // never let an in-flight load get clobbered by a premature save
+  setSaveStatus('saving');
+  try{
+    const result = await storageAdapter.set(STORAGE_KEY, JSON.stringify({ingredients, meals, maintenanceCal}));
+    if(!result) throw new Error('storage.set returned no result');
+    setSaveStatus('ok');
+  } catch(e){
+    console.error('Save failed', e);
+    setSaveStatus('error');
+  }
+}
+
+
+async function updateMaintenance(value){
+  const v = parseFloat(value);
+  maintenanceCal = isNaN(v) || v <= 0 ? DEFAULT_MAINTENANCE : Math.round(v);
+  await saveData();
+  renderApp();
+}
+
+/* ===================== Reordering ===================== */
+let dragFromIndex = null;
+
+async function reorderMeals(fromIndex, toIndex){
+  if(fromIndex === toIndex || fromIndex == null || toIndex == null) return;
+  const [moved] = meals.splice(fromIndex, 1);
+  meals.splice(toIndex, 0, moved);
+  await saveData();
+  renderApp();
+}
+
+async function reorderIngredients(fromId, toId){
+  if(!fromId || !toId || fromId === toId) return;
+  const fromIndex = ingredients.findIndex(i => i.id === fromId);
+  const toIndex = ingredients.findIndex(i => i.id === toId);
+  if(fromIndex === -1 || toIndex === -1) return;
+  const [moved] = ingredients.splice(fromIndex, 1);
+  ingredients.splice(toIndex, 0, moved);
+  await saveData();
+  renderApp();
+  renderIngredientsModal();
+  if(openMealId) renderDrawer();
+}
+
+async function reorderMealItems(mealId, fromId, toId){
+  if(!fromId || !toId || fromId === toId) return;
+  const meal = meals.find(m => m.id === mealId);
+  if(!meal) return;
+  const fromIndex = meal.items.findIndex(it => it.ingredientId === fromId);
+  const toIndex = meal.items.findIndex(it => it.ingredientId === toId);
+  if(fromIndex === -1 || toIndex === -1) return;
+  const [moved] = meal.items.splice(fromIndex, 1);
+  meal.items.splice(toIndex, 0, moved);
+  await saveData();
+  renderDrawer();
+}
+
+/* ===================== Helpers ===================== */
+function uid(prefix){ return prefix + '-' + Math.random().toString(36).slice(2,9); }
+
+function getIngredient(id){ return ingredients.find(i => i.id === id); }
+
+function itemKcal(item){
+  const ing = getIngredient(item.ingredientId);
+  if(!ing) return 0;
+  return ing.unit === 'g' ? (item.amount/100)*ing.kcal : item.amount*ing.kcal;
+}
+
+function mealKcal(meal){
+  return Math.round(meal.items.reduce((sum,it) => sum + itemKcal(it), 0));
+}
+
+function kcalColor(kcal){
+  const cap = maintenanceCal > 0 ? maintenanceCal : 1800;
+  const pct = cap > 0 ? kcal / cap : 0;
+  if(pct < 0.5) return {solid:'var(--green)', soft:'var(--green-soft)'};
+  if(pct < 0.6) return {solid:'var(--orange)', soft:'var(--orange-soft)'};
+  return {solid:'var(--red)', soft:'var(--red-soft)'};
+}
+
+function dialHTML(kcal, big){
+  const cap = maintenanceCal > 0 ? maintenanceCal : 1800;
+  const pct = Math.max(0, Math.min(1, kcal/cap));
+  const deg = Math.round(pct*360);
+  const c = kcalColor(kcal);
+  const cls = big ? 'dial drawer-dial' : 'dial';
+  return `<div class="${cls}" style="background:conic-gradient(${c.solid} ${deg}deg, var(--surface-alt) ${deg}deg)">
+    <div class="dial-inner">
+      <div class="dial-kcal" style="color:${c.solid}">${kcal.toLocaleString()}</div>
+      <div class="dial-kcal-label">kcal</div>
+    </div>
+  </div>`;
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+/* ===================== Render: main grid ===================== */
+function renderApp(){
+  const totalKcal = meals.reduce((s,m) => s + mealKcal(m), 0);
+  const avgKcal = meals.length ? Math.round(totalKcal/meals.length) : 0;
+
+  const cards = meals.map((meal, idx) => {
+    const kcal = mealKcal(meal);
+    const previewNames = meal.items.slice(0,3).map(it => {
+      const ing = getIngredient(it.ingredientId);
+      return ing ? ing.name.split(' (')[0] : '';
+    }).filter(Boolean);
+    const more = meal.items.length > 3 ? `+${meal.items.length-3} more` : '';
+    return `
+      <div class="meal-card" tabindex="0" draggable="false" data-open-meal="${meal.id}" data-index="${idx}">
+        <div class="drag-handle" data-drag-handle title="Drag to reorder">⠿</div>
+        <button class="copy-handle" data-copy-meal="${meal.id}" title="Copy this meal">⧉</button>
+        ${dialHTML(kcal, false)}
+        <div class="meal-name">${escapeHtml(meal.name)}</div>
+        <div class="meal-meta">${meal.items.length} ingredient${meal.items.length===1?'':'s'}</div>
+        <div class="chip-row">
+          ${previewNames.map(n => `<span class="chip">${escapeHtml(n)}</span>`).join('')}
+          ${more ? `<span class="chip">${more}</span>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('app').innerHTML = `
+    <header class="top">
+      <div>
+        <div class="eyebrow">Pantry to Plate</div>
+        <h1 class="title">Meal Builder</h1>
+        <div class="subtitle">Build meals from ingredients, see the calories add up.</div>
+      </div>
+      <div class="header-actions">
+        <div class="save-status" id="saveStatus"><span class="dot"></span><span class="txt">Saved to this device</span></div>
+        <button class="btn btn-secondary" id="openTransferBtn">Export / Import</button>
+        <button class="btn btn-secondary" id="openIngredientsBtn">Manage ingredients</button>
+      </div>
+    </header>
+
+    <div class="summary-bar">
+      <div class="summary-stat">
+        <div class="num mono">${meals.length}</div>
+        <div class="label">Meals</div>
+      </div>
+      <div class="summary-stat">
+        <div class="num mono">${avgKcal.toLocaleString()}</div>
+        <div class="label">Avg kcal / meal</div>
+      </div>
+      <div class="summary-stat">
+        <div class="num mono">${ingredients.length}</div>
+        <div class="label">Ingredients on file</div>
+      </div>
+      <div class="summary-spacer"></div>
+      <div class="summary-stat editable">
+        <div class="num"><input class="maintenance-input" id="maintenanceInput" type="number" min="0" step="10" value="${maintenanceCal}" /></div>
+        <div class="label">Maintenance kcal / day</div>
+      </div>
+    </div>
+
+    <div class="meal-grid">
+      ${cards}
+      <button class="meal-card add-card" id="addMealBtn">
+        <span class="plus">+</span>
+        <span>New meal</span>
+      </button>
+    </div>
+
+  `;
+
+  document.querySelectorAll('[data-open-meal]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if(dragFromIndex !== null) return; // suppress click right after a drag
+      openDrawer(el.getAttribute('data-open-meal'));
+    });
+    el.addEventListener('keydown', e => { if(e.key==='Enter') openDrawer(el.getAttribute('data-open-meal')); });
+
+    el.addEventListener('dragstart', e => {
+      dragFromIndex = parseInt(el.getAttribute('data-index'), 10);
+      el.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    el.addEventListener('dragend', () => {
+      el.classList.remove('dragging');
+      el.setAttribute('draggable', 'false');
+      document.querySelectorAll('.meal-card').forEach(c => c.classList.remove('drag-over'));
+      setTimeout(() => { dragFromIndex = null; }, 0);
+    });
+    el.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      el.classList.add('drag-over');
+    });
+    el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      el.classList.remove('drag-over');
+      const toIndex = parseInt(el.getAttribute('data-index'), 10);
+      reorderMeals(dragFromIndex, toIndex);
+    });
+  });
+  document.querySelectorAll('[data-drag-handle]').forEach(handle => {
+    handle.addEventListener('mousedown', () => handle.closest('.meal-card').setAttribute('draggable', 'true'));
+    handle.addEventListener('touchstart', () => handle.closest('.meal-card').setAttribute('draggable', 'true'), {passive:true});
+  });
+  document.querySelectorAll('[data-copy-meal]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      copyMeal(btn.getAttribute('data-copy-meal'));
+    });
+  });
+  document.getElementById('addMealBtn').addEventListener('click', addMeal);
+  document.getElementById('openIngredientsBtn').addEventListener('click', openIngredientsModal);
+  document.getElementById('openTransferBtn').addEventListener('click', openTransferModal);
+  document.getElementById('maintenanceInput').addEventListener('change', e => updateMaintenance(e.target.value));
+  setSaveStatus('ok');
+}
+
+/* ===================== Meal CRUD ===================== */
+async function addMeal(){
+  const meal = {id: uid('meal'), name:'New meal', items:[]};
+  meals.push(meal);
+  await saveData();
+  renderApp();
+  openDrawer(meal.id);
+}
+
+async function copyMeal(id){
+  const original = meals.find(m => m.id === id);
+  if(!original) return;
+  const idx = meals.findIndex(m => m.id === id);
+  const copy = {
+    id: uid('meal'),
+    name: original.name + ' (copy)',
+    items: original.items.map(it => ({ingredientId: it.ingredientId, amount: it.amount})),
+  };
+  meals.splice(idx + 1, 0, copy);
+  await saveData();
+  renderApp();
+  openDrawer(copy.id);
+}
+
+async function deleteMeal(id){
+  if(!confirm('Delete this meal?')) return;
+  meals = meals.filter(m => m.id !== id);
+  await saveData();
+  closeDrawer();
+  renderApp();
+}
+
+async function renameMeal(id, name){
+  const meal = meals.find(m => m.id === id);
+  if(meal){ meal.name = name || 'Untitled meal'; await saveData(); renderApp(); }
+}
+
+async function updateItemAmount(mealId, ingredientId, amount){
+  const meal = meals.find(m => m.id === mealId);
+  const item = meal.items.find(it => it.ingredientId === ingredientId);
+  if(item){
+    item.amount = isNaN(amount) ? 0 : amount;
+    await saveData();
+    renderApp();
+    renderDrawer();
+  }
+}
+
+async function removeItem(mealId, ingredientId){
+  const meal = meals.find(m => m.id === mealId);
+  meal.items = meal.items.filter(it => it.ingredientId !== ingredientId);
+  await saveData();
+  renderApp();
+  renderDrawer();
+}
+
+async function addItemToMeal(mealId, ingredientId, amount){
+  if(!ingredientId) return;
+  const meal = meals.find(m => m.id === mealId);
+  if(meal.items.some(it => it.ingredientId === ingredientId)) return;
+  meal.items.push({ingredientId, amount: isNaN(amount)||amount<=0 ? 1 : amount});
+  await saveData();
+  renderApp();
+  renderDrawer();
+}
+
+/* ===================== Render: drawer ===================== */
+function openDrawer(mealId){
+  openMealId = mealId;
+  renderDrawer();
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawerBackdrop').classList.add('open');
+}
+
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawerBackdrop').classList.remove('open');
+  openMealId = null;
+}
+
+function renderDrawer(){
+  const drawer = document.getElementById('drawer');
+  if(!openMealId){ drawer.innerHTML = ''; return; }
+  const meal = meals.find(m => m.id === openMealId);
+  if(!meal){ closeDrawer(); return; }
+
+  const kcal = mealKcal(meal);
+  const usedIds = new Set(meal.items.map(it => it.ingredientId));
+  const available = ingredients.filter(i => !usedIds.has(i.id));
+
+  const rows = meal.items.map(it => {
+    const ing = getIngredient(it.ingredientId);
+    if(!ing) return '';
+    return `
+      <div class="item-row" draggable="false" data-item-id="${ing.id}">
+        <div class="item-drag" data-item-drag title="Drag to reorder">⠿</div>
+        <div class="item-name">${escapeHtml(ing.name)}</div>
+        <input class="item-qty" type="number" step="any" min="0" value="${it.amount}"
+          data-amount-for="${ing.id}" />
+        <div class="item-unit">${ing.unit === 'g' ? 'g' : ''}</div>
+        <div class="item-kcal mono">${Math.round(itemKcal(it))}</div>
+        <button class="item-remove" data-remove="${ing.id}" aria-label="Remove ${escapeHtml(ing.name)}">×</button>
+      </div>`;
+  }).join('');
+
+  drawer.innerHTML = `
+    <button class="drawer-close" id="drawerCloseBtn" aria-label="Close">×</button>
+    <input class="meal-name-input" id="mealNameInput" value="${escapeHtml(meal.name)}" />
+
+    <div class="drawer-dial-wrap">${dialHTML(kcal, true)}</div>
+
+    ${meal.items.length ? `<div class="item-head"><span></span><span>Name</span><span>Qty</span><span></span><span>Kcal</span><span></span></div>${rows}` : '<div class="empty-note">No ingredients yet — add one below.</div>'}
+
+    <div class="add-item-row">
+      <select class="add-item-select" id="addItemSelect">
+        <option value="">Add an ingredient…</option>
+        ${available.map(i => `<option value="${i.id}">${escapeHtml(i.name)} (${i.unit==='g'?'g':'each'})</option>`).join('')}
+      </select>
+      <input class="add-item-qty" type="number" step="any" min="0" placeholder="qty" id="addItemQty" />
+      <button class="btn btn-primary" id="addItemBtn">Add</button>
+    </div>
+
+    <div class="drawer-footer">
+      <button class="btn btn-danger" id="deleteMealBtn">Delete meal</button>
+    </div>
+  `;
+
+  document.getElementById('drawerCloseBtn').addEventListener('click', closeDrawer);
+  document.getElementById('mealNameInput').addEventListener('change', e => renameMeal(meal.id, e.target.value.trim()));
+  document.getElementById('deleteMealBtn').addEventListener('click', () => deleteMeal(meal.id));
+  document.getElementById('addItemBtn').addEventListener('click', () => {
+    const sel = document.getElementById('addItemSelect');
+    const qty = parseFloat(document.getElementById('addItemQty').value);
+    addItemToMeal(meal.id, sel.value, qty);
+  });
+  drawer.querySelectorAll('[data-amount-for]').forEach(inp => {
+    inp.addEventListener('change', e => updateItemAmount(meal.id, e.target.getAttribute('data-amount-for'), parseFloat(e.target.value)));
+  });
+  drawer.querySelectorAll('[data-remove]').forEach(btn => {
+    btn.addEventListener('click', e => removeItem(meal.id, e.target.getAttribute('data-remove')));
+  });
+  drawer.querySelectorAll('.item-row').forEach(row => {
+    const handle = row.querySelector('[data-item-drag]');
+    if(handle){
+      handle.addEventListener('mousedown', () => row.setAttribute('draggable', 'true'));
+      handle.addEventListener('touchstart', () => row.setAttribute('draggable', 'true'), {passive:true});
+    }
+    row.addEventListener('dragstart', e => {
+      itemDragFromId = row.getAttribute('data-item-id');
+      row.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    row.addEventListener('dragend', () => {
+      row.classList.remove('dragging');
+      row.setAttribute('draggable', 'false');
+      drawer.querySelectorAll('.item-row').forEach(r => r.classList.remove('drag-over'));
+      setTimeout(() => { itemDragFromId = null; }, 0);
+    });
+    row.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      row.classList.add('drag-over');
+    });
+    row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+    row.addEventListener('drop', e => {
+      e.preventDefault();
+      row.classList.remove('drag-over');
+      reorderMealItems(meal.id, itemDragFromId, row.getAttribute('data-item-id'));
+    });
+  });
+}
+
+document.getElementById('drawerBackdrop').addEventListener('click', closeDrawer);
+
+/* ===================== Ingredients modal ===================== */
+function openIngredientsModal(){
+  ingModalOpen = true;
+  ingSearchTerm = '';
+  renderIngredientsModal();
+  document.getElementById('ingModalBackdrop').classList.add('open');
+}
+function closeIngredientsModal(){
+  ingModalOpen = false;
+  document.getElementById('ingModalBackdrop').classList.remove('open');
+}
+
+async function updateIngredientField(id, field, value){
+  const ing = getIngredient(id);
+  if(!ing) return;
+  if(field === 'name') ing.name = value || ing.name;
+  if(field === 'unit') ing.unit = value;
+  if(field === 'kcal') ing.kcal = isNaN(value) ? ing.kcal : value;
+  await saveData();
+  renderApp();
+  if(openMealId) renderDrawer();
+}
+
+async function deleteIngredient(id){
+  const usedIn = meals.filter(m => m.items.some(it => it.ingredientId === id));
+  if(usedIn.length){
+    alert(`Can't delete — used in: ${usedIn.map(m=>m.name).join(', ')}. Remove it from those meals first.`);
+    return;
+  }
+  if(!confirm('Delete this ingredient?')) return;
+  ingredients = ingredients.filter(i => i.id !== id);
+  await saveData();
+  renderApp();
+  renderIngredientsModal();
+}
+
+async function addIngredient(name, unit, kcal){
+  if(!name || !name.trim()) return;
+  ingredients.push({id: uid('ing'), name: name.trim(), unit: unit || 'g', kcal: isNaN(kcal) ? 0 : kcal});
+  await saveData();
+  renderApp();
+  if(openMealId) renderDrawer();
+  renderIngredientsModal();
+}
+
+function renderIngredientsModal(){
+  const modal = document.getElementById('ingModal');
+  if(!ingModalOpen){ modal.innerHTML = ''; return; }
+
+  const term = ingSearchTerm.trim().toLowerCase();
+  const filtered = term ? ingredients.filter(i => i.name.toLowerCase().includes(term)) : ingredients;
+  const reorderable = !term; // reordering only makes sense against the full, unfiltered list
+
+  const rows = filtered.map(ing => `
+    <div class="ing-row" draggable="false" data-ing-id="${ing.id}">
+      <div class="ing-drag ${reorderable ? '' : 'disabled'}" title="${reorderable ? 'Drag to reorder' : 'Clear search to reorder'}">⠿</div>
+      <input value="${escapeHtml(ing.name)}" data-field="name" data-id="${ing.id}" />
+      <select data-field="unit" data-id="${ing.id}">
+        <option value="g" ${ing.unit==='g'?'selected':''}>g</option>
+        <option value="each" ${ing.unit==='each'?'selected':''}>each</option>
+      </select>
+      <input class="kcal-input" type="number" step="any" min="0" value="${ing.kcal}" data-field="kcal" data-id="${ing.id}" />
+      <button class="ing-remove" data-del="${ing.id}" aria-label="Delete ${escapeHtml(ing.name)}">×</button>
+    </div>`).join('');
+
+  modal.innerHTML = `
+    <button class="drawer-close" id="ingModalCloseBtn" aria-label="Close" style="position:absolute;top:18px;right:18px;">×</button>
+    <h2>Ingredients</h2>
+    <div class="subtitle">Calories per 100g for weighed items, or per item for things you count.</div>
+    <input class="ing-search" id="ingSearchInput" type="search" placeholder="Search ingredients…" value="${escapeHtml(ingSearchTerm)}" />
+    ${term ? `<div class="ing-search-note">${filtered.length} of ${ingredients.length} shown — clear search to drag and reorder.</div>` : ''}
+    <div class="ing-head"><span></span><span>Name</span><span>Unit</span><span>Kcal</span><span></span></div>
+    ${filtered.length ? rows : '<div class="empty-note">No ingredients match that search.</div>'}
+    <div class="section-label">Add new</div>
+    <div class="add-ing-row">
+      <span></span>
+      <input id="newIngName" placeholder="Ingredient name" />
+      <select id="newIngUnit">
+        <option value="g">g</option>
+        <option value="each">each</option>
+      </select>
+      <input id="newIngKcal" type="number" step="any" min="0" placeholder="kcal" />
+      <button class="btn btn-primary" id="addIngBtn" style="padding:8px 10px;">+</button>
+    </div>
+    <div class="modal-footer">
+      <span class="subtitle" style="margin:0;">${ingredients.length} ingredients on file</span>
+      <button class="btn btn-secondary" id="ingDoneBtn">Done</button>
+    </div>
+  `;
+
+  document.getElementById('ingModalCloseBtn').addEventListener('click', closeIngredientsModal);
+  document.getElementById('ingDoneBtn').addEventListener('click', closeIngredientsModal);
+  const searchInput = document.getElementById('ingSearchInput');
+  searchInput.addEventListener('input', e => {
+    ingSearchTerm = e.target.value;
+    renderIngredientsModal();
+    const el = document.getElementById('ingSearchInput');
+    if(el){ el.focus(); el.selectionStart = el.selectionEnd = el.value.length; }
+  });
+  document.getElementById('addIngBtn').addEventListener('click', () => {
+    addIngredient(
+      document.getElementById('newIngName').value,
+      document.getElementById('newIngUnit').value,
+      parseFloat(document.getElementById('newIngKcal').value)
+    );
+    document.getElementById('newIngName').value='';
+    document.getElementById('newIngKcal').value='';
+  });
+  modal.querySelectorAll('[data-field]').forEach(el => {
+    el.addEventListener('change', e => {
+      const field = e.target.getAttribute('data-field');
+      const id = e.target.getAttribute('data-id');
+      const val = field === 'kcal' ? parseFloat(e.target.value) : e.target.value;
+      updateIngredientField(id, field, val);
+    });
+  });
+  modal.querySelectorAll('[data-del]').forEach(btn => {
+    btn.addEventListener('click', e => deleteIngredient(e.target.getAttribute('data-del')));
+  });
+
+  if(reorderable){
+    modal.querySelectorAll('.ing-row').forEach(row => {
+      const handle = row.querySelector('.ing-drag');
+      if(handle){
+        handle.addEventListener('mousedown', () => row.setAttribute('draggable', 'true'));
+        handle.addEventListener('touchstart', () => row.setAttribute('draggable', 'true'), {passive:true});
+      }
+      row.addEventListener('dragstart', e => {
+        ingDragFromId = row.getAttribute('data-ing-id');
+        row.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      row.addEventListener('dragend', () => {
+        row.classList.remove('dragging');
+        row.setAttribute('draggable', 'false');
+        modal.querySelectorAll('.ing-row').forEach(r => r.classList.remove('drag-over'));
+        setTimeout(() => { ingDragFromId = null; }, 0);
+      });
+      row.addEventListener('dragover', e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        row.classList.add('drag-over');
+      });
+      row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+      row.addEventListener('drop', e => {
+        e.preventDefault();
+        row.classList.remove('drag-over');
+        reorderIngredients(ingDragFromId, row.getAttribute('data-ing-id'));
+      });
+    });
+  }
+}
+
+document.getElementById('ingModalBackdrop').addEventListener('click', e => {
+  if(e.target.id === 'ingModalBackdrop') closeIngredientsModal();
+});
+
+/* ===================== Export / Import ===================== */
+function openTransferModal(){
+  transferModalOpen = true;
+  renderTransferModal();
+  document.getElementById('transferModalBackdrop').classList.add('open');
+}
+function closeTransferModal(){
+  transferModalOpen = false;
+  document.getElementById('transferModalBackdrop').classList.remove('open');
+}
+
+function currentExportJSON(){
+  return JSON.stringify({ingredients, meals, maintenanceCal}, null, 2);
+}
+
+function downloadExport(){
+  const blob = new Blob([currentExportJSON()], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'meal-builder-export.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+async function importFromText(text, msgEl){
+  try{
+    const parsed = JSON.parse(text);
+    if(!Array.isArray(parsed.ingredients) || !Array.isArray(parsed.meals)){
+      throw new Error('File is missing an ingredients or meals list.');
+    }
+    ingredients = parsed.ingredients;
+    meals = parsed.meals;
+    maintenanceCal = parsed.maintenanceCal || DEFAULT_MAINTENANCE;
+    await saveData();
+    renderApp();
+    if(msgEl){ msgEl.textContent = `Imported ${meals.length} meals and ${ingredients.length} ingredients.`; msgEl.className = 'import-msg ok'; }
+  } catch(e){
+    console.error(e);
+    if(msgEl){ msgEl.textContent = 'Could not import that file — check it\'s a Meal Builder export.'; msgEl.className = 'import-msg err'; }
+  }
+}
+
+function renderTransferModal(){
+  const modal = document.getElementById('transferModal');
+  if(!transferModalOpen){ modal.innerHTML = ''; return; }
+  modal.innerHTML = `
+    <button class="drawer-close" id="transferCloseBtn" aria-label="Close" style="position:absolute;top:18px;right:18px;">×</button>
+    <h2>Export &amp; import</h2>
+    <div class="subtitle">Move your meals and ingredients to another device, or back them up.</div>
+
+    <div class="section-label" style="margin-top:18px;">Export</div>
+    <button class="btn btn-primary" id="downloadBtn">Download .json file</button>
+    <textarea class="export-textarea" id="exportText" readonly>${escapeHtml(currentExportJSON())}</textarea>
+    <div class="subtitle" style="margin-top:4px;">Or select the text above and copy it directly.</div>
+
+    <div class="section-label">Import</div>
+    <div class="import-row">
+      <label class="file-label">
+        Choose a .json file
+        <input type="file" accept="application/json,.json" id="importFile" style="display:none;">
+      </label>
+      <button class="btn btn-secondary" id="importPasteBtn">Paste JSON instead</button>
+    </div>
+    <textarea class="export-textarea" id="importText" style="display:none;" placeholder="Paste exported JSON here"></textarea>
+    <button class="btn btn-primary" id="importPasteConfirm" style="display:none;margin-top:8px;">Import pasted data</button>
+    <div class="import-msg" id="importMsg"></div>
+
+    <div class="modal-footer">
+      <span class="subtitle" style="margin:0;">Importing replaces everything currently saved.</span>
+      <button class="btn btn-secondary" id="transferDoneBtn">Done</button>
+    </div>
+  `;
+
+  document.getElementById('transferCloseBtn').addEventListener('click', closeTransferModal);
+  document.getElementById('transferDoneBtn').addEventListener('click', closeTransferModal);
+  document.getElementById('downloadBtn').addEventListener('click', downloadExport);
+
+  document.getElementById('importFile').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = () => importFromText(reader.result, document.getElementById('importMsg'));
+    reader.readAsText(file);
+  });
+
+  document.getElementById('importPasteBtn').addEventListener('click', () => {
+    document.getElementById('importText').style.display = 'block';
+    document.getElementById('importPasteConfirm').style.display = 'inline-flex';
+  });
+  document.getElementById('importPasteConfirm').addEventListener('click', () => {
+    const text = document.getElementById('importText').value;
+    importFromText(text, document.getElementById('importMsg'));
+  });
+}
+
+document.getElementById('transferModalBackdrop').addEventListener('click', e => {
+  if(e.target.id === 'transferModalBackdrop') closeTransferModal();
+});
+
+/* ===================== Init ===================== */
+loadData();
+</script>
+</body>
+</html>
