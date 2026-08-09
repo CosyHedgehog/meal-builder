@@ -166,6 +166,7 @@ class Handler(BaseHTTPRequestHandler):
         conn=db(); conn.execute('''INSERT INTO user_data(user_id,data,updated_at) VALUES(?,?,CURRENT_TIMESTAMP) ON CONFLICT(user_id) DO UPDATE SET data=excluded.data, updated_at=CURRENT_TIMESTAMP''',(s['user_id'],encoded)); conn.commit(); conn.close()
         return json_response(self,200,{'ok':True})
 
+# Main entry point
 if __name__ == '__main__':
     init_db()
     print(f'Meal Builder running at http://{HOST}:{PORT}')
