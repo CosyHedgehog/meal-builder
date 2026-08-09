@@ -173,10 +173,123 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;}
 /* ---------- Loading / footer ---------- */
 .loading-state{text-align:center;padding:80px 0;color:var(--ink-muted);font-size:14px;}
 
+/* ---------- Tabs ---------- */
+.tab-nav{display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--line);}
+.tab-btn{background:transparent;padding:11px 16px;font-size:13px;font-weight:600;color:var(--ink-muted);border-bottom:2px solid transparent;border-radius:0;margin-bottom:-1px;}
+.tab-btn:hover{color:var(--ink);}
+.tab-btn.active{color:var(--green);border-bottom-color:var(--green);}
+.tab-toolbar{display:flex;justify-content:flex-end;margin-bottom:14px;}
+
+/* ---------- Cards (generic) ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin-bottom:20px;}
+.card h3{font-size:15px;font-weight:600;margin-bottom:14px;}
+.card .card-sub{color:var(--ink-muted);font-size:12px;margin-top:-10px;margin-bottom:14px;}
+
+/* ---------- Snacks tab ---------- */
+.snack-row{display:grid;grid-template-columns:16px 1fr 90px 30px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);}
+.snack-row input{padding:7px 9px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;background:var(--bg);width:100%;}
+.snack-row .kcal-input{font-family:'IBM Plex Mono',monospace;}
+.snack-head{display:grid;grid-template-columns:16px 1fr 90px 30px;gap:8px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-muted);padding-bottom:6px;}
+.add-snack-row{display:grid;grid-template-columns:16px 1fr 90px 30px;gap:8px;margin-top:12px;align-items:center;}
+.snack-remove{background:none;color:var(--ink-muted);font-size:15px;}
+.snack-remove:hover{color:var(--red);}
+
+/* ---------- Log tab ---------- */
+.log-date-nav{display:flex;align-items:center;gap:10px;margin-bottom:22px;flex-wrap:wrap;}
+.date-arrow{background:var(--surface);border:1px solid var(--line);width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--ink);flex:none;}
+.date-arrow:hover{background:var(--surface-alt);}
+.log-date-input{font-family:'IBM Plex Mono',monospace;font-size:14px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);}
+.log-date-label{font-family:'Fraunces',serif;font-size:19px;font-weight:600;}
+
+.mode-toggle{display:flex;gap:6px;margin-bottom:16px;}
+.mode-btn{padding:7px 14px;border-radius:999px;font-size:12px;font-weight:600;background:var(--surface-alt);color:var(--ink-muted);}
+.mode-btn.active{background:var(--green);color:#fff;}
+
+.meal-select-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.meal-select-row select{flex:1;min-width:180px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:13px;}
+.servings-input{width:72px;padding:9px 8px;border:1px solid var(--line);border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:13px;}
+.custom-meal-row{display:flex;gap:10px;flex-wrap:wrap;}
+.custom-meal-row input{padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:13px;}
+.custom-meal-row input.cm-name{flex:1;min-width:160px;}
+.custom-meal-row input.cm-kcal{width:100px;font-family:'IBM Plex Mono',monospace;}
+.field-note{font-size:11px;color:var(--ink-muted);margin-top:8px;}
+
+.snack-add-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+.snack-add-row select{flex:1;min-width:160px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:13px;}
+.snack-add-row input{width:64px;padding:9px 8px;border:1px solid var(--line);border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:13px;}
+
+.logged-snack-list{margin-top:10px;}
+.logged-snack-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;}
+.logged-snack-row .lsr-name{flex:1;}
+.logged-snack-row input{width:56px;padding:5px 7px;border:1px solid var(--line);border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:12px;}
+.logged-snack-row .lsr-kcal{width:60px;text-align:right;font-family:'IBM Plex Mono',monospace;color:var(--ink-muted);}
+.logged-snack-row .item-remove{flex:none;}
+
+.day-summary{display:flex;gap:30px;flex-wrap:wrap;align-items:center;}
+.day-summary .dial{margin:0;flex:none;}
+.day-stat .num{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;}
+.day-stat .label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);margin-top:2px;}
+.day-stat .num.pos{color:var(--green);}
+.day-stat .num.neg{color:var(--red);}
+
+/* big day summary card (top of log tab) */
+.day-summary-card .dial{width:120px;height:120px;}
+.day-summary-card .dial-kcal{font-size:22px;}
+.day-summary-card .day-stat .num{font-size:28px;}
+.day-summary-card .day-stat.deficit .num{font-size:34px;}
+
+/* food-logged summary + chips */
+.log-food-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
+.log-food-header h3{margin:0;}
+.log-chip-group{margin-bottom:12px;}
+.log-chip-group-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);margin-bottom:8px;}
+.log-chip-row{display:flex;flex-wrap:wrap;gap:8px;}
+.log-chip{display:inline-flex;align-items:center;gap:8px;background:var(--surface-alt);border-radius:999px;padding:7px 14px;font-size:13px;}
+.log-chip .lc-kcal{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-muted);}
+.log-food-empty{color:var(--ink-muted);font-size:13px;padding:6px 0 4px;}
+
+/* history chart */
+.chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.range-toggle{display:flex;gap:6px;}
+.range-btn{padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600;background:var(--surface-alt);color:var(--ink-muted);}
+.range-btn.active{background:var(--green);color:#fff;}
+.chart-legend{display:flex;gap:16px;font-size:11px;color:var(--ink-muted);flex-wrap:wrap;}
+.legend-dot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:middle;}
+
+.chart-scroll{overflow-x:auto;padding-bottom:4px;}
+.chart-track{display:flex;align-items:flex-start;gap:5px;min-width:100%;}
+.chart-col{display:flex;flex-direction:column;align-items:center;flex:1;min-width:22px;}
+.chart-bars{width:100%;display:flex;flex-direction:column;}
+.chart-zone{width:100%;display:flex;}
+.chart-zone.top{height:78px;align-items:flex-end;justify-content:center;}
+.chart-zone.bottom{height:78px;align-items:flex-start;justify-content:center;border-top:1px dashed var(--line);}
+.chart-bar{width:64%;min-height:2px;border-radius:3px 3px 0 0;background:var(--green);}
+.chart-bar.neg{border-radius:0 0 3px 3px;background:var(--red);}
+.chart-bar.empty{background:var(--line);width:5px;border-radius:2px;}
+.chart-date{font-size:9px;color:var(--ink-muted);margin-top:6px;white-space:nowrap;}
+
+.chart-empty-note{color:var(--ink-muted);font-size:13px;padding:30px 0;text-align:center;}
+.snack-drag{color:var(--ink-muted);cursor:grab;font-size:13px;letter-spacing:1px;text-align:center;}
+.snack-drag:active{cursor:grabbing;}
+.snack-row.dragging{opacity:.4;}
+.snack-row.drag-over{box-shadow:none;}
+.snack-search{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font-size:13px;margin:14px 0 12px;}
+.snack-search-note{font-size:11px;color:var(--ink-muted);margin:-6px 0 10px;}
+.day-pie{width:120px;height:120px;border-radius:50%;position:relative;flex:none;}
+.day-pie-inner{position:absolute;inset:12px;background:var(--surface);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.day-pie-kcal{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;}
+.day-pie-label{font-size:9px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;}
+.pie-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--ink-muted);margin-top:10px;}
+.pie-legend-item{display:flex;align-items:center;gap:5px;}
+.pie-dot{width:8px;height:8px;border-radius:2px;display:inline-block;}
+.history-deficit-label{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;margin-bottom:3px;white-space:nowrap;}
+
+
 @media (max-width:480px){
   .drawer{width:100vw;max-width:100vw;}
   .modal{padding:20px 18px;}
   .ing-row,.ing-head,.add-ing-row{grid-template-columns:14px 1fr 56px 74px 26px;font-size:12px;}
+  .snack-row,.snack-head,.add-snack-row{grid-template-columns:14px 1fr 66px 26px;font-size:12px;}
 }
 </style>
 </head>
@@ -197,6 +310,10 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;}
   <div class="modal" id="transferModal"></div>
 </div>
 
+<div class="modal-backdrop" id="logFoodModalBackdrop">
+  <div class="modal" id="logFoodModal"></div>
+</div>
+
 <script>
 /* ===================== Data ===================== */
 const STORAGE_KEY = 'mealbuilder-data';
@@ -204,6 +321,8 @@ const DEFAULT_MAINTENANCE = 2200;
 
 let ingredients = [];
 let meals = [];
+let snacks = [];
+let logs = {}; // dateStr (YYYY-MM-DD) -> log entry
 let maintenanceCal = DEFAULT_MAINTENANCE;
 let openMealId = null;
 let ingModalOpen = false;
@@ -212,6 +331,23 @@ let dataLoaded = false;
 let ingSearchTerm = '';
 let ingDragFromId = null;
 let itemDragFromId = null;
+let currentTab = 'history';
+let snackSearchTerm = '';
+let snackDragFromId = null;
+let logDate = todayStr();
+let chartRangeDays = 14;
+let logFoodModalOpen = false;
+
+const DEFAULT_SNACKS = [
+  {id:'snack-apple', name:'Apple', kcal:95},
+  {id:'snack-banana', name:'Banana', kcal:105},
+  {id:'snack-orange', name:'Orange', kcal:62},
+  {id:'snack-sardines', name:'Sardines (tin)', kcal:220}
+];
+
+function defaultLogEntry(){
+  return {mode:'meal', mealId:null, mealServings:1, manualMealName:'', manualMealKcal:0, snacks:[]};
+}
 
 /* ===================== Storage abstraction ===================== */
 // window.storage only exists when this file is rendered inside a Claude.ai
@@ -254,10 +390,14 @@ async function loadData(){
       const parsed = JSON.parse(res.value);
       ingredients = Array.isArray(parsed.ingredients) ? parsed.ingredients : [];
       meals = Array.isArray(parsed.meals) ? parsed.meals : [];
+      snacks = Array.isArray(parsed.snacks) ? parsed.snacks : DEFAULT_SNACKS.map(s => ({...s}));
+      logs = (parsed.logs && typeof parsed.logs === 'object') ? parsed.logs : {};
       maintenanceCal = parsed.maintenanceCal || DEFAULT_MAINTENANCE;
     } else {
       ingredients = [];
       meals = [];
+      snacks = DEFAULT_SNACKS.map(s => ({...s}));
+      logs = {};
       maintenanceCal = DEFAULT_MAINTENANCE;
       dataLoaded = true;
       await saveData();
@@ -267,6 +407,8 @@ async function loadData(){
     console.warn('No existing saved data found (or storage unavailable), starting from defaults.', e);
     ingredients = [];
     meals = [];
+    snacks = DEFAULT_SNACKS.map(s => ({...s}));
+    logs = {};
     maintenanceCal = DEFAULT_MAINTENANCE;
   }
   dataLoaded = true;
@@ -277,7 +419,7 @@ async function saveData(){
   if(!dataLoaded) return; // never let an in-flight load get clobbered by a premature save
   setSaveStatus('saving');
   try{
-    const result = await storageAdapter.set(STORAGE_KEY, JSON.stringify({ingredients, meals, maintenanceCal}));
+    const result = await storageAdapter.set(STORAGE_KEY, JSON.stringify({ingredients, meals, snacks, logs, maintenanceCal}));
     if(!result) throw new Error('storage.set returned no result');
     setSaveStatus('ok');
   } catch(e){
@@ -301,6 +443,18 @@ async function reorderMeals(fromIndex, toIndex){
   if(fromIndex === toIndex || fromIndex == null || toIndex == null) return;
   const [moved] = meals.splice(fromIndex, 1);
   meals.splice(toIndex, 0, moved);
+  await saveData();
+  renderApp();
+}
+
+async function reorderSnacks(fromId, toId){
+  if(!fromId || !toId || fromId === toId) return;
+  const fromIndex = snacks.findIndex(s => s.id === fromId);
+  const toIndex = snacks.findIndex(s => s.id === toId);
+  if(fromIndex === -1 || toIndex === -1) return;
+  const [moved] = snacks.splice(fromIndex, 1);
+  const adjustedTo = fromIndex < toIndex ? toIndex - 1 : toIndex;
+  snacks.splice(adjustedTo, 0, moved);
   await saveData();
   renderApp();
 }
@@ -333,6 +487,32 @@ async function reorderMealItems(mealId, fromId, toId){
 
 /* ===================== Helpers ===================== */
 function uid(prefix){ return prefix + '-' + Math.random().toString(36).slice(2,9); }
+
+/* ---- Date helpers (all local-time, avoid UTC shift) ---- */
+function formatDateISO(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function todayStr(){ return formatDateISO(new Date()); }
+function parseISODate(ds){
+  const [y,m,d] = ds.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+function shiftDateStr(ds, days){
+  const d = parseISODate(ds);
+  d.setDate(d.getDate()+days);
+  return formatDateISO(d);
+}
+function prettyDate(ds){
+  const d = parseISODate(ds);
+  return d.toLocaleDateString(undefined, {weekday:'short', day:'numeric', month:'short', year:'numeric'});
+}
+function shortDate(ds){
+  const d = parseISODate(ds);
+  return d.toLocaleDateString(undefined, {day:'numeric', month:'short'});
+}
 
 function getIngredient(id){ return ingredients.find(i => i.id === id); }
 
@@ -372,8 +552,46 @@ function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
-/* ===================== Render: main grid ===================== */
+/* ===================== Render: app shell + tabs ===================== */
 function renderApp(){
+  document.getElementById('app').innerHTML = `
+    <header class="top">
+      <div>
+        <div class="eyebrow">Pantry to Plate</div>
+        <h1 class="title">Meal Builder</h1>
+        <div class="subtitle">Log your day, build meals, see the deficit add up.</div>
+      </div>
+      <div class="header-actions">
+        <div class="save-status" id="saveStatus"><span class="dot"></span><span class="txt">Saved to this device</span></div>
+        <button class="btn btn-secondary" id="openTransferBtn">Export / Import</button>
+      </div>
+    </header>
+
+    <div class="tab-nav">
+      <button class="tab-btn ${currentTab==='history'?'active':''}" data-tab="history">History</button>
+      <button class="tab-btn ${currentTab==='log'?'active':''}" data-tab="log">Daily Log</button>
+      <button class="tab-btn ${currentTab==='meals'?'active':''}" data-tab="meals">Meals</button>
+      <button class="tab-btn ${currentTab==='snacks'?'active':''}" data-tab="snacks">Snacks</button>
+    </div>
+
+    <div id="tabContent"></div>
+  `;
+
+  document.getElementById('openTransferBtn').addEventListener('click', openTransferModal);
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => { currentTab = btn.getAttribute('data-tab'); renderApp(); });
+  });
+
+  setSaveStatus('ok');
+
+  if(currentTab === 'history') renderHistoryTab();
+  else if(currentTab === 'log') renderLogTab();
+  else if(currentTab === 'snacks') renderSnacksTab();
+  else renderMealsTab();
+}
+
+/* ===================== Render: meals tab ===================== */
+function renderMealsTab(){
   const totalKcal = meals.reduce((s,m) => s + mealKcal(m), 0);
   const avgKcal = meals.length ? Math.round(totalKcal/meals.length) : 0;
 
@@ -398,19 +616,10 @@ function renderApp(){
       </div>`;
   }).join('');
 
-  document.getElementById('app').innerHTML = `
-    <header class="top">
-      <div>
-        <div class="eyebrow">Pantry to Plate</div>
-        <h1 class="title">Meal Builder</h1>
-        <div class="subtitle">Build meals from ingredients, see the calories add up.</div>
-      </div>
-      <div class="header-actions">
-        <div class="save-status" id="saveStatus"><span class="dot"></span><span class="txt">Saved to this device</span></div>
-        <button class="btn btn-secondary" id="openTransferBtn">Export / Import</button>
-        <button class="btn btn-secondary" id="openIngredientsBtn">Manage ingredients</button>
-      </div>
-    </header>
+  document.getElementById('tabContent').innerHTML = `
+    <div class="tab-toolbar">
+      <button class="btn btn-secondary" id="openIngredientsBtn">Manage ingredients</button>
+    </div>
 
     <div class="summary-bar">
       <div class="summary-stat">
@@ -485,9 +694,7 @@ function renderApp(){
   });
   document.getElementById('addMealBtn').addEventListener('click', addMeal);
   document.getElementById('openIngredientsBtn').addEventListener('click', openIngredientsModal);
-  document.getElementById('openTransferBtn').addEventListener('click', openTransferModal);
   document.getElementById('maintenanceInput').addEventListener('change', e => updateMaintenance(e.target.value));
-  setSaveStatus('ok');
 }
 
 /* ===================== Meal CRUD ===================== */
@@ -821,6 +1028,428 @@ document.getElementById('ingModalBackdrop').addEventListener('click', e => {
   if(e.target.id === 'ingModalBackdrop') closeIngredientsModal();
 });
 
+/* ===================== Snacks tab ===================== */
+async function addSnack(name, kcal){
+  if(!name || !name.trim()) return;
+  snacks.push({id: uid('snack'), name: name.trim(), kcal: isNaN(kcal) ? 0 : kcal});
+  await saveData();
+  renderApp();
+}
+
+async function updateSnackField(id, field, value){
+  const snack = snacks.find(s => s.id === id);
+  if(!snack) return;
+  if(field === 'name') snack.name = value || snack.name;
+  if(field === 'kcal') snack.kcal = isNaN(value) ? snack.kcal : value;
+  await saveData();
+  renderApp();
+}
+
+async function deleteSnack(id){
+  if(!confirm('Delete this snack? It will be removed from any past logged days too.')) return;
+  snacks = snacks.filter(s => s.id !== id);
+  Object.values(logs).forEach(log => { log.snacks = log.snacks.filter(e => e.snackId !== id); });
+  await saveData();
+  renderApp();
+}
+
+function renderSnacksTab(){
+  const term = snackSearchTerm.trim().toLowerCase();
+  const filtered = term ? snacks.filter(s => s.name.toLowerCase().includes(term)) : snacks;
+  const rows = filtered.map(s => `
+    <div class="snack-row" draggable="false" data-snack-id="${s.id}">
+      <div class="snack-drag" data-snack-drag title="Drag to reorder">⠿</div>
+      <input value="${escapeHtml(s.name)}" data-field="name" data-id="${s.id}" />
+      <input class="kcal-input" type="number" step="any" min="0" value="${s.kcal}" data-field="kcal" data-id="${s.id}" />
+      <button class="snack-remove" data-del="${s.id}" aria-label="Delete ${escapeHtml(s.name)}">×</button>
+    </div>`).join('');
+  document.getElementById('tabContent').innerHTML = `
+    <div class="card">
+      <h3>Snacks</h3>
+      <div class="card-sub">Quick things you grab between meals — apple, banana, a tin of sardines. Calories are per item; you'll set how many when you log a day.</div>
+      <input class="snack-search" id="snackSearchInput" type="search" placeholder="Search snacks…" value="${escapeHtml(snackSearchTerm)}" />
+      ${term ? `<div class="snack-search-note">${filtered.length} of ${snacks.length} shown — drag to reorder the matching snacks.</div>` : ''}
+      ${snacks.length ? (filtered.length ? `<div class="snack-head"><span></span><span>Name</span><span>Kcal</span><span></span></div>${rows}` : '<div class="empty-note">No snacks match that search.</div>') : '<div class="empty-note">No snacks yet — add one below.</div>'}
+      <div class="section-label">Add new</div>
+      <div class="add-snack-row"><span></span><input id="newSnackName" placeholder="Snack name" /><input id="newSnackKcal" type="number" step="any" min="0" placeholder="kcal" /><button class="btn btn-primary" id="addSnackBtn" style="padding:8px 10px;">+</button></div>
+    </div>`;
+  document.getElementById('snackSearchInput').addEventListener('input', e => { snackSearchTerm=e.target.value; renderSnacksTab(); const el=document.getElementById('snackSearchInput'); if(el){el.focus();el.selectionStart=el.selectionEnd=el.value.length;} });
+  document.getElementById('addSnackBtn').addEventListener('click',()=>addSnack(document.getElementById('newSnackName').value,parseFloat(document.getElementById('newSnackKcal').value)));
+  document.querySelectorAll('#tabContent [data-field]').forEach(el=>el.addEventListener('change',e=>{const field=e.target.dataset.field,id=e.target.dataset.id;updateSnackField(id,field,field==='kcal'?parseFloat(e.target.value):e.target.value);}));
+  document.querySelectorAll('#tabContent [data-del]').forEach(btn=>btn.addEventListener('click',e=>deleteSnack(e.target.dataset.del)));
+  document.querySelectorAll('.snack-row').forEach(row=>{
+    const handle=row.querySelector('[data-snack-drag]');
+    handle.addEventListener('mousedown',()=>row.setAttribute('draggable','true'));
+    handle.addEventListener('touchstart',()=>row.setAttribute('draggable','true'),{passive:true});
+    row.addEventListener('dragstart',e=>{snackDragFromId=row.dataset.snackId;row.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
+    row.addEventListener('dragend',()=>{row.classList.remove('dragging');row.setAttribute('draggable','false');document.querySelectorAll('.snack-row').forEach(r=>r.classList.remove('drag-over'));setTimeout(()=>snackDragFromId=null,0);});
+    row.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move';row.classList.add('drag-over');});
+    row.addEventListener('dragleave',()=>row.classList.remove('drag-over'));
+    row.addEventListener('drop',e=>{e.preventDefault();row.classList.remove('drag-over');reorderSnacks(snackDragFromId,row.dataset.snackId);});
+  });
+}
+
+/* ===================== Daily log: data + compute ===================== */
+function getLog(dateStr){
+  return logs[dateStr] || defaultLogEntry();
+}
+function ensureLog(dateStr){
+  if(!logs[dateStr]) logs[dateStr] = defaultLogEntry();
+  return logs[dateStr];
+}
+
+function logMealKcal(log){
+  if(log.mode === 'custom') return Math.round(log.manualMealKcal || 0);
+  const meal = meals.find(m => m.id === log.mealId);
+  if(!meal) return 0;
+  return Math.round(mealKcal(meal) * (log.mealServings || 1));
+}
+function logSnacksKcal(log){
+  return Math.round((log.snacks || []).reduce((sum, e) => {
+    const snack = snacks.find(s => s.id === e.snackId);
+    return sum + (snack ? snack.kcal * e.qty : 0);
+  }, 0));
+}
+function logTotalKcal(log){ return logMealKcal(log) + logSnacksKcal(log); }
+function logDeficit(log){ return maintenanceCal - logTotalKcal(log); }
+function logHasEntries(log){ return !!log && (log.mode === 'custom' ? (log.manualMealKcal > 0 || !!log.manualMealName) : !!log.mealId) || (log && log.snacks && log.snacks.length > 0); }
+
+/* ===================== Daily log: mutators ===================== */
+function refreshLog(){
+  renderLogTab();
+  if(logFoodModalOpen) renderLogFoodModal();
+}
+async function setLogMode(dateStr, mode){
+  const log = ensureLog(dateStr);
+  log.mode = mode;
+  await saveData();
+  refreshLog();
+}
+async function setLogMeal(dateStr, mealId){
+  const log = ensureLog(dateStr);
+  log.mealId = mealId || null;
+  await saveData();
+  refreshLog();
+}
+async function setLogMealServings(dateStr, servings){
+  const log = ensureLog(dateStr);
+  log.mealServings = isNaN(servings) || servings <= 0 ? 1 : servings;
+  await saveData();
+  refreshLog();
+}
+async function setManualMeal(dateStr, name, kcal){
+  const log = ensureLog(dateStr);
+  log.manualMealName = name;
+  log.manualMealKcal = isNaN(kcal) ? 0 : kcal;
+  await saveData();
+  refreshLog();
+}
+async function addLogSnack(dateStr, snackId, qty){
+  if(!snackId) return;
+  const log = ensureLog(dateStr);
+  const q = (isNaN(qty) || qty <= 0) ? 1 : qty;
+  const existing = log.snacks.find(e => e.snackId === snackId);
+  if(existing) existing.qty += q;
+  else log.snacks.push({snackId, qty: q});
+  await saveData();
+  refreshLog();
+}
+async function updateLogSnackQty(dateStr, snackId, qty){
+  const log = ensureLog(dateStr);
+  const entry = log.snacks.find(e => e.snackId === snackId);
+  if(entry){
+    entry.qty = isNaN(qty) || qty <= 0 ? entry.qty : qty;
+    await saveData();
+    refreshLog();
+  }
+}
+async function removeLogSnack(dateStr, snackId){
+  const log = ensureLog(dateStr);
+  log.snacks = log.snacks.filter(e => e.snackId !== snackId);
+  await saveData();
+  refreshLog();
+}
+async function clearLogDay(dateStr){
+  if(!confirm('Clear everything logged for this day?')) return;
+  delete logs[dateStr];
+  await saveData();
+  refreshLog();
+}
+async function setLogDateView(dateStr){
+  logDate = dateStr;
+  closeLogFoodModal();
+  renderLogTab();
+}
+async function setChartRange(days){
+  chartRangeDays = days;
+  if(currentTab === 'history') renderHistoryTab();
+}
+
+/* ===================== Daily log: log-food modal ===================== */
+function openLogFoodModal(){
+  logFoodModalOpen = true;
+  renderLogFoodModal();
+  document.getElementById('logFoodModalBackdrop').classList.add('open');
+}
+function closeLogFoodModal(){
+  logFoodModalOpen = false;
+  const backdrop = document.getElementById('logFoodModalBackdrop');
+  if(backdrop) backdrop.classList.remove('open');
+}
+document.getElementById('logFoodModalBackdrop').addEventListener('click', e => {
+  if(e.target.id === 'logFoodModalBackdrop') closeLogFoodModal();
+});
+
+function renderLogFoodModal(){
+  const modal = document.getElementById('logFoodModal');
+  if(!logFoodModalOpen){ modal.innerHTML = ''; return; }
+
+  const log = getLog(logDate);
+  const totalKcal = logTotalKcal(log);
+  const mealOptions = meals.map(m => `<option value="${m.id}" ${log.mealId===m.id?'selected':''}>${escapeHtml(m.name)} (${mealKcal(m)} kcal)</option>`).join('');
+
+  const loggedSnackRows = (log.snacks || []).map(e => {
+    const snack = snacks.find(s => s.id === e.snackId);
+    if(!snack) return '';
+    return `
+      <div class="logged-snack-row" data-log-snack="${e.snackId}">
+        <div class="lsr-name">${escapeHtml(snack.name)}</div>
+        <input type="number" step="any" min="0" value="${e.qty}" data-qty-for="${e.snackId}" />
+        <div class="lsr-kcal mono">${Math.round(snack.kcal * e.qty)}</div>
+        <button class="item-remove" data-remove-snack="${e.snackId}" aria-label="Remove ${escapeHtml(snack.name)}">×</button>
+      </div>`;
+  }).join('');
+
+  modal.innerHTML = `
+    <button class="drawer-close" id="logFoodModalCloseBtn" aria-label="Close" style="position:absolute;top:18px;right:18px;">×</button>
+    <h2>Log food</h2>
+    <div class="subtitle">${prettyDate(logDate)}</div>
+
+    <div class="section-label" style="margin-top:20px;">Main meal</div>
+    <div class="mode-toggle">
+      <button class="mode-btn ${log.mode==='meal'?'active':''}" data-mode="meal">From my meals</button>
+      <button class="mode-btn ${log.mode==='custom'?'active':''}" data-mode="custom">Custom entry</button>
+    </div>
+    ${log.mode === 'meal' ? `
+      <div class="meal-select-row">
+        <select id="logMealSelect">
+          <option value="">— choose a meal —</option>
+          ${mealOptions}
+        </select>
+        <input class="servings-input" type="number" step="any" min="0" id="logMealServings" value="${log.mealServings}" title="Servings" ${log.mealId ? '' : 'disabled'} />
+        <span class="field-note" style="margin:0;">servings</span>
+      </div>
+      ${!meals.length ? '<div class="field-note">You haven\'t built any meals yet — add one on the Meals tab, or use Custom entry.</div>' : ''}
+    ` : `
+      <div class="custom-meal-row">
+        <input class="cm-name" id="logCustomName" placeholder="What did you eat?" value="${escapeHtml(log.manualMealName||'')}" />
+        <input class="cm-kcal" type="number" step="any" min="0" id="logCustomKcal" placeholder="kcal" value="${log.manualMealKcal||''}" />
+      </div>
+    `}
+
+    <div class="section-label">Snacks</div>
+    <div class="snack-add-row" style="margin-top:0;">
+      <select id="logSnackSelect">
+        <option value="">— choose a snack —</option>
+        ${snacks.map(s => `<option value="${s.id}">${escapeHtml(s.name)} (${s.kcal} kcal)</option>`).join('')}
+      </select>
+      <input type="number" step="any" min="0" id="logSnackQty" placeholder="qty" value="1" />
+      <button class="btn btn-primary" id="addLogSnackBtn">Add</button>
+    </div>
+    ${!snacks.length ? '<div class="field-note">No snacks on file yet — add some on the Snacks tab.</div>' : ''}
+    <div class="logged-snack-list">
+      ${loggedSnackRows || '<div class="empty-note">No snacks logged for this day yet.</div>'}
+    </div>
+
+    <div class="modal-footer">
+      <span class="subtitle mono" style="margin:0;">${totalKcal.toLocaleString()} kcal today</span>
+      <button class="btn btn-secondary" id="logFoodDoneBtn">Done</button>
+    </div>
+  `;
+
+  document.getElementById('logFoodModalCloseBtn').addEventListener('click', closeLogFoodModal);
+  document.getElementById('logFoodDoneBtn').addEventListener('click', closeLogFoodModal);
+
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => setLogMode(logDate, btn.getAttribute('data-mode')));
+  });
+
+  if(log.mode === 'meal'){
+    document.getElementById('logMealSelect').value = log.mealId || '';
+    document.getElementById('logMealSelect').addEventListener('change', e => setLogMeal(logDate, e.target.value));
+    const servingsInput = document.getElementById('logMealServings');
+    if(servingsInput) servingsInput.addEventListener('change', e => setLogMealServings(logDate, parseFloat(e.target.value)));
+  } else {
+    document.getElementById('logCustomName').addEventListener('change', e => setManualMeal(logDate, e.target.value, parseFloat(document.getElementById('logCustomKcal').value)));
+    document.getElementById('logCustomKcal').addEventListener('change', e => setManualMeal(logDate, document.getElementById('logCustomName').value, parseFloat(e.target.value)));
+  }
+
+  const addSnackBtn = document.getElementById('addLogSnackBtn');
+  if(addSnackBtn){
+    addSnackBtn.addEventListener('click', () => {
+      const sel = document.getElementById('logSnackSelect');
+      const qty = parseFloat(document.getElementById('logSnackQty').value);
+      addLogSnack(logDate, sel.value, qty);
+    });
+  }
+  modal.querySelectorAll('[data-qty-for]').forEach(inp => {
+    inp.addEventListener('change', e => updateLogSnackQty(logDate, e.target.getAttribute('data-qty-for'), parseFloat(e.target.value)));
+  });
+  modal.querySelectorAll('[data-remove-snack]').forEach(btn => {
+    btn.addEventListener('click', e => removeLogSnack(logDate, e.target.getAttribute('data-remove-snack')));
+  });
+}
+
+/* ===================== Daily log: render (main tab) ===================== */
+function computeHistory(days){
+  const arr = [];
+  for(let i = days - 1; i >= 0; i--){
+    const ds = shiftDateStr(todayStr(), -i);
+    const log = logs[ds];
+    const has = logHasEntries(log);
+    arr.push({date: ds, total: log ? logTotalKcal(log) : 0, deficit: log ? logDeficit(log) : 0, hasLog: has});
+  }
+  return arr;
+}
+
+function dayPieHTML(log){
+  const meal=Math.max(0,logMealKcal(log));
+  const snack=Math.max(0,logSnacksKcal(log));
+  const foodTotal=meal+snack;
+  const deficit=Math.max(0, maintenanceCal-foodTotal);
+  const pieTotal=Math.max(maintenanceCal, foodTotal);
+  if(!pieTotal)return `<div class="day-pie" style="background:var(--surface-alt);"><div class="day-pie-inner"><div class="day-pie-kcal">0</div><div class="day-pie-label">kcal</div></div></div>`;
+  const mealDeg=meal/pieTotal*360;
+  const snackDeg=(meal+snack)/pieTotal*360;
+  const deficitDeg=(meal+snack+deficit)/pieTotal*360;
+  const gradient=deficit>0
+    ? `conic-gradient(var(--green) 0deg ${mealDeg}deg, #8EAB94 ${mealDeg}deg ${snackDeg}deg, var(--green-soft) ${snackDeg}deg ${deficitDeg}deg, var(--surface-alt) ${deficitDeg}deg 360deg)`
+    : `conic-gradient(var(--green) 0deg ${mealDeg}deg, #8EAB94 ${mealDeg}deg ${snackDeg}deg, var(--surface-alt) ${snackDeg}deg 360deg)`;
+  return `<div class="day-pie" style="background:${gradient};"><div class="day-pie-inner"><div class="day-pie-kcal">${foodTotal.toLocaleString()}</div><div class="day-pie-label">kcal</div></div></div>`;
+}
+
+function renderHistoryTab(){
+  const history=computeHistory(chartRangeDays),maxAbs=Math.max(100,...history.map(h=>Math.abs(h.deficit))),loggedDays=history.filter(h=>h.hasLog);
+  const avgDeficit=loggedDays.length?Math.round(loggedDays.reduce((s,h)=>s+h.deficit,0)/loggedDays.length):0;
+  let streak=0;for(let i=history.length-1;i>=0;i--){if(history[i].hasLog&&history[i].deficit>0)streak++;else break;}
+  const chartCols=history.map(h=>{let topBar='',botBar='';if(!h.hasLog)topBar='<div class="chart-bar empty" style="height:3px"></div>';else if(h.deficit>=0)topBar=`<div class="chart-bar" style="height:${Math.max(2,Math.round(Math.abs(h.deficit)/maxAbs*78))}px"></div>`;else botBar=`<div class="chart-bar neg" style="height:${Math.max(2,Math.round(Math.abs(h.deficit)/maxAbs*78))}px"></div>`;const label=h.hasLog?`${h.deficit>=0?'−':'+'}${Math.abs(h.deficit)}`:'';const tip=h.hasLog?`${prettyDate(h.date)}: ${h.total} kcal — ${h.deficit>=0?h.deficit+' kcal deficit':Math.abs(h.deficit)+' kcal surplus'}`:`${prettyDate(h.date)}: nothing logged`;return `<div class="chart-col" title="${escapeHtml(tip)}"><div class="history-deficit-label">${label}</div><div class="chart-bars"><div class="chart-zone top">${topBar}</div><div class="chart-zone bottom">${botBar}</div></div><div class="chart-date">${parseISODate(h.date).getDate()}</div></div>`;}).join('');
+  document.getElementById('tabContent').innerHTML=`<div class="card"><div class="chart-header"><h3 style="margin:0;">Deficit history</h3><div class="range-toggle"><button class="range-btn ${chartRangeDays===7?'active':''}" data-range="7">7d</button><button class="range-btn ${chartRangeDays===14?'active':''}" data-range="14">14d</button><button class="range-btn ${chartRangeDays===30?'active':''}" data-range="30">30d</button></div></div><div class="summary-bar" style="margin-bottom:18px;"><div class="summary-stat"><div class="num mono">${loggedDays.length}</div><div class="label">Days logged</div></div><div class="summary-stat"><div class="num mono" style="color:${avgDeficit>=0?'var(--green)':'var(--red)'}">${avgDeficit>=0?'−':'+'}${Math.abs(avgDeficit).toLocaleString()}</div><div class="label">Avg ${avgDeficit>=0?'deficit':'surplus'} / day</div></div><div class="summary-stat"><div class="num mono">${streak}</div><div class="label">Day streak in deficit</div></div></div><div class="chart-legend"><span><span class="legend-dot" style="background:var(--green);"></span>Deficit (under maintenance)</span><span><span class="legend-dot" style="background:var(--red);"></span>Surplus (over maintenance)</span><span><span class="legend-dot" style="background:var(--line);"></span>Not logged</span></div><div class="chart-scroll" style="margin-top:14px;"><div class="chart-track">${chartCols}</div></div></div>`;
+  document.querySelectorAll('.range-btn').forEach(btn=>btn.addEventListener('click',()=>setChartRange(parseInt(btn.dataset.range,10))));
+}
+
+function renderLogTab(){
+  const log = getLog(logDate);
+  const totalKcal = logTotalKcal(log);
+  const deficit = logDeficit(log);
+  const isToday = logDate === todayStr();
+  const hasEntries = logHasEntries(log);
+
+  const mealChip = (() => {
+    if(log.mode === 'custom'){
+      if(!log.manualMealName && !log.manualMealKcal) return '';
+      return `<div class="log-chip"><span>${escapeHtml(log.manualMealName || 'Custom meal')}</span><span class="lc-kcal">${Math.round(log.manualMealKcal||0)} kcal</span></div>`;
+    }
+    const meal = meals.find(m => m.id === log.mealId);
+    if(!meal) return '';
+    const servings = log.mealServings || 1;
+    return `<div class="log-chip"><span>${escapeHtml(meal.name)}${servings !== 1 ? ` ×${servings}` : ''}</span><span class="lc-kcal">${logMealKcal(log)} kcal</span></div>`;
+  })();
+
+  const snackChips = (log.snacks || []).map(e => {
+    const snack = snacks.find(s => s.id === e.snackId);
+    if(!snack) return '';
+    return `<div class="log-chip"><span>${escapeHtml(snack.name)}${e.qty !== 1 ? ` ×${e.qty}` : ''}</span><span class="lc-kcal">${Math.round(snack.kcal*e.qty)} kcal</span></div>`;
+  }).join('');
+
+  const history = computeHistory(chartRangeDays);
+  const maxAbs = Math.max(100, ...history.map(h => Math.abs(h.deficit)));
+  const loggedDays = history.filter(h => h.hasLog);
+  const avgDeficit = loggedDays.length ? Math.round(loggedDays.reduce((s,h)=>s+h.deficit,0)/loggedDays.length) : 0;
+  let streak = 0;
+  for(let i = history.length - 1; i >= 0; i--){
+    if(history[i].hasLog && history[i].deficit > 0) streak++;
+    else break;
+  }
+
+  const chartCols = history.map(h => {
+    let topBar = '', botBar = '';
+    if(!h.hasLog){
+      topBar = `<div class="chart-bar empty" style="height:3px"></div>`;
+    } else if(h.deficit >= 0){
+      const height = Math.max(2, Math.round((Math.abs(h.deficit)/maxAbs)*78));
+      topBar = `<div class="chart-bar" style="height:${height}px"></div>`;
+    } else {
+      const height = Math.max(2, Math.round((Math.abs(h.deficit)/maxAbs)*78));
+      botBar = `<div class="chart-bar neg" style="height:${height}px"></div>`;
+    }
+    const tip = h.hasLog
+      ? `${prettyDate(h.date)}: ${h.total} kcal — ${h.deficit>=0 ? h.deficit+' kcal deficit' : Math.abs(h.deficit)+' kcal surplus'}`
+      : `${prettyDate(h.date)}: nothing logged`;
+    return `
+      <div class="chart-col" title="${escapeHtml(tip)}">
+        <div class="chart-bars">
+          <div class="chart-zone top">${topBar}</div>
+          <div class="chart-zone bottom">${botBar}</div>
+        </div>
+        <div class="chart-date">${parseISODate(h.date).getDate()}</div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('tabContent').innerHTML = `
+    <div class="log-date-nav">
+      <button class="date-arrow" id="prevDayBtn" aria-label="Previous day">‹</button>
+      <input class="log-date-input" type="date" id="logDateInput" value="${logDate}" max="${todayStr()}" />
+      <button class="date-arrow" id="nextDayBtn" aria-label="Next day" ${isToday?'disabled style="opacity:.35;cursor:default;"':''}>›</button>
+      <div class="log-date-label">${prettyDate(logDate)}${isToday ? ' · Today' : ''}</div>
+    </div>
+
+    <div class="card day-summary-card">
+      <div class="day-summary">
+        ${dayPieHTML(log)}
+        <div class="day-stat">
+          <div class="num mono">${maintenanceCal.toLocaleString()}</div>
+          <div class="label">Maintenance</div>
+        </div>
+        <div class="day-stat deficit">
+          <div class="num mono ${deficit>=0?'pos':'neg'}">${deficit>=0 ? '−' : '+'}${Math.abs(deficit).toLocaleString()}</div>
+          <div class="label">${deficit>=0 ? 'Deficit' : 'Surplus'}</div>
+        </div>
+      </div>
+      <div class="pie-legend"><span class="pie-legend-item"><span class="pie-dot" style="background:var(--green);"></span>Main meal</span><span class="pie-legend-item"><span class="pie-dot" style="background:#8EAB94;"></span>Snacks</span><span class="pie-legend-item"><span class="pie-dot" style="background:var(--green-soft);"></span>Deficit</span></div>
+    </div>
+
+    <div class="card">
+      <div class="log-food-header">
+        <h3>Food logged</h3>
+        <button class="btn btn-primary" id="openLogFoodBtn">${hasEntries ? 'Edit log' : 'Log food'}</button>
+      </div>
+      <div class="log-chip-group">
+        <div class="log-chip-group-label">Main meal</div>
+        ${mealChip ? `<div class="log-chip-row">${mealChip}</div>` : '<div class="log-food-empty">Nothing logged yet.</div>'}
+      </div>
+      <div class="log-chip-group" style="margin-bottom:0;">
+        <div class="log-chip-group-label">Snacks</div>
+        ${snackChips ? `<div class="log-chip-row">${snackChips}</div>` : '<div class="log-food-empty">No snacks logged yet.</div>'}
+      </div>
+      ${hasEntries ? '<button class="btn btn-danger" style="margin-top:16px;" id="clearDayBtn">Clear day</button>' : ''}
+    </div>
+
+  `;
+
+  document.getElementById('prevDayBtn').addEventListener('click', () => setLogDateView(shiftDateStr(logDate, -1)));
+  document.getElementById('nextDayBtn').addEventListener('click', () => { if(!isToday) setLogDateView(shiftDateStr(logDate, 1)); });
+  document.getElementById('logDateInput').addEventListener('change', e => { if(e.target.value) setLogDateView(e.target.value); });
+
+  document.getElementById('openLogFoodBtn').addEventListener('click', openLogFoodModal);
+
+  const clearBtn = document.getElementById('clearDayBtn');
+  if(clearBtn) clearBtn.addEventListener('click', () => clearLogDay(logDate));
+
+  document.querySelectorAll('.range-btn').forEach(btn => {
+    btn.addEventListener('click', () => setChartRange(parseInt(btn.getAttribute('data-range'), 10)));
+  });
+}
+
 /* ===================== Export / Import ===================== */
 function openTransferModal(){
   transferModalOpen = true;
@@ -833,7 +1462,7 @@ function closeTransferModal(){
 }
 
 function currentExportJSON(){
-  return JSON.stringify({ingredients, meals, maintenanceCal}, null, 2);
+  return JSON.stringify({ingredients, meals, snacks, logs, maintenanceCal}, null, 2);
 }
 
 function downloadExport(){
@@ -856,10 +1485,12 @@ async function importFromText(text, msgEl){
     }
     ingredients = parsed.ingredients;
     meals = parsed.meals;
+    snacks = Array.isArray(parsed.snacks) ? parsed.snacks : [];
+    logs = (parsed.logs && typeof parsed.logs === 'object') ? parsed.logs : {};
     maintenanceCal = parsed.maintenanceCal || DEFAULT_MAINTENANCE;
     await saveData();
     renderApp();
-    if(msgEl){ msgEl.textContent = `Imported ${meals.length} meals and ${ingredients.length} ingredients.`; msgEl.className = 'import-msg ok'; }
+    if(msgEl){ msgEl.textContent = `Imported ${meals.length} meals, ${ingredients.length} ingredients and ${snacks.length} snacks.`; msgEl.className = 'import-msg ok'; }
   } catch(e){
     console.error(e);
     if(msgEl){ msgEl.textContent = 'Could not import that file — check it\'s a Meal Builder export.'; msgEl.className = 'import-msg err'; }
