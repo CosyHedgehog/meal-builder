@@ -78,7 +78,7 @@ function setSaveStatus(state){
   el.classList.remove('error','saving');
   if(state==='saving'){el.classList.add('saving');el.querySelector('.txt').textContent='Saving…';}
   else if(state==='error'){el.classList.add('error');el.querySelector('.txt').textContent='Save failed';}
-  else el.querySelector('.txt').textContent='Saved to database';
+  else el.querySelector('.txt').textContent='Saved to database 2';
 }
 
 async function loadData(){
