@@ -52,7 +52,7 @@
       .app-shell {
         max-width: 1080px;
         margin: 0 auto;
-        padding: 36px 24px 80px;
+        padding: 24px 24px 24px;
       }
 
       /* ---------- Header ---------- */
@@ -720,7 +720,7 @@
       .home {
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 8px;
       }
       .home-header {
         display: flex;
@@ -770,10 +770,12 @@
         background: var(--surface);
         border: 1px solid var(--line);
         border-radius: 20px;
-        padding: 18px;
+        padding: 12px 20px 10px 12px;
+        box-shadow: 1px 2px 8px rgba(21, 31, 23, 0.06);
       }
       .today-top {
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: space-between;
         gap: 14px;
@@ -781,7 +783,7 @@
       .today-date-row {
         display: flex;
         align-items: center;
-        gap: 5px;
+        gap: 30px;
       }
       .today-date {
         font-family: "Fraunces", serif;
@@ -869,7 +871,6 @@
         color: var(--red);
       }
       .today-chips {
-        margin-top: 16px;
         display: grid;
         gap: 12px;
       }
@@ -883,7 +884,7 @@
         align-items: center;
         justify-content: space-between;
         gap: 10px;
-        font-size: 10px;
+        font-size: 12px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.14em;
@@ -990,6 +991,7 @@
         display: inline-flex;
         align-items: stretch;
         min-height: 30px;
+        max-height: 30px;
         overflow: hidden;
         border: 1px solid var(--green);
         border-radius: 999px;
@@ -1016,10 +1018,9 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        padding: 0 8px;
+        padding: 0 4px;
         border-inline: 1px solid rgba(255, 255, 255, 0.28);
         font-size: 10px;
-        font-weight: 600;
         white-space: nowrap;
       }
       .snack-stepper-kcal {
@@ -1139,7 +1140,7 @@
       @media (min-width: 700px) {
         .app-shell {
           max-width: 760px;
-          padding: 28px 24px 60px;
+          padding: 24px 24px 24px;
         }
         .header-actions .save-status {
           display: flex;
@@ -1424,7 +1425,7 @@
         gap: 10px;
       }
       .today-status-bar {
-        height: 10px;
+        height: 20px;
         border-radius: 999px;
         background: var(--surface-alt);
         overflow: hidden;
@@ -2206,6 +2207,9 @@
             <input class="date-picker-input" type="date" id="homeDateInput" value="${logDate}" max="${todayStr()}" aria-label="Choose log date">
             <button class="date-arrow" id="homeNextDay" aria-label="Next day" ${logDate === todayStr() ? "disabled" : ""}>›</button>
           </div>
+        </section>
+      <section class="today-card">
+                <div class="today-top">
           <div class="today-kcal"><strong>${totalK.toLocaleString()} <span class="goal-kcal">/ ${maintenanceCal.toLocaleString()} kcal</span></strong></div>
         </div>
         <div class="today-status">
@@ -2219,17 +2223,19 @@
             <div class="status-pill snack"><span>Snacks</span><strong>${snackK.toLocaleString()} <small>kcal</small></strong></div>
             <div class="status-pill ${deficit >= 0 ? "deficit" : "surplus"}"><span>${deficit >= 0 ? "Deficit" : "Surplus"}</span><strong>${Math.abs(deficit).toLocaleString()} <small>kcal</small></strong></div>
           </div>
-        </div>
-        <div class="today-chips">
+          </div>
+      </section>
+            <section class="today-card">
+              <div class="today-chips">
           <div class="chip-group">
           <div class="chip-group-header">
-            <span>Meal</span>
+            <span>1. Select meal for today</span>
             <button type="button" class="chip-group-menu-btn" data-chip-menu="meals" aria-label="Meal options" aria-expanded="false">⋯</button>
             <div class="chip-group-menu" data-chip-menu-panel="meals">
               <button type="button" id="editMealsChipBtn" data-edit-food-menu="meals">✎ Edit meals</button>
               <button type="button" id="newMealsChipBtn">+ Add meal</button>
             </div>
-          </div>
+      </div>
             <div class="chip-list">
               ${
                 meals.length
@@ -2245,9 +2251,14 @@
               ${log.mode === "custom" ? `<button type="button" class="today-chip active one-off" data-select-meal="custom"><span>${escapeHtml(log.manualMealName || "Custom")}<span class="one-off-badge">1-off</span></span><span class="chip-kcal">· ${Math.round(log.manualMealKcal || 0).toLocaleString()} kcal</span></button>` : `<button type="button" class="today-chip chip-add" id="addCustomMealChip">＋ Custom meal</button>`}
             </div>
           </div>
+        </div>
+        </section>
+      <section class="today-card">
+
+         <div class="today-chips">
           <div class="chip-group">
           <div class="chip-group-header">
-            <span>Snacks</span>
+            <span>2. Select snacks for today</span>
             <button type="button" class="chip-group-menu-btn" data-chip-menu="snacks" aria-label="Snack options" aria-expanded="false">⋯</button>
             <div class="chip-group-menu" data-chip-menu-panel="snacks">
               <button type="button" id="editSnacksChipBtn" data-edit-food-menu="snacks">✎ Edit snacks</button>
@@ -2285,7 +2296,6 @@
           </div>
         </div>
       </section>
-
       <section class="section-block history-section">
         <div class="section-head">
           <div><h2>History</h2><div class="muted">Last ${historyDays} days</div></div>
@@ -2340,7 +2350,6 @@
           <button class="btn btn-secondary" id="showAllHistoryBtn">Show all</button>
         </div>
       </section>
-
       <section class="section-block manage-section">
         <div class="manage-actions">
           <button class="manage-toggle" id="manageMealsBtn"><span><strong>Meals</strong><small>Manage meals</small></span><span class="manage-chevron">›</span></button>
