@@ -522,46 +522,45 @@
         z-index: 41;
       }
 
-      .ing-row {
-        display: grid;
-        grid-template-columns: 16px 1fr 70px 90px 30px;
-        gap: 8px;
+      .manager-item-row {
+        display: flex;
+        align-items: stretch;
+        gap: 4px;
+      }
+      .manager-item-row .manager-item {
+        flex: 1;
+        min-width: 0;
+      }
+      .manager-drag {
+        display: flex;
         align-items: center;
-        padding: 7px 0;
-        border-bottom: 1px solid var(--line);
-      }
-      .ing-row input,
-      .ing-row select {
-        padding: 6px 8px;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        font-size: 13px;
-        font-family: "Inter", sans-serif;
-        background: var(--bg);
-        width: 100%;
-      }
-      .ing-row .kcal-input {
-        font-family: "IBM Plex Mono", monospace;
-      }
-      .ing-row.dragging {
-        opacity: 0.4;
-      }
-      .ing-row.drag-over {
-        box-shadow: none;
-      }
-      .ing-drag {
+        justify-content: center;
+        width: 22px;
+        flex: none;
         color: var(--ink-muted);
         cursor: grab;
-        font-size: 13px;
+        font-size: 14px;
         letter-spacing: 1px;
-        text-align: center;
+        border-radius: 8px;
+        touch-action: none;
       }
-      .ing-drag.disabled {
+      .manager-drag:hover {
+        color: var(--ink);
+        background: var(--surface-alt);
+      }
+      .manager-drag:active {
+        cursor: grabbing;
+      }
+      .manager-drag.disabled {
         opacity: 0.25;
         cursor: default;
+        pointer-events: none;
       }
-      .ing-drag:active {
-        cursor: grabbing;
+      .manager-item-row.dragging {
+        opacity: 0.4;
+      }
+      .manager-item-row.drag-over .manager-item {
+        border-color: var(--green);
       }
       .ing-head {
         display: grid;
@@ -1843,8 +1842,10 @@
       let managerMealSearchTerm = "";
       let managerSnackSearchTerm = "";
       let managerIngredientSearchTerm = "";
-      let ingDragFromId = null;
       let itemDragFromId = null;
+      let mealDragFromId = null;
+      let snackDragFromId = null;
+      let ingredientDragFromId = null;
       let logDate = todayStr();
       let foodManagerTab = "meals";
 
@@ -2058,41 +2059,6 @@
         renderApp();
       }
 
-      /* ===================== Reordering ===================== */
-      async function reorderMeals(fromIndex, toIndex) {
-        if (fromIndex === toIndex || fromIndex == null || toIndex == null)
-          return;
-        const [moved] = meals.splice(fromIndex, 1);
-        meals.splice(toIndex, 0, moved);
-        await saveData();
-        renderApp();
-      }
-
-      async function reorderSnacks(fromId, toId) {
-        if (!fromId || !toId || fromId === toId) return;
-        const fromIndex = snacks.findIndex((s) => s.id === fromId);
-        const toIndex = snacks.findIndex((s) => s.id === toId);
-        if (fromIndex === -1 || toIndex === -1) return;
-        const [moved] = snacks.splice(fromIndex, 1);
-        const adjustedTo = fromIndex < toIndex ? toIndex - 1 : toIndex;
-        snacks.splice(adjustedTo, 0, moved);
-        await saveData();
-        renderApp();
-      }
-
-      async function reorderIngredients(fromId, toId) {
-        if (!fromId || !toId || fromId === toId) return;
-        const fromIndex = ingredients.findIndex((i) => i.id === fromId);
-        const toIndex = ingredients.findIndex((i) => i.id === toId);
-        if (fromIndex === -1 || toIndex === -1) return;
-        const [moved] = ingredients.splice(fromIndex, 1);
-        ingredients.splice(toIndex, 0, moved);
-        await saveData();
-        renderApp();
-        renderIngredientsModal();
-        if (openMealId) renderDrawer();
-      }
-
       async function reorderMealItems(mealId, fromId, toId) {
         if (!fromId || !toId || fromId === toId) return;
         const meal = meals.find((m) => m.id === mealId);
@@ -2106,6 +2072,79 @@
         meal.items.splice(toIndex, 0, moved);
         await saveData();
         renderDrawer();
+      }
+
+      async function reorderMeals(fromId, toId) {
+        if (!fromId || !toId || fromId === toId) return;
+        const fromIndex = meals.findIndex((m) => m.id === fromId);
+        const toIndex = meals.findIndex((m) => m.id === toId);
+        if (fromIndex === -1 || toIndex === -1) return;
+        const [moved] = meals.splice(fromIndex, 1);
+        meals.splice(toIndex, 0, moved);
+        await saveData();
+        renderApp();
+      }
+
+      async function reorderSnacks(fromId, toId) {
+        if (!fromId || !toId || fromId === toId) return;
+        const fromIndex = snacks.findIndex((s) => s.id === fromId);
+        const toIndex = snacks.findIndex((s) => s.id === toId);
+        if (fromIndex === -1 || toIndex === -1) return;
+        const [moved] = snacks.splice(fromIndex, 1);
+        snacks.splice(toIndex, 0, moved);
+        await saveData();
+        renderApp();
+      }
+
+      async function reorderIngredients(fromId, toId) {
+        if (!fromId || !toId || fromId === toId) return;
+        const fromIndex = ingredients.findIndex((i) => i.id === fromId);
+        const toIndex = ingredients.findIndex((i) => i.id === toId);
+        if (fromIndex === -1 || toIndex === -1) return;
+        const [moved] = ingredients.splice(fromIndex, 1);
+        ingredients.splice(toIndex, 0, moved);
+        await saveData();
+        renderApp();
+        if (openMealId) renderDrawer();
+      }
+
+      /* Generic drag-to-reorder wiring for .manager-item-row lists.
+         get/set track the currently dragged row's id; onDrop performs the reorder. */
+      function wireManagerDrag(container, { get, set, onDrop }) {
+        if (!container) return;
+        container.querySelectorAll(".manager-item-row").forEach((row) => {
+          const handle = row.querySelector("[data-manager-drag]");
+          if (!handle || handle.classList.contains("disabled")) return;
+          const arm = () => row.setAttribute("draggable", "true");
+          handle.addEventListener("mousedown", arm);
+          handle.addEventListener("touchstart", arm, { passive: true });
+          row.addEventListener("dragstart", (e) => {
+            set(row.getAttribute("data-manager-id"));
+            row.classList.add("dragging");
+            e.dataTransfer.effectAllowed = "move";
+          });
+          row.addEventListener("dragend", () => {
+            row.classList.remove("dragging");
+            row.setAttribute("draggable", "false");
+            container
+              .querySelectorAll(".manager-item-row")
+              .forEach((r) => r.classList.remove("drag-over"));
+            setTimeout(() => set(null), 0);
+          });
+          row.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            row.classList.add("drag-over");
+          });
+          row.addEventListener("dragleave", () =>
+            row.classList.remove("drag-over"),
+          );
+          row.addEventListener("drop", (e) => {
+            e.preventDefault();
+            row.classList.remove("drag-over");
+            onDrop(get(), row.getAttribute("data-manager-id"));
+          });
+        });
       }
 
       /* ===================== Helpers ===================== */
@@ -2609,6 +2648,10 @@
                 i.name.toLowerCase().includes(ingredientTerm),
               )
             : ingredients;
+          const mealsDragOk = !mealTerm && filteredMeals.length > 1;
+          const snacksDragOk = !snackTerm && filteredSnacks.length > 1;
+          const ingredientsDragOk =
+            !ingredientTerm && filteredIngredients.length > 1;
           mealsHost.innerHTML =
             (mealTerm
               ? `<div class="ing-search-note">${filteredMeals.length} of ${meals.length} meals shown.</div>`
@@ -2617,7 +2660,7 @@
               ? filteredMeals
                   .map(
                     (m) =>
-                      `<button class="manager-item" data-manager-meal="${m.id}"><span><strong>${escapeHtml(m.name)}</strong><small>${mealKcal(m).toLocaleString()} kcal · ${m.items.length} ingredient${m.items.length === 1 ? "" : "s"}</small></span><span>›</span></button>`,
+                      `<div class="manager-item-row" data-manager-id="${m.id}"><span class="manager-drag${mealsDragOk ? "" : " disabled"}" data-manager-drag title="Drag to reorder">⠿</span><button class="manager-item" data-manager-meal="${m.id}"><span><strong>${escapeHtml(m.name)}</strong><small>${mealKcal(m).toLocaleString()} kcal · ${m.items.length} ingredient${m.items.length === 1 ? "" : "s"}</small></span><span>›</span></button></div>`,
                   )
                   .join("")
               : '<div class="empty-note">No meals match that search.</div>');
@@ -2629,7 +2672,7 @@
               ? filteredSnacks
                   .map(
                     (s) =>
-                      `<button class="manager-item manager-snack-edit" data-manager-edit-snack="${s.id}"><span><strong>${escapeHtml(s.name)}</strong><small>${s.kcal} kcal</small></span><span>›</span></button>`,
+                      `<div class="manager-item-row" data-manager-id="${s.id}"><span class="manager-drag${snacksDragOk ? "" : " disabled"}" data-manager-drag title="Drag to reorder">⠿</span><button class="manager-item manager-snack-edit" data-manager-edit-snack="${s.id}"><span><strong>${escapeHtml(s.name)}</strong><small>${s.kcal} kcal</small></span><span>›</span></button></div>`,
                   )
                   .join("")
               : '<div class="empty-note">No snacks match that search.</div>');
@@ -2641,7 +2684,7 @@
               ? filteredIngredients
                   .map(
                     (i) =>
-                      `<button class="manager-item" data-manager-ingredient="${i.id}"><span><strong>${escapeHtml(i.name)}</strong><small>${i.kcal} kcal ${i.unit === "g" ? "/ 100g" : "/ item"}</small></span><span>›</span></button>`,
+                      `<div class="manager-item-row" data-manager-id="${i.id}"><span class="manager-drag${ingredientsDragOk ? "" : " disabled"}" data-manager-drag title="Drag to reorder">⠿</span><button class="manager-item" data-manager-ingredient="${i.id}"><span><strong>${escapeHtml(i.name)}</strong><small>${i.kcal} kcal ${i.unit === "g" ? "/ 100g" : "/ item"}</small></span><span>›</span></button></div>`,
                   )
                   .join("")
               : '<div class="empty-note">No ingredients match that search.</div>');
@@ -2666,6 +2709,30 @@
                 );
               }),
           );
+          wireManagerDrag(mealsHost, {
+            get: () => mealDragFromId,
+            set: (id) => (mealDragFromId = id),
+            onDrop: async (fromId, toId) => {
+              await reorderMeals(fromId, toId);
+              render();
+            },
+          });
+          wireManagerDrag(snacksHost, {
+            get: () => snackDragFromId,
+            set: (id) => (snackDragFromId = id),
+            onDrop: async (fromId, toId) => {
+              await reorderSnacks(fromId, toId);
+              render();
+            },
+          });
+          wireManagerDrag(ingredientsHost, {
+            get: () => ingredientDragFromId,
+            set: (id) => (ingredientDragFromId = id),
+            onDrop: async (fromId, toId) => {
+              await reorderIngredients(fromId, toId);
+              render();
+            },
+          });
         };
         document.getElementById("foodMgrClose").onclick = closeTransferModal;
         document.getElementById("foodMgrAddMeal").onclick = () =>
@@ -3375,6 +3442,7 @@
         const filtered = term
           ? ingredients.filter((i) => i.name.toLowerCase().includes(term))
           : ingredients;
+        const dragOk = !term && filtered.length > 1;
 
         modal.innerHTML = `
     <button class="drawer-close" id="ingModalCloseBtn" aria-label="Close" style="position:absolute;top:18px;right:18px;">×</button>
@@ -3382,12 +3450,12 @@
     <div class="subtitle">Calories per 100g for weighed items, or per item for things you count.</div>
     <input class="ing-search" id="ingSearchInput" type="search" placeholder="Search ingredients…" value="${escapeHtml(ingSearchTerm)}" />
     ${term ? `<div class="ing-search-note">${filtered.length} of ${ingredients.length} shown.</div>` : ""}
-    <div class="manager-list">${
+    <div class="manager-list" id="ingModalList">${
       filtered.length
         ? filtered
             .map(
               (i) =>
-                `<button class="manager-item" data-manager-ingredient="${i.id}"><span><strong>${escapeHtml(i.name)}</strong><small>${i.kcal} kcal ${i.unit === "g" ? "/ 100g" : "/ item"}</small></span><span>›</span></button>`,
+                `<div class="manager-item-row" data-manager-id="${i.id}"><span class="manager-drag${dragOk ? "" : " disabled"}" data-manager-drag title="Drag to reorder">⠿</span><button class="manager-item" data-manager-ingredient="${i.id}"><span><strong>${escapeHtml(i.name)}</strong><small>${i.kcal} kcal ${i.unit === "g" ? "/ 100g" : "/ item"}</small></span><span>›</span></button></div>`,
             )
             .join("")
         : '<div class="empty-note">No ingredients match that search.</div>'
@@ -3432,6 +3500,14 @@
               openIngredientEditor(e.currentTarget.dataset.managerIngredient),
             );
           });
+        wireManagerDrag(document.getElementById("ingModalList"), {
+          get: () => ingredientDragFromId,
+          set: (id) => (ingredientDragFromId = id),
+          onDrop: async (fromId, toId) => {
+            await reorderIngredients(fromId, toId);
+            renderIngredientsModal();
+          },
+        });
       }
 
       document
