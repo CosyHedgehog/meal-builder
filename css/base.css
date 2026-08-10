@@ -1,0 +1,57 @@
+/**
+ * Design tokens, resets, typography and shared button/dial styles.
+ */
+
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+:root{
+  --bg:#F3F5EE;
+  --surface:#FFFFFF;
+  --surface-alt:#EAEFE2;
+  --ink:#1C2A1F;
+  --ink-muted:#6E7A6A;
+  --line:#DDE3D3;
+  --green:#3F6B4A;
+  --green-soft:#E4EEE3;
+  --orange:#DD8034;
+  --orange-soft:#FBEADC;
+  --red:#C1442C;
+  --red-soft:#F7E1DA;
+  --radius:16px;
+}
+
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+h1,h2,h3{font-family:'Fraunces',serif;margin:0;}
+.mono{font-family:'IBM Plex Mono',monospace;}
+
+.app-shell{max-width:1080px;margin:0 auto;padding:36px 24px 80px;}
+
+/* ---------- Header ---------- */
+header.top{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:28px;}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--green);margin-bottom:6px;}
+h1.title{font-size:34px;font-weight:600;color:var(--ink);}
+.subtitle{color:var(--ink-muted);font-size:14px;margin-top:6px;}
+.header-actions{display:flex;gap:10px;align-items:center;}
+.header-profile-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);transition:background .15s ease,border-color .15s ease,box-shadow .15s ease;}
+.header-profile-btn:hover{background:var(--surface-alt);border-color:rgba(28,42,31,.12);box-shadow:0 2px 8px rgba(28,42,31,.06);}
+.header-profile-name{font-size:13px;color:var(--ink-muted);line-height:1.2;}
+.header-profile-icon{display:inline-flex;align-items:center;justify-content:center;font-size:15px;color:var(--ink);}
+
+button{font-family:'Inter',sans-serif;cursor:pointer;border:none;}
+.btn{padding:10px 16px;border-radius:999px;font-size:13px;font-weight:600;transition:transform .12s ease, box-shadow .12s ease;}
+.btn:active{transform:scale(.97);}
+.btn-primary{background:var(--green);color:#fff;}
+.btn-primary:hover{box-shadow:0 4px 14px rgba(63,107,74,.3);}
+.btn-secondary{background:var(--surface);color:var(--ink);border:1px solid var(--line);}
+.btn-secondary:hover{background:var(--surface-alt);}
+.btn-danger{background:transparent;color:var(--red);}
+.btn-danger:hover{text-decoration:underline;}
+.btn-danger-outline{background:transparent;color:var(--red);border:1px solid var(--red);}
+.btn-danger-outline:hover{background:rgba(193,68,44,.08);}
+
+/* ---------- Dial ---------- */
+.dial{width:96px;height:96px;border-radius:50%;margin:0 auto 14px;position:relative;}
+.dial-inner{position:absolute;inset:9px;background:var(--surface);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.dial-kcal{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:18px;line-height:1;}
+.dial-kcal-label{font-size:9px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;}

@@ -11,6 +11,15 @@ HOST = '127.0.0.1'
 PORT = 5500
 SESSIONS = {}
 
+# Static assets: only files under these top-level directories are served,
+# and only with these extensions, to keep this a narrow allowlist rather
+# than a general-purpose file server.
+STATIC_DIRS = {'css', 'js'}
+STATIC_CONTENT_TYPES = {
+    '.css': 'text/css; charset=utf-8',
+    '.js': 'application/javascript; charset=utf-8',
+}
+
 DEFAULT_DATA = {
     'ingredients': [],
     'meals': [],
@@ -92,6 +101,28 @@ def read_json(handler):
     raw = handler.rfile.read(length)
     return json.loads(raw.decode('utf-8') or '{}')
 
+def resolve_static_path(url_path):
+    """Map a request path like /css/base.css to a file on disk, restricted
+    to STATIC_DIRS and STATIC_CONTENT_TYPES. Returns None if the path isn't
+    a servable static asset (including any attempt to escape BASE_DIR)."""
+    parts = [p for p in url_path.split('/') if p not in ('', '.')]
+    if len(parts) < 2 or parts[0] not in STATIC_DIRS: return None
+    if any(p == '..' for p in parts): return None
+    ext = os.path.splitext(parts[-1])[1].lower()
+    if ext not in STATIC_CONTENT_TYPES: return None
+    full_path = os.path.normpath(os.path.join(BASE_DIR, *parts))
+    if not full_path.startswith(BASE_DIR + os.sep): return None
+    if not os.path.isfile(full_path): return None
+    return full_path, STATIC_CONTENT_TYPES[ext]
+
+def serve_static_file(handler, full_path, content_type):
+    with open(full_path, 'rb') as f: body = f.read()
+    handler.send_response(200)
+    handler.send_header('Content-Type', content_type)
+    handler.send_header('Content-Length', str(len(body)))
+    handler.end_headers()
+    handler.wfile.write(body)
+
 class Handler(BaseHTTPRequestHandler):
     server_version = 'MealBuilderSQLite/1.0'
 
@@ -106,6 +137,9 @@ class Handler(BaseHTTPRequestHandler):
             except FileNotFoundError:
                 return json_response(self, 500, {'error':'index_sqlite.html not found'})
             self.send_response(200); self.send_header('Content-Type','text/html; charset=utf-8'); self.send_header('Content-Length',str(len(body))); self.end_headers(); self.wfile.write(body); return
+        static = resolve_static_path(path)
+        if static:
+            return serve_static_file(self, *static)
         if path == '/api/me':
             s=current_session(self)
             return json_response(self,200,{'user': {'username':s['username']} if s else None})

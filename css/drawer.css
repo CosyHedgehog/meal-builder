@@ -1,0 +1,67 @@
+/**
+ * Slide-in meal editing drawer, including the later mobile-first
+ * refresh that overrides the original drawer styling.
+ */
+
+/* ---------- Drawer ---------- */
+.backdrop{position:fixed;inset:0;background:rgba(20,28,20,.32);opacity:0;pointer-events:none;transition:opacity .18s ease;z-index:20;}
+.backdrop.open{opacity:1;pointer-events:auto;}
+
+.drawer{position:fixed;top:0;right:0;height:100vh;width:400px;max-width:92vw;background:var(--bg);box-shadow:-12px 0 30px rgba(20,28,20,.14);transform:translateX(100%);transition:transform .22s ease;z-index:21;overflow-y:auto;padding:26px 24px 40px;}
+.drawer.open{transform:translateX(0);}
+
+.drawer-close{position:absolute;top:20px;right:20px;background:var(--surface);border:1px solid var(--line);width:32px;height:32px;border-radius:50%;font-size:16px;color:var(--ink-muted);display:flex;align-items:center;justify-content:center;}
+.drawer-close:hover{color:var(--ink);}
+
+.meal-name-input{font-family:'Fraunces',serif;font-size:24px;font-weight:600;border:none;background:transparent;width:100%;padding:4px 0;border-bottom:1px solid transparent;}
+.meal-name-input:hover,.meal-name-input:focus{border-bottom:1px solid var(--line);outline:none;}
+
+.drawer-dial-wrap{display:flex;justify-content:center;margin:20px 0 6px;}
+.drawer-dial{width:130px;height:130px;}
+.drawer-dial .dial-inner{inset:12px;}
+.drawer-dial .dial-kcal{font-size:24px;}
+
+.section-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);margin:22px 0 10px;}
+
+.item-row{display:grid;grid-template-columns:16px minmax(0,1fr) 72px 18px 56px 15px;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);}
+.item-drag{width:16px;color:var(--ink-muted);cursor:grab;font-size:13px;letter-spacing:1px;flex:none;}
+.item-drag:active{cursor:grabbing;}
+.item-row.dragging{opacity:.4;}
+.item-row.drag-over{box-shadow:none;}
+.item-name{flex:1;font-size:14px;line-height:1.3;}
+.item-unit{font-size:11px;color:var(--ink-muted);text-align:center;}
+.item-qty{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:9px;font-family:'IBM Plex Mono',monospace;font-size:13px;background:var(--bg);min-height:40px;}
+.item-qty:focus{outline:2px solid var(--green);outline-offset:1px;}
+.item-kcal{width:56px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-muted);}
+.item-head{display:grid;grid-template-columns:16px 1fr 60px 18px 56px 15px;gap:8px;align-items:center;padding:0 0 6px;color:var(--ink-muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em;}
+.item-head span:nth-child(5){text-align:right;}
+.item-remove{background:none;color:var(--ink-muted);font-size:15px;padding:2px 4px;}
+.item-remove:hover{color:var(--red);}
+
+.add-item-row{display:flex;gap:8px;margin-top:12px;align-items:center;}
+.add-item-select{flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--surface);font-size:13px;min-height:40px;}
+.add-item-qty{width:72px;padding:10px 9px;border:1px solid var(--line);border-radius:9px;font-family:'IBM Plex Mono',monospace;font-size:13px;min-height:40px;}
+
+.empty-note{color:var(--ink-muted);font-size:13px;padding:10px 0;}
+
+.drawer-footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;}
+
+/* ---------- Mobile-first drawer refresh (overrides above) ---------- */
+/* ---------- Fresh mobile-first modal refresh ---------- */
+.drawer{width:440px;max-width:100vw;padding:0 20px 28px;border-radius:22px 0 0 22px;background:var(--bg);}
+.drawer-topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 0 8px;position:sticky;top:0;background:var(--bg);z-index:3;}
+.drawer-kicker,.modal-kicker{font-size:10px;font-weight:700;letter-spacing:.12em;color:var(--ink-muted);}
+.drawer-topbar .drawer-close{position:static;}
+.meal-name-input{font-size:30px;line-height:1.15;padding:10px 0 12px;margin-bottom:4px;border-bottom:1px solid var(--line);}
+.drawer-dial-wrap{margin:14px 0 18px;}
+.drawer-dial{width:112px;height:112px;}
+.item-head{display:none;}
+.item-row{grid-template-columns:18px minmax(0,1fr) 70px 20px 56px 20px;gap:7px;padding:14px 0;}
+.item-name{font-size:14px;font-weight:600;}
+.item-qty{padding:9px 7px!important;border:1px solid var(--line)!important;border-radius:9px!important;background:var(--surface)!important;}
+.add-item-row{display:grid;grid-template-columns:1fr 72px 48px;gap:8px;margin-top:18px;padding:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;}
+.add-item-select,.add-item-qty{width:100%;min-width:0;padding:11px 9px;}
+.add-item-row .btn{padding:10px 8px;}
+.drawer-footer{position:sticky;bottom:0;background:linear-gradient(transparent,var(--bg) 18%);padding:24px 0 4px;margin-top:20px;}
+.drawer-footer .btn{width:100%;}
+
