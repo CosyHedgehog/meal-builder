@@ -1299,9 +1299,9 @@
       }
       .history-goal-line span {
         position: absolute;
-        left: 0;
+        right: 0;
         top: -15px;
-        padding-right: 4px;
+        padding-left: 4px;
         background: var(--surface);
         color: var(--ink-muted);
         font-size: 11px;
@@ -1318,7 +1318,6 @@
         color: var(--ink-muted);
       }
       .history-day.today .history-day-label {
-        color: var(--green);
         font-weight: 700;
       }
       .history-day.today .history-day-label::after {
@@ -1330,6 +1329,15 @@
         bottom: -7px;
         transform: translateX(-50%);
         border-radius: 50%;
+        border: 1px solid var(--ink-muted);
+        background: transparent;
+      }
+      .history-day.active .history-day-label {
+        color: var(--green);
+        font-weight: 700;
+      }
+      .history-day.active .history-day-label::after {
+        border-color: var(--green);
         background: var(--green);
       }
       .history-tooltip {
