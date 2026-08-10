@@ -2115,7 +2115,6 @@
         const snackPct = Math.min(100 - mealPct, (snackK / barTotal) * 100);
         document.getElementById("app").innerHTML = `
     <div class="home">
-      <header class="home-header"><div><div class="eyebrow">Pantry to Plate</div></div><div class="header-actions"><button class="header-profile-btn" id="openSettingsBtn" aria-label="Open settings"><span class="header-profile-name">${escapeHtml(currentUser?.username || "Settings")}</span><span class="header-profile-icon" aria-hidden="true">⚙</span></button></div></header>
       <section class="today-card">
         <div class="today-top">
           <div class="today-date-row">
@@ -2171,6 +2170,7 @@
                         );
                         if (!entry) {
                           return `<button type="button" class="today-chip" data-log-snack="${s.id}" aria-label="Add ${escapeHtml(s.name)}"><span>＋ ${escapeHtml(s.name)}</span><span class="chip-kcal">· ${s.kcal.toLocaleString()} kcal</span></button>`;
+                          return `<button type="button" class="today-chip" data-log-snack="${s.id}" aria-label="Add ${escapeHtml(s.name)}"><span>＋ ${escapeHtml(s.name)}</span><span class="chip-kcal">${s.kcal.toLocaleString()} kcal</span></button>`;
                         }
                         const snackTotalKcal = Math.round(s.kcal * entry.qty);
                         return `<div class="snack-stepper" role="group" aria-label="${escapeHtml(s.name)} quantity"><button type="button" class="snack-stepper-control" data-decrement-snack="${s.id}" aria-label="Remove one ${escapeHtml(s.name)}">−</button><span class="snack-stepper-label"><span>${entry.qty} ${escapeHtml(s.name)}</span><span class="snack-stepper-kcal">${snackTotalKcal.toLocaleString()} kcal</span></span><button type="button" class="snack-stepper-control" data-increment-snack="${s.id}" aria-label="Add one ${escapeHtml(s.name)}">＋</button></div>`;
@@ -2250,9 +2250,7 @@
           <button class="manage-toggle" id="manageIngredientsBtn"><span><strong>Ingredients</strong><small>Manage ingredients</small></span><span class="manage-chevron">›</span></button>
         </div>
       </section>
-
-      
-      
+      <header class="home-header"><div><div class="eyebrow">Pantry to Plate</div></div><div class="header-actions"><button class="header-profile-btn" id="openSettingsBtn" aria-label="Open settings"><span class="header-profile-name">${escapeHtml(currentUser?.username || "Settings")}</span><span class="header-profile-icon" aria-hidden="true">⚙</span></button></div></header>
     </div>`;
         document.getElementById("homePrevDay").onclick = () =>
           setLogDateView(shiftDateStr(logDate, -1));
