@@ -1376,7 +1376,9 @@
         line-height: 1.35;
         opacity: 0;
         pointer-events: none;
-        transition: opacity 0.12s ease, transform 0.12s ease;
+        transition:
+          opacity 0.12s ease,
+          transform 0.12s ease;
       }
       .history-tooltip::before {
         content: "";
@@ -1658,7 +1660,7 @@
           grid-template-columns: minmax(0, 1fr) 58px 48px;
         }
       }
-    
+
       .chip-group-header {
         position: relative;
         display: flex;
@@ -1695,6 +1697,7 @@
         border: 1px solid var(--line);
         border-radius: 10px;
         box-shadow: 0 8px 24px rgba(28, 42, 31, 0.12);
+        max-width: 40px;
       }
       .chip-group-menu.open {
         display: block;
@@ -1716,7 +1719,7 @@
         background: var(--surface-alt);
         outline: none;
       }
-</style>
+    </style>
   </head>
   <body>
     <div class="app-shell" id="app">
@@ -2223,7 +2226,8 @@
             <span>Meal</span>
             <button type="button" class="chip-group-menu-btn" data-chip-menu="meals" aria-label="Meal options" aria-expanded="false">⋯</button>
             <div class="chip-group-menu" data-chip-menu-panel="meals">
-              <button type="button" id="editMealsChipBtn" data-edit-food-menu="meals">Edit meals</button>
+              <button type="button" id="editMealsChipBtn" data-edit-food-menu="meals">✎ Edit meals</button>
+              <button type="button" id="newMealsChipBtn">+ Add meal</button>
             </div>
           </div>
             <div class="chip-list">
@@ -2246,7 +2250,9 @@
             <span>Snacks</span>
             <button type="button" class="chip-group-menu-btn" data-chip-menu="snacks" aria-label="Snack options" aria-expanded="false">⋯</button>
             <div class="chip-group-menu" data-chip-menu-panel="snacks">
-              <button type="button" id="editSnacksChipBtn" data-edit-food-menu="snacks">Edit snacks</button>
+              <button type="button" id="editSnacksChipBtn" data-edit-food-menu="snacks">✎ Edit snacks</button>
+              <button type="button" id="newSnackChipBtn">+ Add snack</button>
+              <button type="button" id="clearSnacksChipBtn">× Clear all</button>
             </div>
           </div>
             <div class="chip-list">
@@ -2266,15 +2272,13 @@
                       .join("")
                   : ""
               }
-              ${
-                (log.snacks || [])
-                  .filter((e) => e.custom)
-                  .map((e) => {
-                    const totalKcal = Math.round(e.kcal * e.qty);
-                    return `<div class="snack-stepper one-off" role="group" aria-label="${escapeHtml(e.name)} quantity"><button type="button" class="snack-stepper-control" data-decrement-custom-snack="${e.id}" aria-label="Remove one ${escapeHtml(e.name)}">−</button><span class="snack-stepper-label"><span>${e.qty} ${escapeHtml(e.name)}<span class="one-off-badge">1-off</span></span><span class="snack-stepper-kcal">${totalKcal.toLocaleString()} kcal</span></span><button type="button" class="snack-stepper-control" data-increment-custom-snack="${e.id}" aria-label="Add one ${escapeHtml(e.name)}">＋</button></div>`;
-                  })
-                  .join("")
-              }
+              ${(log.snacks || [])
+                .filter((e) => e.custom)
+                .map((e) => {
+                  const totalKcal = Math.round(e.kcal * e.qty);
+                  return `<div class="snack-stepper one-off" role="group" aria-label="${escapeHtml(e.name)} quantity"><button type="button" class="snack-stepper-control" data-decrement-custom-snack="${e.id}" aria-label="Remove one ${escapeHtml(e.name)}">−</button><span class="snack-stepper-label"><span>${e.qty} ${escapeHtml(e.name)}<span class="one-off-badge">1-off</span></span><span class="snack-stepper-kcal">${totalKcal.toLocaleString()} kcal</span></span><button type="button" class="snack-stepper-control" data-increment-custom-snack="${e.id}" aria-label="Add one ${escapeHtml(e.name)}">＋</button></div>`;
+                })
+                .join("")}
               ${!snacks.length && !(log.snacks || []).some((e) => e.custom) ? '<span class="empty-note">No snacks yet</span>' : ""}
               <button type="button" class="today-chip chip-add" id="addCustomSnackChip">＋ Custom</button>
             </div>
@@ -2292,7 +2296,10 @@
             .map((h) => {
               const intake = h.total || 0;
               const barHeight = h.hasLog
-                ? Math.max(5, Math.round((intake / historyScale) * historyBarHeight))
+                ? Math.max(
+                    5,
+                    Math.round((intake / historyScale) * historyBarHeight),
+                  )
                 : 0;
               const barClass =
                 intake > maintenanceCal
@@ -2303,9 +2310,12 @@
               const label = h.hasLog
                 ? `${prettyDate(h.date)}: ${intake.toLocaleString()} kcal logged, ${h.deficit >= 0 ? `${h.deficit.toLocaleString()} kcal deficit` : `${Math.abs(h.deficit).toLocaleString()} kcal surplus`}`
                 : `${prettyDate(h.date)}: Not logged`;
-              const weekday = parseISODate(h.date).toLocaleDateString(undefined, {
-                weekday: "narrow",
-              });
+              const weekday = parseISODate(h.date).toLocaleDateString(
+                undefined,
+                {
+                  weekday: "narrow",
+                },
+              );
               const isActive = h.date === logDate;
               const isToday = h.date === todayStr();
               return (
@@ -2335,7 +2345,7 @@
         <div class="manage-actions">
           <button class="manage-toggle" id="manageMealsBtn"><span><strong>Meals</strong><small>Manage meals</small></span><span class="manage-chevron">›</span></button>
           <button class="manage-toggle" id="manageSnacksBtn"><span><strong>Snacks</strong><small>Manage snacks</small></span><span class="manage-chevron">›</span></button>
-          <button class="manage-toggle" id="manageIngredientsBtn"><span><strong>Ingredients</strong><small>Manage ingredients</small></span><span class="manage-chevron">›</span></button>
+
         </div>
       </section>
       <header class="home-header"><div><div class="eyebrow">Pantry to Plate</div></div><div class="header-actions"><button class="header-profile-btn" id="openSettingsBtn" aria-label="Open settings"><span class="header-profile-name">${escapeHtml(currentUser?.username || "Settings")}</span><span class="header-profile-icon" aria-hidden="true">⚙</span></button></div></header>
@@ -2364,14 +2374,18 @@
         document.getElementById("openSettingsBtn").onclick = openSettingsModal;
         document.getElementById("editMealsChipBtn").onclick = () =>
           openFoodManager("meals");
+        document.getElementById("newMealsChipBtn").onclick = () =>
+          openMealEditor();
         document.getElementById("editSnacksChipBtn").onclick = () =>
           openFoodManager("snacks");
+        document.getElementById("newSnackChipBtn").onclick = () =>
+          openNewSnackModal();
+        document.getElementById("clearSnacksChipBtn").onclick = () =>
+          resetLogSnacks(logDate);
         document.getElementById("manageMealsBtn").onclick = () =>
           openFoodManager("meals");
         document.getElementById("manageSnacksBtn").onclick = () =>
           openFoodManager("snacks");
-        document.getElementById("manageIngredientsBtn").onclick = () =>
-          openFoodManager("ingredients");
         document.querySelectorAll("[data-chip-menu]").forEach((btn) => {
           btn.onclick = (e) => {
             e.stopPropagation();
@@ -2380,8 +2394,12 @@
               `[data-chip-menu-panel="${type}"]`,
             );
             const isOpen = panel?.classList.contains("open");
-            document.querySelectorAll(".chip-group-menu.open").forEach((p) => p.classList.remove("open"));
-            document.querySelectorAll("[data-chip-menu]").forEach((b) => b.setAttribute("aria-expanded", "false"));
+            document
+              .querySelectorAll(".chip-group-menu.open")
+              .forEach((p) => p.classList.remove("open"));
+            document
+              .querySelectorAll("[data-chip-menu]")
+              .forEach((b) => b.setAttribute("aria-expanded", "false"));
             if (panel && !isOpen) {
               panel.classList.add("open");
               btn.setAttribute("aria-expanded", "true");
@@ -2391,15 +2409,27 @@
         document.querySelectorAll("[data-edit-food-menu]").forEach((btn) => {
           btn.onclick = (e) => {
             e.stopPropagation();
-            document.querySelectorAll(".chip-group-menu.open").forEach((p) => p.classList.remove("open"));
-            document.querySelectorAll("[data-chip-menu]").forEach((b) => b.setAttribute("aria-expanded", "false"));
+            document
+              .querySelectorAll(".chip-group-menu.open")
+              .forEach((p) => p.classList.remove("open"));
+            document
+              .querySelectorAll("[data-chip-menu]")
+              .forEach((b) => b.setAttribute("aria-expanded", "false"));
             openFoodManager(btn.dataset.editFoodMenu);
           };
         });
-        document.addEventListener("click", () => {
-          document.querySelectorAll(".chip-group-menu.open").forEach((p) => p.classList.remove("open"));
-          document.querySelectorAll("[data-chip-menu]").forEach((b) => b.setAttribute("aria-expanded", "false"));
-        }, { once: false });
+        document.addEventListener(
+          "click",
+          () => {
+            document
+              .querySelectorAll(".chip-group-menu.open")
+              .forEach((p) => p.classList.remove("open"));
+            document
+              .querySelectorAll("[data-chip-menu]")
+              .forEach((b) => b.setAttribute("aria-expanded", "false"));
+          },
+          { once: false },
+        );
         const showAllBtn = document.getElementById("showAllHistoryBtn");
         if (showAllBtn) showAllBtn.onclick = openHistoryModal;
         document.querySelectorAll("[data-history-day]").forEach((btn) => {
@@ -2422,9 +2452,8 @@
         });
         const addCustomMealChip = document.getElementById("addCustomMealChip");
         if (addCustomMealChip) addCustomMealChip.onclick = openCustomMealModal;
-        const addCustomSnackChip = document.getElementById(
-          "addCustomSnackChip",
-        );
+        const addCustomSnackChip =
+          document.getElementById("addCustomSnackChip");
         if (addCustomSnackChip)
           addCustomSnackChip.onclick = openCustomSnackModal;
         document.querySelectorAll("[data-log-snack]").forEach((btn) => {
@@ -2475,17 +2504,19 @@
     <h2>${tab === "meals" ? "Meals" : tab === "snacks" ? "Snacks" : "Ingredients"}</h2>
     <div class="subtitle">Keep your saved foods tidy. Use this panel to edit meals, snacks, and ingredients.</div>
     <div class="manager-group" style="display:${tab === "meals" ? "flex" : "none"};flex-direction:column;gap:0;">
+      <button class="btn btn-secondary btn-full" id="manageIngredientsBtn">↪ Manage Ingredients</button>
       <button class="btn btn-primary btn-full" id="foodMgrAddMeal">＋ New meal</button>
       <input class="ing-search" id="foodMgrMealsSearch" type="search" placeholder="Search meals…" value="${escapeHtml(managerMealSearchTerm)}" />
       <div class="manager-list" id="foodMgrMeals"></div>
     </div>
     <div class="manager-group" style="display:${tab === "snacks" ? "flex" : "none"};flex-direction:column;gap:0;">
-      <button class="btn btn-secondary btn-full" id="foodMgrAddSnack">＋ New snack</button>
+      <button class="btn btn-primary btn-full" id="foodMgrAddSnack">＋ New snack</button>
       <input class="ing-search" id="foodMgrSnacksSearch" type="search" placeholder="Search snacks…" value="${escapeHtml(managerSnackSearchTerm)}" />
       <div class="manager-list" id="foodMgrSnacks"></div>
     </div>
     <div class="manager-group" style="display:${tab === "ingredients" ? "flex" : "none"};flex-direction:column;gap:0;">
-      <button class="btn btn-secondary btn-full" id="foodMgrAddIngredient">＋ New ingredient</button>
+      <button class="btn btn-secondary btn-full" id="backToMealsBtn">↩ Back to meals</button>
+      <button class="btn btn-primary btn-full" id="foodMgrAddIngredient">＋ New ingredient</button>
       <input class="ing-search" id="foodMgrIngredientsSearch" type="search" placeholder="Search ingredients…" value="${escapeHtml(managerIngredientSearchTerm)}" />
       <div class="manager-list" id="foodMgrIngredients"></div>
     </div>`;
@@ -2576,6 +2607,14 @@
           closeTransferModal();
           openIngredientEditor(undefined, "foodManager");
         };
+        document.getElementById("manageIngredientsBtn").onclick = () => {
+          closeTransferModal();
+          openFoodManager("ingredients");
+        };
+        document.getElementById("backToMealsBtn").onclick = () => {
+          closeTransferModal();
+          openFoodManager("meals");
+        };
         const mealsSearchInput = document.getElementById("foodMgrMealsSearch");
         if (mealsSearchInput) {
           mealsSearchInput.addEventListener("input", (e) => {
@@ -2602,22 +2641,28 @@
           });
         }
         document.getElementById("foodMgrAddSnack").onclick = () => {
-          modal.innerHTML = `<button class="drawer-close" id="snackCreateClose" aria-label="Close">×</button><h2>New snack</h2><div class="auth-field"><label>Name</label><input id="newSnackMgrName" placeholder="e.g. Apple"></div><div class="auth-field"><label>Calories</label><input id="newSnackMgrKcal" type="number" min="0" step="1" placeholder="95"></div><button class="btn btn-primary primary-wide" id="saveNewSnackMgr">Add snack</button>`;
-          document.getElementById("snackCreateClose").onclick = () =>
-            openFoodManager(foodManagerTab);
-          document.getElementById("saveNewSnackMgr").onclick = async () => {
-            const name = document
-              .getElementById("newSnackMgrName")
-              .value.trim();
-            const kcal = parseFloat(
-              document.getElementById("newSnackMgrKcal").value,
-            );
-            if (!name || !Number.isFinite(kcal) || kcal < 0) return;
-            await addSnack(name, kcal);
-            openFoodManager(foodManagerTab);
-          };
+          openNewSnackModal();
         };
         render();
+      }
+
+      function openNewSnackModal(foodManagerTab = "snacks") {
+        transferModalOpen = true;
+        const modal = document.getElementById("transferModal");
+        document.getElementById("transferModalBackdrop").classList.add("open");
+        modal.innerHTML = `<button class="drawer-close" id="snackCreateClose" aria-label="Close">×</button><h2>New snack</h2><div class="auth-field"><label>Name</label><input id="newSnackMgrName" placeholder="e.g. Apple"></div><div class="auth-field"><label>Calories</label><input id="newSnackMgrKcal" type="number" min="0" step="1" placeholder="95"></div><button class="btn btn-primary primary-wide" id="saveNewSnackMgr">Add snack</button>`;
+        document.getElementById("snackCreateClose").onclick = () =>
+          openFoodManager(foodManagerTab);
+        document.getElementById("saveNewSnackMgr").onclick = async () => {
+          const name = document.getElementById("newSnackMgrName").value.trim();
+          const kcal = parseFloat(
+            document.getElementById("newSnackMgrKcal").value,
+          );
+          if (!name || !Number.isFinite(kcal) || kcal < 0) return;
+          await addSnack(name, kcal);
+          openFoodManager(foodManagerTab);
+        };
+        renderApp();
       }
 
       function openSnackEditor(editId) {
@@ -2711,7 +2756,8 @@
         const modal = document.getElementById("transferModal");
         modal.innerHTML = `<button class="drawer-close" id="customSnackClose" aria-label="Close">×</button><h2>Custom snack</h2><div class="subtitle">A one-off bite for today — logged just this once unless you save it.</div><div class="auth-field"><label>Name (optional)</label><input id="customSnackName" placeholder="e.g. Bite of cake"></div><div class="auth-field"><label>Calories</label><input id="customSnackKcal" type="number" min="0" step="1" placeholder="80"></div><div class="chip-list" id="customSnackQuickAmounts" style="margin-top:2px;"><button type="button" class="today-chip chip-add" data-quick-kcal="50">+50</button><button type="button" class="today-chip chip-add" data-quick-kcal="100">+100</button><button type="button" class="today-chip chip-add" data-quick-kcal="150">+150</button><button type="button" class="today-chip chip-add" data-quick-kcal="250">+250</button></div><label class="settings-row" style="margin-top:14px;cursor:pointer;"><span>Save to My Snacks</span><input type="checkbox" id="saveCustomSnackToMy"></label><button class="btn btn-primary primary-wide" id="saveCustomSnack">Add for today</button>`;
         document.getElementById("transferModalBackdrop").classList.add("open");
-        document.getElementById("customSnackClose").onclick = closeTransferModal;
+        document.getElementById("customSnackClose").onclick =
+          closeTransferModal;
         modal.querySelectorAll("[data-quick-kcal]").forEach((btn) => {
           btn.onclick = () => {
             document.getElementById("customSnackKcal").value =
@@ -3495,6 +3541,15 @@
           },
         });
       }
+
+      async function resetLogSnacks(dateStr) {
+        const log = ensureLog(dateStr);
+        if (!log.snacks || !log.snacks.length) return;
+        log.snacks = [];
+        await saveData();
+        refreshLog();
+      }
+
       async function setLogDateView(dateStr) {
         logDate = dateStr;
         renderApp();
