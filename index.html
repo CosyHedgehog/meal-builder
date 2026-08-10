@@ -891,6 +891,41 @@
       .today-chip:hover {
         background: var(--surface-alt);
       }
+      .snack-stepper {
+        display: inline-flex;
+        align-items: stretch;
+        min-height: 28px;
+        overflow: hidden;
+        border: 1px solid var(--green);
+        border-radius: 999px;
+        background: var(--green);
+        color: #fff;
+        box-shadow: 0 2px 7px rgba(63, 107, 74, 0.18);
+      }
+      .snack-stepper-control {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 26px;
+        padding: 0 5px;
+        background: transparent;
+        color: inherit;
+        font-size: 16px;
+        line-height: 1;
+        transition: background 0.15s ease;
+      }
+      .snack-stepper-control:hover {
+        background: rgba(255, 255, 255, 0.16);
+      }
+      .snack-stepper-label {
+        display: inline-flex;
+        align-items: center;
+        padding: 0 7px;
+        border-inline: 1px solid rgba(255, 255, 255, 0.28);
+        font-size: 10px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
       .manage-actions {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -1950,9 +1985,10 @@
                         const entry = (log.snacks || []).find(
                           (e) => e.snackId === s.id,
                         );
-                        const qtyLabel =
-                          entry && entry.qty > 1 ? ` ×${entry.qty}` : "";
-                        return `<button type="button" class="today-chip${entry ? " active" : ""}" data-log-snack="${s.id}">${escapeHtml(s.name)}${qtyLabel}</button>`;
+                        if (!entry) {
+                          return `<button type="button" class="today-chip" data-log-snack="${s.id}" aria-label="Add ${escapeHtml(s.name)}">＋ ${escapeHtml(s.name)}</button>`;
+                        }
+                        return `<div class="snack-stepper" role="group" aria-label="${escapeHtml(s.name)} quantity"><button type="button" class="snack-stepper-control" data-decrement-snack="${s.id}" aria-label="Remove one ${escapeHtml(s.name)}">−</button><span class="snack-stepper-label">${entry.qty} ${escapeHtml(s.name)}</span><button type="button" class="snack-stepper-control" data-increment-snack="${s.id}" aria-label="Add one ${escapeHtml(s.name)}">＋</button></div>`;
                       })
                       .join("")
                   : '<span class="empty-note">No snacks yet</span>'
@@ -2064,6 +2100,21 @@
         });
         document.querySelectorAll("[data-log-snack]").forEach((btn) => {
           btn.onclick = () => addLogSnack(logDate, btn.dataset.logSnack, 1);
+        });
+        document.querySelectorAll("[data-increment-snack]").forEach((btn) => {
+          btn.onclick = () =>
+            addLogSnack(logDate, btn.dataset.incrementSnack, 1);
+        });
+        document.querySelectorAll("[data-decrement-snack]").forEach((btn) => {
+          btn.onclick = () => {
+            const snackId = btn.dataset.decrementSnack;
+            const entry = (getLog(logDate).snacks || []).find(
+              (item) => item.snackId === snackId,
+            );
+            if (!entry) return;
+            if (entry.qty <= 1) removeLogSnack(logDate, snackId);
+            else updateLogSnackQty(logDate, snackId, entry.qty - 1);
+          };
         });
         const resetSnacksBtn = document.getElementById("resetSnacksBtn");
         if (resetSnacksBtn)
