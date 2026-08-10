@@ -361,7 +361,7 @@
         align-items: center;
         padding: 0 0 6px;
         color: var(--ink-muted);
-        font-size: 10px;
+        font-size: 12px;
         text-transform: uppercase;
         letter-spacing: 0.06em;
       }
@@ -1200,64 +1200,144 @@
         grid-template-columns: repeat(14, minmax(0, 1fr));
         gap: 8px;
         margin-top: 16px;
+        position: relative;
       }
       .history-day {
-        aspect-ratio: 1/1;
         width: 100%;
-        display: flex;
-        flex-direction: column;
+        height: 132px;
+        display: grid;
+        grid-template-rows: 108px 18px;
         align-items: center;
-        justify-content: center;
-        padding: 10px;
-        border-radius: 16px;
-        border: 1px solid var(--line);
-        background: var(--surface-alt);
+        padding: 0;
+        border: none;
+        background: transparent;
         color: var(--ink);
         transition:
           transform 0.18s ease,
-          opacity 0.18s ease,
-          box-shadow 0.18s ease,
-          border-color 0.18s ease;
+          opacity 0.18s ease;
         position: relative;
-        min-height: 58px;
         cursor: pointer;
       }
       .history-day:hover {
         transform: translateY(-1px);
-        box-shadow: 0 6px 14px rgba(28, 42, 31, 0.08);
+        z-index: 4;
       }
       .history-day:focus-visible {
         outline: 2px solid var(--green);
         outline-offset: 2px;
+        border-radius: 6px;
+        z-index: 4;
       }
-      .history-day.active {
-        border-color: var(--green);
-        box-shadow:
-          inset 0 0 0 1px rgba(63, 107, 74, 0.18),
-          0 4px 10px rgba(28, 42, 31, 0.06);
+      .history-bar-area {
+        width: 100%;
+        height: 108px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
       }
-      .history-day[data-has-log="false"] {
-        opacity: 0.35;
-        border-color: rgba(28, 42, 31, 0.08);
+      .history-bar {
+        width: 12px;
+        min-height: 5px;
+        border-radius: 6px 6px 2px 2px;
+        background: var(--green-light);
+        transition: height 0.2s ease;
+      }
+      .history-bar.at-goal {
+        background: var(--green);
+      }
+      .history-bar.over-goal {
+        background: #d98970;
+      }
+      .history-empty-bar {
+        width: 6px;
+        height: 32px;
+        border-radius: 999px;
+        background: #f0f0f0;
+      }
+      .history-goal-line {
+        position: absolute;
+        z-index: 1;
+        left: 0;
+        right: 0;
+        height: 0;
+        border-top: 1px dashed rgba(28, 42, 31, 0.32);
+        pointer-events: none;
+      }
+      .history-goal-line span {
+        position: absolute;
+        left: 0;
+        top: -15px;
+        padding-right: 4px;
         background: var(--surface);
+        color: var(--ink-muted);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
       }
       .history-day-label {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        padding: 2px 0;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.22);
-        font-size: 12px;
-        font-weight: 700;
-        color: var(--ink);
-        margin-bottom: 4px;
-      }
-      .history-day-value {
+        position: relative;
+        margin-top: 8px;
         font-size: 12px;
         font-weight: 600;
-        color: var(--ink);
+        line-height: 12px;
+        color: var(--ink-muted);
+      }
+      .history-day.today .history-day-label {
+        color: var(--green);
+        font-weight: 700;
+      }
+      .history-day.today .history-day-label::after {
+        content: "";
+        position: absolute;
+        width: 5px;
+        height: 5px;
+        left: 50%;
+        bottom: -7px;
+        transform: translateX(-50%);
+        border-radius: 50%;
+        background: var(--green);
+      }
+      .history-tooltip {
+        position: absolute;
+        z-index: 3;
+        left: 50%;
+        top: auto;
+        bottom: calc(24px + var(--bar-height, 32px) + 8px);
+        width: max-content;
+        max-width: 150px;
+        transform: translate(-50%, 4px);
+        padding: 6px 8px;
+        border-radius: 7px;
+        background: var(--ink);
+        color: #fff;
+        font-size: 10px;
+        line-height: 1.35;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.12s ease, transform 0.12s ease;
+      }
+      .history-tooltip::before {
+        content: "";
+        position: absolute;
+        bottom: -4px;
+        left: 50%;
+        width: 8px;
+        height: 8px;
+        transform: translateX(-50%) rotate(45deg);
+        background: var(--ink);
+      }
+      .history-day:hover .history-tooltip,
+      .history-day:focus-visible .history-tooltip {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+      .history-day:last-child .history-tooltip {
+        transform: translate(-80%, 4px);
+      }
+      .history-day:last-child:hover .history-tooltip,
+      .history-day:last-child:focus-visible .history-tooltip {
+        transform: translate(-80%, 0);
       }
       .history-footer {
         margin-top: 14px;
@@ -1265,6 +1345,13 @@
         justify-content: space-between;
         font-size: 13px;
         color: var(--ink-muted);
+      }
+      .history-average strong {
+        color: var(--ink);
+        font-weight: 700;
+      }
+      .history-footer .btn {
+        padding: 6px 16px;
       }
 
       .today-status {
@@ -1968,8 +2055,16 @@
           deficit = logDeficit(log);
         const historyDays = getHistoryDaysForViewport();
         const gridColumns = historyDays;
-        const hist = computeHistory(historyDays),
-          max = Math.max(100, ...hist.map((h) => Math.abs(h.deficit)));
+        const hist = computeHistory(historyDays);
+        const historyBarHeight = 108;
+        const historyScale = Math.max(
+          maintenanceCal,
+          1,
+          ...hist.filter((h) => h.hasLog).map((h) => h.total),
+        );
+        const goalLineBottom = Math.round(
+          24 + (maintenanceCal / historyScale) * historyBarHeight,
+        );
         const mealK = logMealKcal(log),
           snackK = logSnacksKcal(log),
           totalK = mealK + snackK;
@@ -2051,23 +2146,32 @@
           <div><h2>History</h2><div class="muted">Last ${historyDays} days</div></div>
         </div>
         <div class="history-grid" style="grid-template-columns:repeat(${gridColumns},minmax(0,1fr));">
+          <div class="history-goal-line" style="bottom:${goalLineBottom}px"><span>${maintenanceCal.toLocaleString()} Maintenance</span></div>
           ${hist
             .map((h) => {
-              const color = h.hasLog
-                ? historyHeatColor(h.deficit, max)
-                : "var(--surface-alt)";
+              const intake = h.total || 0;
+              const barHeight = h.hasLog
+                ? Math.max(5, Math.round((intake / historyScale) * historyBarHeight))
+                : 0;
+              const barClass =
+                intake > maintenanceCal
+                  ? "over-goal"
+                  : intake === maintenanceCal
+                    ? "at-goal"
+                    : "";
               const label = h.hasLog
-                ? `${prettyDate(h.date)}: ${h.deficit >= 0 ? `${h.deficit} deficit` : `${Math.abs(h.deficit)} surplus`}`
-                : "Not logged";
-              const valueText = h.hasLog
-                ? h.deficit >= 0
-                  ? `${h.deficit}`
-                  : `-${Math.abs(h.deficit)}`
-                : "";
+                ? `${prettyDate(h.date)}: ${intake.toLocaleString()} kcal logged, ${h.deficit >= 0 ? `${h.deficit.toLocaleString()} kcal deficit` : `${Math.abs(h.deficit).toLocaleString()} kcal surplus`}`
+                : `${prettyDate(h.date)}: Not logged`;
+              const weekday = parseISODate(h.date).toLocaleDateString(undefined, {
+                weekday: "narrow",
+              });
               const isActive = h.date === logDate;
+              const isToday = h.date === todayStr();
               return (
-                `<button type="button" class="history-day${isActive ? " active" : ""}" title="${escapeHtml(label)}" data-history-day="${h.date}" data-has-log="${h.hasLog ? "true" : "false"}" style="background:${color};" aria-label="Load ${escapeHtml(prettyDate(h.date))}">` +
-                `${valueText ? `<span class="history-day-value">${valueText}</span>` : ""}` +
+                `<button type="button" class="history-day${isActive ? " active" : ""}${isToday ? " today" : ""}" title="${escapeHtml(label)}" data-history-day="${h.date}" data-has-log="${h.hasLog ? "true" : "false"}" style="--bar-height:${h.hasLog ? barHeight : 32}px" aria-label="Load ${escapeHtml(label)}">` +
+                `<span class="history-bar-area">${h.hasLog ? `<span class="history-bar ${barClass}" style="height:${barHeight}px"></span>` : '<span class="history-empty-bar"></span>'}</span>` +
+                `<span class="history-day-label">${weekday}</span>` +
+                `<span class="history-tooltip" role="tooltip">${escapeHtml(prettyDate(h.date))}<br>${h.hasLog ? `${intake.toLocaleString()} kcal logged` : "Not logged"}</span>` +
                 `</button>`
               );
             })
@@ -2075,12 +2179,12 @@
         </div>
         <div class="history-footer">
           <span>${hist.filter((h) => h.hasLog).length} days logged</span>
-          <span>${(() => {
+          <span class="history-average">${(() => {
             const a = hist.filter((h) => h.hasLog),
               d = a.length
                 ? Math.round(a.reduce((s, h) => s + h.deficit, 0) / a.length)
                 : 0;
-            return `${d >= 0 ? "−" : "+"}${Math.abs(d).toLocaleString()} avg / day`;
+            return `<strong>${Math.abs(d).toLocaleString()} kcal</strong> avg ${d >= 0 ? "deficit" : "surplus"}`;
           })()}</span>
           <button class="btn btn-secondary" id="showAllHistoryBtn">Show all</button>
         </div>
