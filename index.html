@@ -8,6 +8,23 @@
       rel="icon"
       href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍋</text></svg>"
     />
+    <meta name="theme-color" content="#f3f5ee" id="themeColorMeta" />
+    <script>
+      (function () {
+        var stored = null;
+        try {
+          stored = localStorage.getItem("theme");
+        } catch (e) {}
+        var theme =
+          stored === "dark" || stored === "light"
+            ? stored
+            : window.matchMedia &&
+                window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+        document.documentElement.setAttribute("data-theme", theme);
+      })();
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap");
@@ -27,10 +44,43 @@
         --red: #c1442c;
         --red-soft: #f7e1da;
         --radius: 16px;
+        --shadow-rgb: 28, 42, 31;
+        --backdrop-rgb: 20, 28, 20;
+        --history-empty: #f0f0f0;
+        --history-over: #d98970;
+        --green-strong: #2f623f;
+      }
+
+      [data-theme="dark"] {
+        --bg: #10150f;
+        --surface: #1a201a;
+        --surface-alt: #232b22;
+        --ink: #eef1ea;
+        --ink-muted: #93a08d;
+        --line: #313b30;
+        --green: #5fac6f;
+        --green-light: #85c98f;
+        --green-soft: #1c2b1f;
+        --orange: #e39a5c;
+        --orange-soft: #33261a;
+        --red: #e07b64;
+        --red-soft: #35201c;
+        --shadow-rgb: 0, 0, 0;
+        --backdrop-rgb: 0, 0, 0;
+        --history-empty: #262f25;
+        --history-over: #c17457;
+        --green-strong: #4a8f5a;
       }
 
       * {
         box-sizing: border-box;
+      }
+      html {
+        background: var(--bg);
+        color-scheme: light;
+      }
+      html[data-theme="dark"] {
+        color-scheme: dark;
       }
       body {
         margin: 0;
@@ -38,6 +88,9 @@
         color: var(--ink);
         font-family: "Inter", sans-serif;
         -webkit-font-smoothing: antialiased;
+        transition:
+          background 0.2s ease,
+          color 0.2s ease;
       }
       h1,
       h2,
@@ -103,8 +156,8 @@
       }
       .header-profile-btn:hover {
         background: var(--surface-alt);
-        border-color: rgba(28, 42, 31, 0.12);
-        box-shadow: 0 2px 8px rgba(28, 42, 31, 0.06);
+        border-color: rgba(var(--shadow-rgb), 0.12);
+        box-shadow: 0 2px 8px rgba(var(--shadow-rgb), 0.06);
       }
       .header-profile-name {
         font-size: 13px;
@@ -203,7 +256,7 @@
       .backdrop {
         position: fixed;
         inset: 0;
-        background: rgba(20, 28, 20, 0.32);
+        background: rgba(var(--backdrop-rgb), 0.32);
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.18s ease;
@@ -222,7 +275,7 @@
         width: 400px;
         max-width: 92vw;
         background: var(--bg);
-        box-shadow: -12px 0 30px rgba(20, 28, 20, 0.14);
+        box-shadow: -12px 0 30px rgba(var(--backdrop-rgb), 0.14);
         transform: translateX(100%);
         transition: transform 0.22s ease;
         z-index: 21;
@@ -421,7 +474,7 @@
       .modal-backdrop {
         position: fixed;
         inset: 0;
-        background: rgba(20, 28, 20, 0.32);
+        background: rgba(var(--backdrop-rgb), 0.32);
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.18s ease;
@@ -617,7 +670,7 @@
         border: 1px solid var(--line);
         border-radius: 20px;
         padding: 30px;
-        box-shadow: 0 14px 40px rgba(28, 42, 31, 0.08);
+        box-shadow: 0 14px 40px rgba(var(--shadow-rgb), 0.08);
       }
       .auth-card h1 {
         font-size: 30px;
@@ -646,7 +699,7 @@
       .auth-tab.active {
         background: var(--surface);
         color: var(--ink);
-        box-shadow: 0 1px 4px rgba(28, 42, 31, 0.08);
+        box-shadow: 0 1px 4px rgba(var(--shadow-rgb), 0.08);
       }
       .auth-field {
         margin-bottom: 12px;
@@ -756,7 +809,7 @@
       }
       .icon-btn:hover {
         background: var(--surface-alt);
-        border-color: rgba(28, 42, 31, 0.12);
+        border-color: rgba(var(--shadow-rgb), 0.12);
       }
       .header-username {
         font-size: 13px;
@@ -771,7 +824,7 @@
         border: 1px solid var(--line);
         border-radius: 20px;
         padding: 12px 20px 10px 12px;
-        box-shadow: 1px 2px 8px rgba(21, 31, 23, 0.06);
+        box-shadow: 1px 2px 8px rgba(var(--shadow-rgb), 0.06);
       }
       .today-top {
         display: flex;
@@ -935,9 +988,9 @@
         color: #fff;
       }
       .today-chip.active:hover {
-        background: #2f623f;
+        background: var(--green-strong);
         color: #fff;
-        border-color: #2f623f;
+        border-color: var(--green-strong);
       }
       .today-chip:hover {
         background: var(--surface-alt);
@@ -1137,6 +1190,45 @@
         font-family: "IBM Plex Mono", monospace;
         text-align: right;
       }
+      .theme-switch {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        width: 46px;
+        height: 27px;
+        flex-shrink: 0;
+        border-radius: 999px;
+        border: none;
+        background: var(--surface-alt);
+        box-shadow: inset 0 0 0 1px var(--line);
+        cursor: pointer;
+        padding: 0;
+        transition: background 0.18s ease;
+      }
+      .theme-switch[aria-checked="true"] {
+        background: var(--green);
+        box-shadow: inset 0 0 0 1px var(--green);
+      }
+      .theme-switch-knob {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 21px;
+        height: 21px;
+        border-radius: 50%;
+        background: var(--surface);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        line-height: 1;
+        box-shadow: 0 1px 3px rgba(var(--shadow-rgb), 0.3);
+        transform: translateX(0);
+        transition: transform 0.18s ease;
+      }
+      .theme-switch[aria-checked="true"] .theme-switch-knob {
+        transform: translateX(19px);
+      }
       @media (min-width: 700px) {
         .app-shell {
           max-width: 760px;
@@ -1227,7 +1319,7 @@
       }
       .manage-toggle:hover {
         background: var(--surface-alt);
-        border-color: rgba(28, 42, 31, 0.12);
+        border-color: rgba(var(--shadow-rgb), 0.12);
       }
       .manage-toggle strong {
         display: block;
@@ -1300,13 +1392,13 @@
         background: var(--green);
       }
       .history-bar.over-goal {
-        background: #d98970;
+        background: var(--history-over);
       }
       .history-empty-bar {
         width: 6px;
         height: 32px;
         border-radius: 999px;
-        background: #f0f0f0;
+        background: var(--history-empty);
       }
       .history-goal-line {
         position: absolute;
@@ -1314,7 +1406,7 @@
         left: 0;
         right: 0;
         height: 0;
-        border-top: 1px dashed rgba(28, 42, 31, 0.32);
+        border-top: 1px dashed rgba(var(--shadow-rgb), 0.32);
         pointer-events: none;
       }
       .history-goal-line span {
@@ -1697,7 +1789,7 @@
         background: var(--surface);
         border: 1px solid var(--line);
         border-radius: 10px;
-        box-shadow: 0 8px 24px rgba(28, 42, 31, 0.12);
+        box-shadow: 0 8px 24px rgba(var(--shadow-rgb), 0.12);
         max-width: 40px;
       }
       .chip-group-menu.open {
@@ -1758,6 +1850,22 @@
     </div>
 
     <script>
+      /* ===================== Theme ===================== */
+      function getTheme() {
+        return document.documentElement.getAttribute("data-theme") === "dark"
+          ? "dark"
+          : "light";
+      }
+      function setTheme(theme) {
+        document.documentElement.setAttribute("data-theme", theme);
+        try {
+          localStorage.setItem("theme", theme);
+        } catch (e) {}
+        const meta = document.getElementById("themeColorMeta");
+        if (meta) meta.setAttribute("content", theme === "dark" ? "#10150f" : "#f3f5ee");
+      }
+      setTheme(getTheme());
+
       /* ===================== Data ===================== */
       const DEFAULT_MAINTENANCE = 2200;
 
@@ -2115,20 +2223,14 @@
       function historyHeatColor(deficit, max) {
         if (!Number.isFinite(deficit) || max <= 0) return "var(--surface-alt)";
         const intensity = Math.min(1, Math.abs(deficit) / max);
-        const greenShades = [
-          "#edf6ec",
-          "#d7ebd7",
-          "#bde1bc",
-          "#8fcf8d",
-          "#5c9f5b",
-        ];
-        const redShades = [
-          "#f9e5e1",
-          "#f3c7be",
-          "#eb9b8f",
-          "#e16661",
-          "#b63d38",
-        ];
+        const isDark =
+          document.documentElement.getAttribute("data-theme") === "dark";
+        const greenShades = isDark
+          ? ["#1c2b1f", "#20372a", "#2a4a34", "#3a6b45", "#4c8f57"]
+          : ["#edf6ec", "#d7ebd7", "#bde1bc", "#8fcf8d", "#5c9f5b"];
+        const redShades = isDark
+          ? ["#2f221f", "#3d2a24", "#5a3129", "#813a2c", "#a7402c"]
+          : ["#f9e5e1", "#f3c7be", "#eb9b8f", "#e16661", "#b63d38"];
         const idx = Math.min(
           greenShades.length - 1,
           Math.floor(intensity * greenShades.length),
@@ -2713,7 +2815,8 @@
       function openSettingsModal() {
         transferModalOpen = true;
         const modal = document.getElementById("transferModal");
-        modal.innerHTML = `<button class="drawer-close" id="settingsClose" aria-label="Close">×</button><h2>Settings</h2><div class="subtitle">A couple of account and app settings.</div><div class="section-label">Daily maintenance</div><div class="settings-row"><label>Calories</label><input id="settingsMaintenanceInput" type="number" min="1" step="10" value="${maintenanceCal}"></div><button class="btn btn-primary primary-wide" id="settingsSave">Save settings</button><button class="btn btn-secondary primary-wide" id="transferDataBtn" style="margin-top:10px;">Import / export data</button><button class="btn btn-secondary primary-wide" id="signOutBtnInSettings" style="margin-top:10px;">Log out</button>`;
+        const isDark = getTheme() === "dark";
+        modal.innerHTML = `<button class="drawer-close" id="settingsClose" aria-label="Close">×</button><h2>Settings</h2><div class="subtitle">A couple of account and app settings.</div><div class="section-label">Daily maintenance</div><div class="settings-row"><label>Calories</label><input id="settingsMaintenanceInput" type="number" min="1" step="10" value="${maintenanceCal}"></div><div class="section-label" style="margin-top:16px;">Appearance</div><div class="settings-row"><label>Dark mode</label><button type="button" class="theme-switch" id="themeToggle" role="switch" aria-checked="${isDark}" aria-label="Toggle dark mode"><span class="theme-switch-knob">${isDark ? "🌙" : "☀️"}</span></button></div><button class="btn btn-primary primary-wide" id="settingsSave" style="margin-top:14px;">Save settings</button><button class="btn btn-secondary primary-wide" id="transferDataBtn" style="margin-top:10px;">Import / export data</button><button class="btn btn-secondary primary-wide" id="signOutBtnInSettings" style="margin-top:10px;">Log out</button>`;
         document.getElementById("transferModalBackdrop").classList.add("open");
         document.getElementById("settingsClose").onclick = closeTransferModal;
         document.getElementById("settingsSave").onclick = async () => {
@@ -2729,6 +2832,15 @@
         document.getElementById("signOutBtnInSettings").onclick = async () => {
           closeTransferModal();
           await signOut();
+        };
+        document.getElementById("themeToggle").onclick = (e) => {
+          const next = getTheme() === "dark" ? "light" : "dark";
+          setTheme(next);
+          const btn = e.currentTarget;
+          btn.setAttribute("aria-checked", next === "dark");
+          btn.querySelector(".theme-switch-knob").textContent =
+            next === "dark" ? "🌙" : "☀️";
+          renderApp();
         };
       }
 
