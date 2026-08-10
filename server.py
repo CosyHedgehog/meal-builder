@@ -120,6 +120,9 @@ def serve_static_file(handler, full_path, content_type):
     handler.send_response(200)
     handler.send_header('Content-Type', content_type)
     handler.send_header('Content-Length', str(len(body)))
+    # Dev server: never let the browser cache these, so edits to css/js
+    # show up on the next reload instead of being served from cache.
+    # handler.send_header('Cache-Control', 'no-store')
     handler.end_headers()
     handler.wfile.write(body)
 
