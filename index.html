@@ -932,6 +932,41 @@
       .today-chip.active .chip-kcal {
         color: rgba(255, 255, 255, 0.72);
       }
+      .today-chip.chip-add {
+        border-style: dashed;
+        color: var(--ink-muted);
+        background: transparent;
+      }
+      .today-chip.chip-add:hover {
+        color: var(--ink);
+        border-color: var(--ink-muted);
+      }
+      .today-chip.one-off {
+        border-style: dashed;
+      }
+      .today-chip.one-off .chip-kcal {
+        font-style: italic;
+      }
+      .one-off-badge {
+        display: inline-block;
+        margin-left: 5px;
+        padding: 0 5px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.22);
+        font-size: 8px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        vertical-align: middle;
+      }
+      .today-chip:not(.active) .one-off-badge {
+        background: var(--surface-alt);
+        color: var(--ink-muted);
+      }
+      .snack-stepper.one-off {
+        border-style: dashed;
+        filter: brightness(0.92) saturate(1.15);
+      }
       .snack-stepper {
         display: inline-flex;
         align-items: stretch;
@@ -2113,7 +2148,7 @@
                       .join("")
                   : '<span class="empty-note">No meals yet</span>'
               }
-              ${log.mode === "custom" ? `<button type="button" class="today-chip active" data-select-meal="custom"><span>${escapeHtml(log.manualMealName || "Custom")}</span><span class="chip-kcal">· ${Math.round(log.manualMealKcal || 0).toLocaleString()} kcal</span></button>` : ""}
+              ${log.mode === "custom" ? `<button type="button" class="today-chip active one-off" data-select-meal="custom"><span>${escapeHtml(log.manualMealName || "Custom")}<span class="one-off-badge">1-off</span></span><span class="chip-kcal">· ${Math.round(log.manualMealKcal || 0).toLocaleString()} kcal</span></button>` : `<button type="button" class="today-chip chip-add" id="addCustomMealChip">＋ Custom meal</button>`}
             </div>
           </div>
           <div class="chip-group">
@@ -2133,8 +2168,19 @@
                         return `<div class="snack-stepper" role="group" aria-label="${escapeHtml(s.name)} quantity"><button type="button" class="snack-stepper-control" data-decrement-snack="${s.id}" aria-label="Remove one ${escapeHtml(s.name)}">−</button><span class="snack-stepper-label"><span>${entry.qty} ${escapeHtml(s.name)}</span><span class="snack-stepper-kcal">${snackTotalKcal.toLocaleString()} kcal</span></span><button type="button" class="snack-stepper-control" data-increment-snack="${s.id}" aria-label="Add one ${escapeHtml(s.name)}">＋</button></div>`;
                       })
                       .join("")
-                  : '<span class="empty-note">No snacks yet</span>'
+                  : ""
               }
+              ${
+                (log.snacks || [])
+                  .filter((e) => e.custom)
+                  .map((e) => {
+                    const totalKcal = Math.round(e.kcal * e.qty);
+                    return `<div class="snack-stepper one-off" role="group" aria-label="${escapeHtml(e.name)} quantity"><button type="button" class="snack-stepper-control" data-decrement-custom-snack="${e.id}" aria-label="Remove one ${escapeHtml(e.name)}">−</button><span class="snack-stepper-label"><span>${e.qty} ${escapeHtml(e.name)}<span class="one-off-badge">1-off</span></span><span class="snack-stepper-kcal">${totalKcal.toLocaleString()} kcal</span></span><button type="button" class="snack-stepper-control" data-increment-custom-snack="${e.id}" aria-label="Add one ${escapeHtml(e.name)}">＋</button></div>`;
+                  })
+                  .join("")
+              }
+              ${!snacks.length && !(log.snacks || []).some((e) => e.custom) ? '<span class="empty-note">No snacks yet</span>' : ""}
+              <button type="button" class="today-chip chip-add" id="addCustomSnackChip">＋ Custom</button>
             </div>
           </div>
         </div>
@@ -2237,16 +2283,7 @@
           btn.onclick = async () => {
             const mealId = btn.dataset.selectMeal;
             if (mealId === "custom") {
-              const name = prompt(
-                "Custom meal name",
-                log.manualMealName || "Custom meal",
-              );
-              if (name === null) return;
-              const kcal = parseFloat(
-                prompt("Custom meal calories", log.manualMealKcal || 0),
-              );
-              if (Number.isFinite(kcal))
-                await setManualMeal(logDate, name.trim(), kcal);
+              openCustomMealModal();
               return;
             }
             if (log.mode === "meal" && log.mealId === mealId) {
@@ -2257,6 +2294,13 @@
             }
           };
         });
+        const addCustomMealChip = document.getElementById("addCustomMealChip");
+        if (addCustomMealChip) addCustomMealChip.onclick = openCustomMealModal;
+        const addCustomSnackChip = document.getElementById(
+          "addCustomSnackChip",
+        );
+        if (addCustomSnackChip)
+          addCustomSnackChip.onclick = openCustomSnackModal;
         document.querySelectorAll("[data-log-snack]").forEach((btn) => {
           btn.onclick = () => addLogSnack(logDate, btn.dataset.logSnack, 1);
         });
@@ -2275,6 +2319,24 @@
             else updateLogSnackQty(logDate, snackId, entry.qty - 1);
           };
         });
+        document
+          .querySelectorAll("[data-increment-custom-snack]")
+          .forEach((btn) => {
+            btn.onclick = () =>
+              incrementCustomLogSnack(
+                logDate,
+                btn.dataset.incrementCustomSnack,
+              );
+          });
+        document
+          .querySelectorAll("[data-decrement-custom-snack]")
+          .forEach((btn) => {
+            btn.onclick = () =>
+              decrementCustomLogSnack(
+                logDate,
+                btn.dataset.decrementCustomSnack,
+              );
+          });
         setSaveStatus("ok");
       }
 
@@ -2487,6 +2549,66 @@
         document.getElementById("signOutBtnInSettings").onclick = async () => {
           closeTransferModal();
           await signOut();
+        };
+      }
+
+      function openCustomMealModal() {
+        const log = ensureLog(logDate);
+        transferModalOpen = true;
+        const modal = document.getElementById("transferModal");
+        const isEdit = log.mode === "custom";
+        modal.innerHTML = `<button class="drawer-close" id="customMealClose" aria-label="Close">×</button><h2>Custom meal</h2><div class="subtitle">A one-off entry for ${escapeHtml(prettyDate(logDate))} only — it won't be saved to your meals.</div><div class="auth-field"><label>Name</label><input id="customMealName" placeholder="e.g. Dinner out" value="${escapeHtml(log.manualMealName || "")}"></div><div class="auth-field"><label>Calories</label><input id="customMealKcal" type="number" min="0" step="1" placeholder="650" value="${log.manualMealKcal ? log.manualMealKcal : ""}"></div><button class="btn btn-primary primary-wide" id="saveCustomMeal">${isEdit ? "Save changes" : "Add for today"}</button>${isEdit ? '<button class="btn btn-secondary primary-wide" id="removeCustomMeal" style="margin-top:8px;">Remove</button>' : ""}`;
+        document.getElementById("transferModalBackdrop").classList.add("open");
+        document.getElementById("customMealClose").onclick = closeTransferModal;
+        document.getElementById("saveCustomMeal").onclick = async () => {
+          const name = document.getElementById("customMealName").value.trim();
+          const kcal = parseFloat(
+            document.getElementById("customMealKcal").value,
+          );
+          if (!Number.isFinite(kcal) || kcal < 0) return;
+          await setLogMode(logDate, "custom");
+          await setManualMeal(logDate, name || "Custom meal", kcal);
+          closeTransferModal();
+        };
+        const removeBtn = document.getElementById("removeCustomMeal");
+        if (removeBtn) {
+          removeBtn.onclick = async () => {
+            await setLogMode(logDate, "meal");
+            await setManualMeal(logDate, "", 0);
+            closeTransferModal();
+          };
+        }
+      }
+
+      function openCustomSnackModal() {
+        transferModalOpen = true;
+        const modal = document.getElementById("transferModal");
+        modal.innerHTML = `<button class="drawer-close" id="customSnackClose" aria-label="Close">×</button><h2>Custom snack</h2><div class="subtitle">A one-off bite for today — logged just this once unless you save it.</div><div class="auth-field"><label>Name (optional)</label><input id="customSnackName" placeholder="e.g. Bite of cake"></div><div class="auth-field"><label>Calories</label><input id="customSnackKcal" type="number" min="0" step="1" placeholder="80"></div><div class="chip-list" id="customSnackQuickAmounts" style="margin-top:2px;"><button type="button" class="today-chip chip-add" data-quick-kcal="50">+50</button><button type="button" class="today-chip chip-add" data-quick-kcal="100">+100</button><button type="button" class="today-chip chip-add" data-quick-kcal="150">+150</button><button type="button" class="today-chip chip-add" data-quick-kcal="250">+250</button></div><label class="settings-row" style="margin-top:14px;cursor:pointer;"><span>Save to My Snacks</span><input type="checkbox" id="saveCustomSnackToMy"></label><button class="btn btn-primary primary-wide" id="saveCustomSnack">Add for today</button>`;
+        document.getElementById("transferModalBackdrop").classList.add("open");
+        document.getElementById("customSnackClose").onclick = closeTransferModal;
+        modal.querySelectorAll("[data-quick-kcal]").forEach((btn) => {
+          btn.onclick = () => {
+            document.getElementById("customSnackKcal").value =
+              btn.dataset.quickKcal;
+          };
+        });
+        document.getElementById("saveCustomSnack").onclick = async () => {
+          const nameInput = document.getElementById("customSnackName");
+          const name = nameInput.value.trim() || "Snack";
+          const kcal = parseFloat(
+            document.getElementById("customSnackKcal").value,
+          );
+          if (!Number.isFinite(kcal) || kcal < 0) return;
+          const savePreset = document.getElementById(
+            "saveCustomSnackToMy",
+          ).checked;
+          if (savePreset) {
+            const newId = await addSnack(name, kcal);
+            if (newId) await addLogSnack(logDate, newId, 1);
+          } else {
+            await addCustomLogSnack(logDate, name, kcal, 1);
+          }
+          closeTransferModal();
         };
       }
 
@@ -3071,14 +3193,16 @@
 
       /* ===================== Snacks tab ===================== */
       async function addSnack(name, kcal) {
-        if (!name || !name.trim()) return;
-        snacks.push({
+        if (!name || !name.trim()) return null;
+        const snack = {
           id: uid("snack"),
           name: name.trim(),
           kcal: isNaN(kcal) ? 0 : kcal,
-        });
+        };
+        snacks.push(snack);
         await saveData();
         renderApp();
+        return snack.id;
       }
 
       async function updateSnackField(id, field, value) {
@@ -3125,6 +3249,7 @@
       function logSnacksKcal(log) {
         return Math.round(
           (log.snacks || []).reduce((sum, e) => {
+            if (e.custom) return sum + (e.kcal || 0) * e.qty;
             const snack = snacks.find((s) => s.id === e.snackId);
             return sum + (snack ? snack.kcal * e.qty : 0);
           }, 0),
@@ -3197,6 +3322,38 @@
       async function removeLogSnack(dateStr, snackId) {
         const log = ensureLog(dateStr);
         log.snacks = log.snacks.filter((e) => e.snackId !== snackId);
+        await saveData();
+        refreshLog();
+      }
+      async function addCustomLogSnack(dateStr, name, kcal, qty) {
+        const log = ensureLog(dateStr);
+        log.snacks.push({
+          id: uid("logsnack"),
+          custom: true,
+          name: (name || "Snack").trim() || "Snack",
+          kcal: isNaN(kcal) || kcal < 0 ? 0 : kcal,
+          qty: isNaN(qty) || qty <= 0 ? 1 : qty,
+        });
+        await saveData();
+        refreshLog();
+      }
+      async function incrementCustomLogSnack(dateStr, id) {
+        const log = ensureLog(dateStr);
+        const entry = log.snacks.find((e) => e.custom && e.id === id);
+        if (!entry) return;
+        entry.qty += 1;
+        await saveData();
+        refreshLog();
+      }
+      async function decrementCustomLogSnack(dateStr, id) {
+        const log = ensureLog(dateStr);
+        const entry = log.snacks.find((e) => e.custom && e.id === id);
+        if (!entry) return;
+        if (entry.qty <= 1) {
+          log.snacks = log.snacks.filter((e) => !(e.custom && e.id === id));
+        } else {
+          entry.qty -= 1;
+        }
         await saveData();
         refreshLog();
       }
