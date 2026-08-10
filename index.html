@@ -896,11 +896,11 @@
         color: var(--ink);
         border-radius: 999px;
         display: inline-flex;
-        flex-direction: row;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
         min-height: 30px;
-        padding: 5px 10px;
+        padding: 2px 10px;
         font-size: 11px;
         cursor: pointer;
         transition:
@@ -947,11 +947,10 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 28px;
         padding: 0 6px;
         background: transparent;
         color: inherit;
-        font-size: 16px;
+        font-size: 10px;
         line-height: 1;
         transition: background 0.15s ease;
       }
@@ -960,7 +959,7 @@
       }
       .snack-stepper-label {
         display: inline-flex;
-        flex-direction: row;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
         padding: 0 8px;
@@ -1415,7 +1414,7 @@
         color: var(--ink-muted);
       }
       .status-pill.snack strong {
-        color: var(--green-light);
+        color: var(--ink);
       }
       .status-pill.deficit strong {
         color: var(--ink);
@@ -2109,7 +2108,7 @@
                       .map((m) => {
                         const isActive =
                           log.mode === "meal" && log.mealId === m.id;
-                        return `<button type="button" class="today-chip${isActive ? " active" : ""}" data-select-meal="${m.id}"><span>${escapeHtml(m.name)}</span><span class="chip-kcal">· ${mealKcal(m).toLocaleString()} kcal</span></button>`;
+                        return `<button type="button" class="today-chip${isActive ? " active" : ""}" data-select-meal="${m.id}"><span>${escapeHtml(m.name)}</span><span class="chip-kcal">${mealKcal(m).toLocaleString()} kcal</span></button>`;
                       })
                       .join("")
                   : '<span class="empty-note">No meals yet</span>'
@@ -2131,7 +2130,7 @@
                           return `<button type="button" class="today-chip" data-log-snack="${s.id}" aria-label="Add ${escapeHtml(s.name)}"><span>＋ ${escapeHtml(s.name)}</span><span class="chip-kcal">· ${s.kcal.toLocaleString()} kcal</span></button>`;
                         }
                         const snackTotalKcal = Math.round(s.kcal * entry.qty);
-                        return `<div class="snack-stepper" role="group" aria-label="${escapeHtml(s.name)} quantity"><button type="button" class="snack-stepper-control" data-decrement-snack="${s.id}" aria-label="Remove one ${escapeHtml(s.name)}">−</button><span class="snack-stepper-label"><span>${entry.qty} ${escapeHtml(s.name)}</span><span class="snack-stepper-kcal">· ${snackTotalKcal.toLocaleString()} kcal</span></span><button type="button" class="snack-stepper-control" data-increment-snack="${s.id}" aria-label="Add one ${escapeHtml(s.name)}">＋</button></div>`;
+                        return `<div class="snack-stepper" role="group" aria-label="${escapeHtml(s.name)} quantity"><button type="button" class="snack-stepper-control" data-decrement-snack="${s.id}" aria-label="Remove one ${escapeHtml(s.name)}">−</button><span class="snack-stepper-label"><span>${entry.qty} ${escapeHtml(s.name)}</span><span class="snack-stepper-kcal">${snackTotalKcal.toLocaleString()} kcal</span></span><button type="button" class="snack-stepper-control" data-increment-snack="${s.id}" aria-label="Add one ${escapeHtml(s.name)}">＋</button></div>`;
                       })
                       .join("")
                   : '<span class="empty-note">No snacks yet</span>'
