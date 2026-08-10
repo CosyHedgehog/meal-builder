@@ -11,6 +11,7 @@ async function updateMaintenance(value){
 }
 
 function renderApp(){
+  if(!currentUser || !dataLoaded){ showAuth(); return; }
   const log=getLog(logDate), deficit=logDeficit(log);
   const historyDays = getHistoryDaysForViewport();
   const gridColumns = historyDays;
