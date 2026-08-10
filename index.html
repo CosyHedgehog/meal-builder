@@ -879,11 +879,30 @@
         gap: 8px;
       }
       .chip-group-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
         font-size: 10px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.14em;
         color: var(--ink-muted);
+      }
+
+      .chip-group-edit {
+        margin-left: auto;
+        padding: 0;
+        background: transparent;
+        color: var(--green);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0;
+        text-transform: none;
+      }
+
+      .chip-group-edit:hover {
+        text-decoration: underline;
       }
       .chip-list {
         display: flex;
@@ -1639,7 +1658,65 @@
           grid-template-columns: minmax(0, 1fr) 58px 48px;
         }
       }
-    </style>
+    
+      .chip-group-header {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+      .chip-group-menu-btn {
+        margin-left: auto;
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: var(--ink-muted);
+        border-radius: 8px;
+        font-size: 20px;
+        line-height: 1;
+        cursor: pointer;
+      }
+      .chip-group-menu-btn:hover,
+      .chip-group-menu-btn:focus-visible {
+        background: var(--surface-alt);
+        color: var(--ink);
+        outline: none;
+      }
+      .chip-group-menu {
+        position: absolute;
+        top: calc(100% + 6px);
+        right: 0;
+        z-index: 20;
+        display: none;
+        min-width: 130px;
+        padding: 5px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(28, 42, 31, 0.12);
+      }
+      .chip-group-menu.open {
+        display: block;
+      }
+      .chip-group-menu button {
+        width: 100%;
+        padding: 9px 10px;
+        border: 0;
+        background: transparent;
+        color: var(--ink);
+        border-radius: 7px;
+        text-align: left;
+        font: inherit;
+        font-size: 10px;
+        cursor: pointer;
+      }
+      .chip-group-menu button:hover,
+      .chip-group-menu button:focus-visible {
+        background: var(--surface-alt);
+        outline: none;
+      }
+</style>
   </head>
   <body>
     <div class="app-shell" id="app">
@@ -2142,7 +2219,13 @@
         </div>
         <div class="today-chips">
           <div class="chip-group">
-            <div class="chip-group-header">Meal</div>
+          <div class="chip-group-header">
+            <span>Meal</span>
+            <button type="button" class="chip-group-menu-btn" data-chip-menu="meals" aria-label="Meal options" aria-expanded="false">⋯</button>
+            <div class="chip-group-menu" data-chip-menu-panel="meals">
+              <button type="button" id="editMealsChipBtn" data-edit-food-menu="meals">Edit meals</button>
+            </div>
+          </div>
             <div class="chip-list">
               ${
                 meals.length
@@ -2159,7 +2242,13 @@
             </div>
           </div>
           <div class="chip-group">
-            <div class="chip-group-header">Snacks</div>
+          <div class="chip-group-header">
+            <span>Snacks</span>
+            <button type="button" class="chip-group-menu-btn" data-chip-menu="snacks" aria-label="Snack options" aria-expanded="false">⋯</button>
+            <div class="chip-group-menu" data-chip-menu-panel="snacks">
+              <button type="button" id="editSnacksChipBtn" data-edit-food-menu="snacks">Edit snacks</button>
+            </div>
+          </div>
             <div class="chip-list">
               ${
                 snacks.length
@@ -2169,7 +2258,6 @@
                           (e) => e.snackId === s.id,
                         );
                         if (!entry) {
-                          return `<button type="button" class="today-chip" data-log-snack="${s.id}" aria-label="Add ${escapeHtml(s.name)}"><span>＋ ${escapeHtml(s.name)}</span><span class="chip-kcal">· ${s.kcal.toLocaleString()} kcal</span></button>`;
                           return `<button type="button" class="today-chip" data-log-snack="${s.id}" aria-label="Add ${escapeHtml(s.name)}"><span>＋ ${escapeHtml(s.name)}</span><span class="chip-kcal">${s.kcal.toLocaleString()} kcal</span></button>`;
                         }
                         const snackTotalKcal = Math.round(s.kcal * entry.qty);
@@ -2274,12 +2362,44 @@
           };
         }
         document.getElementById("openSettingsBtn").onclick = openSettingsModal;
+        document.getElementById("editMealsChipBtn").onclick = () =>
+          openFoodManager("meals");
+        document.getElementById("editSnacksChipBtn").onclick = () =>
+          openFoodManager("snacks");
         document.getElementById("manageMealsBtn").onclick = () =>
           openFoodManager("meals");
         document.getElementById("manageSnacksBtn").onclick = () =>
           openFoodManager("snacks");
         document.getElementById("manageIngredientsBtn").onclick = () =>
           openFoodManager("ingredients");
+        document.querySelectorAll("[data-chip-menu]").forEach((btn) => {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            const type = btn.dataset.chipMenu;
+            const panel = document.querySelector(
+              `[data-chip-menu-panel="${type}"]`,
+            );
+            const isOpen = panel?.classList.contains("open");
+            document.querySelectorAll(".chip-group-menu.open").forEach((p) => p.classList.remove("open"));
+            document.querySelectorAll("[data-chip-menu]").forEach((b) => b.setAttribute("aria-expanded", "false"));
+            if (panel && !isOpen) {
+              panel.classList.add("open");
+              btn.setAttribute("aria-expanded", "true");
+            }
+          };
+        });
+        document.querySelectorAll("[data-edit-food-menu]").forEach((btn) => {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            document.querySelectorAll(".chip-group-menu.open").forEach((p) => p.classList.remove("open"));
+            document.querySelectorAll("[data-chip-menu]").forEach((b) => b.setAttribute("aria-expanded", "false"));
+            openFoodManager(btn.dataset.editFoodMenu);
+          };
+        });
+        document.addEventListener("click", () => {
+          document.querySelectorAll(".chip-group-menu.open").forEach((p) => p.classList.remove("open"));
+          document.querySelectorAll("[data-chip-menu]").forEach((b) => b.setAttribute("aria-expanded", "false"));
+        }, { once: false });
         const showAllBtn = document.getElementById("showAllHistoryBtn");
         if (showAllBtn) showAllBtn.onclick = openHistoryModal;
         document.querySelectorAll("[data-history-day]").forEach((btn) => {
