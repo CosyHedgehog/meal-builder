@@ -889,7 +889,12 @@
         background: var(--surface);
         color: var(--ink);
         border-radius: 999px;
-        padding: 5px 9px;
+        display: inline-flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        min-height: 30px;
+        padding: 5px 10px;
         font-size: 11px;
         cursor: pointer;
         transition:
@@ -908,18 +913,23 @@
         color: #fff;
         border-color: #2f623f;
       }
-      .today-chip.reset {
-        background: var(--surface-alt);
-        border-color: var(--line);
-        color: var(--ink-muted);
-      }
       .today-chip:hover {
         background: var(--surface-alt);
+      }
+      .chip-kcal {
+        margin-left: 3px;
+        color: var(--ink-muted);
+        font-size: 9px;
+        font-weight: 500;
+        line-height: 1.2;
+      }
+      .today-chip.active .chip-kcal {
+        color: rgba(255, 255, 255, 0.72);
       }
       .snack-stepper {
         display: inline-flex;
         align-items: stretch;
-        min-height: 28px;
+        min-height: 30px;
         overflow: hidden;
         border: 1px solid var(--green);
         border-radius: 999px;
@@ -931,8 +941,8 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 26px;
-        padding: 0 5px;
+        min-width: 28px;
+        padding: 0 6px;
         background: transparent;
         color: inherit;
         font-size: 16px;
@@ -944,12 +954,21 @@
       }
       .snack-stepper-label {
         display: inline-flex;
+        flex-direction: row;
         align-items: center;
-        padding: 0 7px;
+        justify-content: center;
+        padding: 0 8px;
         border-inline: 1px solid rgba(255, 255, 255, 0.28);
         font-size: 10px;
         font-weight: 600;
         white-space: nowrap;
+      }
+      .snack-stepper-kcal {
+        margin-left: 3px;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 9px;
+        font-weight: 500;
+        line-height: 1;
       }
       .manage-actions {
         display: grid;
@@ -1265,10 +1284,7 @@
         background: var(--green-light);
       }
       .status-seg.deficit {
-        background: var(--orange);
-      }
-      .today-status-bar.surplus .status-seg.deficit {
-        background: var(--red);
+        background: transparent;
       }
       .today-status-labels {
         display: grid;
@@ -1295,6 +1311,12 @@
         font-family: "IBM Plex Mono", monospace;
         font-size: 16px;
         color: var(--ink);
+      }
+      .status-pill strong small {
+        font-family: "Inter", sans-serif;
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--ink-muted);
       }
       .status-pill.meal {
         border-color: rgba(63, 107, 74, 0.16);
@@ -1955,9 +1977,9 @@
             <div class="status-seg deficit" style="width:${Math.max(0, 100 - mealPct - snackPct)}%"></div>
           </div>
           <div class="today-status-labels">
-            <div class="status-pill meal"><span>Meal</span><strong>${mealK.toLocaleString()}</strong></div>
-            <div class="status-pill snack"><span>Snacks</span><strong>${snackK.toLocaleString()}</strong></div>
-            <div class="status-pill ${deficit >= 0 ? "deficit" : "surplus"}"><span>${deficit >= 0 ? "Deficit" : "Surplus"}</span><strong>${Math.abs(deficit).toLocaleString()}</strong></div>
+            <div class="status-pill meal"><span>Meals</span><strong>${mealK.toLocaleString()} <small>kcal</small></strong></div>
+            <div class="status-pill snack"><span>Snacks</span><strong>${snackK.toLocaleString()} <small>kcal</small></strong></div>
+            <div class="status-pill ${deficit >= 0 ? "deficit" : "surplus"}"><span>${deficit >= 0 ? "Deficit target" : "Surplus"}</span><strong>${Math.abs(deficit).toLocaleString()} <small>kcal</small></strong></div>
           </div>
         </div>
         <div class="today-chips">
@@ -1970,12 +1992,12 @@
                       .map((m) => {
                         const isActive =
                           log.mode === "meal" && log.mealId === m.id;
-                        return `<button type="button" class="today-chip${isActive ? " active" : ""}" data-select-meal="${m.id}">${escapeHtml(m.name)}</button>`;
+                        return `<button type="button" class="today-chip${isActive ? " active" : ""}" data-select-meal="${m.id}"><span>${escapeHtml(m.name)}</span><span class="chip-kcal">· ${mealKcal(m).toLocaleString()} kcal</span></button>`;
                       })
                       .join("")
                   : '<span class="empty-note">No meals yet</span>'
               }
-              ${log.mode === "custom" ? `<button type="button" class="today-chip active" data-select-meal="custom">${escapeHtml(log.manualMealName || "Custom")} ${log.manualMealKcal ? `(${Math.round(log.manualMealKcal)} kcal)` : ""}</button>` : ""}
+              ${log.mode === "custom" ? `<button type="button" class="today-chip active" data-select-meal="custom"><span>${escapeHtml(log.manualMealName || "Custom")}</span><span class="chip-kcal">· ${Math.round(log.manualMealKcal || 0).toLocaleString()} kcal</span></button>` : ""}
             </div>
           </div>
           <div class="chip-group">
@@ -1989,14 +2011,14 @@
                           (e) => e.snackId === s.id,
                         );
                         if (!entry) {
-                          return `<button type="button" class="today-chip" data-log-snack="${s.id}" aria-label="Add ${escapeHtml(s.name)}">＋ ${escapeHtml(s.name)}</button>`;
+                          return `<button type="button" class="today-chip" data-log-snack="${s.id}" aria-label="Add ${escapeHtml(s.name)}"><span>＋ ${escapeHtml(s.name)}</span><span class="chip-kcal">· ${s.kcal.toLocaleString()} kcal</span></button>`;
                         }
-                        return `<div class="snack-stepper" role="group" aria-label="${escapeHtml(s.name)} quantity"><button type="button" class="snack-stepper-control" data-decrement-snack="${s.id}" aria-label="Remove one ${escapeHtml(s.name)}">−</button><span class="snack-stepper-label">${entry.qty} ${escapeHtml(s.name)}</span><button type="button" class="snack-stepper-control" data-increment-snack="${s.id}" aria-label="Add one ${escapeHtml(s.name)}">＋</button></div>`;
+                        const snackTotalKcal = Math.round(s.kcal * entry.qty);
+                        return `<div class="snack-stepper" role="group" aria-label="${escapeHtml(s.name)} quantity"><button type="button" class="snack-stepper-control" data-decrement-snack="${s.id}" aria-label="Remove one ${escapeHtml(s.name)}">−</button><span class="snack-stepper-label"><span>${entry.qty} ${escapeHtml(s.name)}</span><span class="snack-stepper-kcal">· ${snackTotalKcal.toLocaleString()} kcal</span></span><button type="button" class="snack-stepper-control" data-increment-snack="${s.id}" aria-label="Add one ${escapeHtml(s.name)}">＋</button></div>`;
                       })
                       .join("")
                   : '<span class="empty-note">No snacks yet</span>'
               }
-              ${log.snacks && log.snacks.length ? '<button type="button" class="today-chip reset" id="resetSnacksBtn">Reset snacks</button>' : ""}
             </div>
           </div>
         </div>
@@ -2128,9 +2150,6 @@
             else updateLogSnackQty(logDate, snackId, entry.qty - 1);
           };
         });
-        const resetSnacksBtn = document.getElementById("resetSnacksBtn");
-        if (resetSnacksBtn)
-          resetSnacksBtn.onclick = () => resetLogSnacks(logDate);
         setSaveStatus("ok");
       }
 
@@ -3038,13 +3057,6 @@
         const existing = log.snacks.find((e) => e.snackId === snackId);
         if (existing) existing.qty += q;
         else log.snacks.push({ snackId, qty: q });
-        await saveData();
-        refreshLog();
-      }
-      async function resetLogSnacks(dateStr) {
-        const log = ensureLog(dateStr);
-        if (!log.snacks || !log.snacks.length) return;
-        log.snacks = [];
         await saveData();
         refreshLog();
       }
