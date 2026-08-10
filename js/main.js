@@ -5,7 +5,7 @@
 /* ===================== Init ===================== */
 initAuth();
 window.addEventListener('resize', () => {
-  if(document.getElementById('app') && document.getElementById('app').innerHTML) {
+  if(currentUser && dataLoaded) {
     renderApp();
   }
 });
