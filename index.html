@@ -65,7 +65,7 @@
         --orange-soft: #33261a;
         --red: #e07b64;
         --red-soft: #35201c;
-        --shadow-rgb: 0, 0, 0;
+        --shadow-rgb: 150, 150, 150;
         --backdrop-rgb: 0, 0, 0;
         --history-empty: #262f25;
         --history-over: #c17457;
@@ -1303,10 +1303,9 @@
       }
       .manage-toggle {
         width: 100%;
-        border: 1px solid var(--line);
         background: var(--surface);
         border-radius: 14px;
-        padding: 15px 16px;
+        padding: 8px;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -1432,7 +1431,8 @@
       .history-day.today .history-day-label {
         font-weight: 700;
       }
-      .history-day.today .history-day-label::after {
+      .history-day.today .history-day-label::after,
+      .history-day.active .history-day-label::after {
         content: "";
         position: absolute;
         width: 5px;
@@ -1451,49 +1451,6 @@
       .history-day.active .history-day-label::after {
         border-color: var(--green);
         background: var(--green);
-      }
-      .history-tooltip {
-        position: absolute;
-        z-index: 3;
-        left: 50%;
-        top: auto;
-        bottom: calc(24px + var(--bar-height, 32px) + 8px);
-        width: max-content;
-        max-width: 150px;
-        transform: translate(-50%, 4px);
-        padding: 6px 8px;
-        border-radius: 7px;
-        background: var(--ink);
-        color: #fff;
-        font-size: 10px;
-        line-height: 1.35;
-        opacity: 0;
-        pointer-events: none;
-        transition:
-          opacity 0.12s ease,
-          transform 0.12s ease;
-      }
-      .history-tooltip::before {
-        content: "";
-        position: absolute;
-        bottom: -4px;
-        left: 50%;
-        width: 8px;
-        height: 8px;
-        transform: translateX(-50%) rotate(45deg);
-        background: var(--ink);
-      }
-      .history-day:hover .history-tooltip,
-      .history-day:focus-visible .history-tooltip {
-        opacity: 1;
-        transform: translate(-50%, 0);
-      }
-      .history-day:last-child .history-tooltip {
-        transform: translate(-80%, 4px);
-      }
-      .history-day:last-child:hover .history-tooltip,
-      .history-day:last-child:focus-visible .history-tooltip {
-        transform: translate(-80%, 0);
       }
       .history-footer {
         margin-top: 14px;
@@ -2434,7 +2391,6 @@
                 `<button type="button" class="history-day${isActive ? " active" : ""}${isToday ? " today" : ""}" title="${escapeHtml(label)}" data-history-day="${h.date}" data-has-log="${h.hasLog ? "true" : "false"}" style="--bar-height:${h.hasLog ? barHeight : 32}px" aria-label="Load ${escapeHtml(label)}">` +
                 `<span class="history-bar-area">${h.hasLog ? `<span class="history-bar ${barClass}" style="height:${barHeight}px"></span>` : '<span class="history-empty-bar"></span>'}</span>` +
                 `<span class="history-day-label">${weekday}</span>` +
-                `<span class="history-tooltip" role="tooltip">${escapeHtml(prettyDate(h.date))}<br>${h.hasLog ? `${intake.toLocaleString()} kcal logged` : "Not logged"}</span>` +
                 `</button>`
               );
             })
