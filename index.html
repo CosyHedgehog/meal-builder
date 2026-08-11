@@ -783,7 +783,17 @@
         background: var(--surface);
         border: 1px solid var(--line);
         border-radius: 20px;
-        padding: 12px 20px 10px 12px;
+        padding: 12px 12px 10px 12px;
+        box-shadow: 1px 2px 8px rgba(var(--shadow-rgb), 0.06);
+      }
+      .today-meal-card {
+        border-radius: 20px;
+        padding: 5px 12px 5px 12px;
+        box-shadow: 1px 2px 8px rgba(var(--shadow-rgb), 0.06);
+      }
+      .today-snack-card {
+        border-radius: 20px;
+        padding: 5px 12px 5px 12px;
         box-shadow: 1px 2px 8px rgba(var(--shadow-rgb), 0.06);
       }
       .today-top {
@@ -1190,7 +1200,7 @@
       }
       @media (min-width: 700px) {
         .app-shell {
-          max-width: 760px;
+          max-width: 680px;
           padding: 24px 24px 24px;
         }
         .header-actions .save-status {
@@ -1259,12 +1269,14 @@
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 14px;
+        padding-top: 5px;
       }
       .manage-toggle {
         width: 100%;
         background: var(--surface);
+        border: 1px solid var(--line);
         border-radius: 14px;
-        padding: 8px;
+        padding: 10px;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -2285,7 +2297,7 @@
           </div>
           </div>
       </section>
-            <section class="today-card">
+            <section class="today-meal-card">
               <div class="today-chips">
           <div class="chip-group">
           <div class="chip-group-header">
@@ -2313,7 +2325,7 @@
           </div>
         </div>
         </section>
-      <section class="today-card">
+      <section class="today-snack-card">
 
          <div class="today-chips">
           <div class="chip-group">
@@ -2409,7 +2421,7 @@
           <button class="btn btn-secondary" id="showAllHistoryBtn">Show all</button>
         </div>
       </section>
-      <section class="section-block manage-section">
+      <section class="manage-section">
         <div class="manage-actions">
           <button class="manage-toggle" id="manageMealsBtn"><span><strong>Meals</strong><small>Manage meals</small></span><span class="manage-chevron">›</span></button>
           <button class="manage-toggle" id="manageSnacksBtn"><span><strong>Snacks</strong><small>Manage snacks</small></span><span class="manage-chevron">›</span></button>
