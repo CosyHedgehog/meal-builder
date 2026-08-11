@@ -30,7 +30,8 @@ DEFAULT_DATA = {
         {'id':'snack-sardines','name':'Sardines (tin)','kcal':220}
     ],
     'logs': {},
-    'maintenanceCal': 2200
+    'maintenanceCal': 2200,
+    'showKcal': True
 }
 
 def db():
@@ -196,7 +197,8 @@ class Handler(BaseHTTPRequestHandler):
             'meals': data.get('meals',[]),
             'snacks': data.get('snacks',[]),
             'logs': data.get('logs',{}),
-            'maintenanceCal': data.get('maintenanceCal',2200)
+            'maintenanceCal': data.get('maintenanceCal',2200),
+            'showKcal': data.get('showKcal',True)
         }
         try: encoded=json.dumps(safe,separators=(',',':'))
         except Exception: return json_response(self,400,{'error':'Data could not be saved'})
