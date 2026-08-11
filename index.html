@@ -49,6 +49,7 @@
         --history-empty: #f0f0f0;
         --history-over: #d98970;
         --green-strong: #2f623f;
+        --trend-line: #3a7dd9;
       }
 
       [data-theme="dark"] {
@@ -70,6 +71,7 @@
         --history-empty: #262f25;
         --history-over: #c17457;
         --green-strong: #4a8f5a;
+        --trend-line: #6ea8f0;
       }
 
       * {
@@ -256,7 +258,7 @@
       .backdrop {
         position: fixed;
         inset: 0;
-        background: rgba(var(--backdrop-rgb), 0.32);
+        background: rgba(var(--backdrop-rgb), 0.7);
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.18s ease;
@@ -474,7 +476,7 @@
       .modal-backdrop {
         position: fixed;
         inset: 0;
-        background: rgba(var(--backdrop-rgb), 0.32);
+        background: rgba(var(--backdrop-rgb), 0.7);
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.18s ease;
@@ -1364,11 +1366,93 @@
       .history-bar.over-goal {
         background: var(--history-over);
       }
+      .history-bar-stack {
+        width: 12px;
+        min-height: 5px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        border-radius: 6px 6px 2px 2px;
+        overflow: hidden;
+        transition: height 0.2s ease;
+        position: relative;
+      }
+      .history-bar-stack.over-goal {
+        box-shadow: 0 -2px 0 0 var(--history-over) inset;
+      }
+      .history-bar-seg {
+        width: 100%;
+      }
+      .history-bar-seg.meal {
+        background: var(--green);
+      }
+      .history-bar-seg.snack {
+        background: var(--green-light);
+      }
       .history-empty-bar {
         width: 6px;
         height: 32px;
         border-radius: 999px;
         background: var(--history-empty);
+      }
+      .history-trend-svg {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 108px;
+        z-index: 3;
+        pointer-events: none;
+        overflow: visible;
+      }
+      .history-trend-line {
+        fill: none;
+        stroke: var(--trend-line, #3a7dd9);
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        vector-effect: non-scaling-stroke;
+        opacity: 0.9;
+      }
+      .history-legend {
+        display: flex;
+        gap: 16px;
+        margin-top: 12px;
+        font-size: 12px;
+        color: var(--ink-muted);
+        flex-wrap: wrap;
+      }
+      .history-legend .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .history-legend .legend-swatch {
+        width: 10px;
+        height: 10px;
+        border-radius: 3px;
+        display: inline-block;
+      }
+      .history-legend .legend-swatch.meal {
+        background: var(--green);
+      }
+      .history-legend .legend-swatch.snack {
+        background: var(--green-light);
+      }
+      .history-legend .legend-swatch.trend {
+        width: 14px;
+        height: 2px;
+        border-radius: 2px;
+        background: var(--trend-line, #3a7dd9);
+      }
+      .history-projection {
+        margin-top: 6px;
+        font-size: 13px;
+        color: var(--ink-muted);
+      }
+      .history-projection strong {
+        color: var(--ink);
+        font-weight: 700;
       }
       .history-goal-line {
         position: absolute;
@@ -1788,7 +1872,11 @@
           localStorage.setItem("theme", theme);
         } catch (e) {}
         const meta = document.getElementById("themeColorMeta");
-        if (meta) meta.setAttribute("content", theme === "dark" ? "#10150f" : "#f3f5ee");
+        if (meta)
+          meta.setAttribute(
+            "content",
+            theme === "dark" ? "#10150f" : "#f3f5ee",
+          );
       }
       setTheme(getTheme());
 
@@ -2257,6 +2345,28 @@
           1,
           ...hist.filter((h) => h.hasLog).map((h) => h.total),
         );
+        const historyLoggedDays = hist.filter((h) => h.hasLog);
+        const historyAvgDeficit = historyLoggedDays.length
+          ? Math.round(
+              historyLoggedDays.reduce((s, h) => s + h.deficit, 0) /
+                historyLoggedDays.length,
+            )
+          : 0;
+        // ~7700 kcal deficit/surplus is roughly equivalent to 1kg of body fat.
+        const KCAL_PER_KG = 7700;
+        const projectedKgPerWeek = (historyAvgDeficit * 7) / KCAL_PER_KG;
+        const movingAvg = historyMovingAverage(hist, 7);
+        const trendPoints = movingAvg.map((v, i) => {
+          if (v === null) return null;
+          const cappedV = Math.min(v, maintenanceCal);
+          const x = ((i + 0.5) / gridColumns) * 100;
+          const y = Math.max(
+            0,
+            historyBarHeight - (cappedV / maintenanceCal) * historyBarHeight,
+          );
+          return { x, y };
+        });
+        const trendPaths = smoothLinePaths(trendPoints);
         const goalLineBottom = Math.round(
           24 + (maintenanceCal / historyScale) * historyBarHeight,
         );
@@ -2374,6 +2484,9 @@
         </div>
         <div class="history-grid" style="grid-template-columns:repeat(${gridColumns},minmax(0,1fr));">
           <div class="history-goal-line" ><span>${maintenanceCal.toLocaleString()} Maintenance</span></div>
+          <svg class="history-trend-svg" viewBox="0 0 100 ${historyBarHeight}" preserveAspectRatio="none" aria-hidden="true">
+            ${trendPaths.map((d) => `<path class="history-trend-line" d="${d}"></path>`).join("")}
+          </svg>
           ${hist
             .map((h) => {
               const intake = Math.min(h.total, maintenanceCal) || 0;
@@ -2383,14 +2496,14 @@
                     Math.round((intake / maintenanceCal) * historyBarHeight),
                   )
                 : 0;
-              const barClass =
-                intake >= maintenanceCal
-                  ? "over-goal"
-                  : intake === maintenanceCal
-                    ? "at-goal"
-                    : "";
+              const mealShare = h.total > 0 ? h.mealK / h.total : 0;
+              const mealHeight = h.hasLog
+                ? Math.round(barHeight * mealShare)
+                : 0;
+              const snackHeight = h.hasLog ? barHeight - mealHeight : 0;
+              const isOverGoal = intake >= maintenanceCal && h.hasLog;
               const label = h.hasLog
-                ? `${prettyDate(h.date)}: ${intake.toLocaleString()} kcal logged, ${h.deficit >= 0 ? `${h.deficit.toLocaleString()} kcal deficit` : `${Math.abs(h.deficit).toLocaleString()} kcal surplus`}`
+                ? `${prettyDate(h.date)}: ${intake.toLocaleString()} kcal logged (${h.mealK.toLocaleString()} meals / ${h.snackK.toLocaleString()} snacks), ${h.deficit >= 0 ? `${h.deficit.toLocaleString()} kcal deficit` : `${Math.abs(h.deficit).toLocaleString()} kcal surplus`}`
                 : `${prettyDate(h.date)}: Not logged`;
               const weekday = parseISODate(h.date).toLocaleDateString(
                 undefined,
@@ -2402,23 +2515,26 @@
               const isToday = h.date === todayStr();
               return (
                 `<button type="button" class="history-day${isActive ? " active" : ""}${isToday ? " today" : ""}" title="${escapeHtml(label)}" data-history-day="${h.date}" data-has-log="${h.hasLog ? "true" : "false"}" style="--bar-height:${h.hasLog ? barHeight : 32}px" aria-label="Load ${escapeHtml(label)}">` +
-                `<span class="history-bar-area">${h.hasLog ? `<span class="history-bar ${barClass}" style="height:${barHeight}px"></span>` : '<span class="history-empty-bar"></span>'}</span>` +
+                `<span class="history-bar-area">${
+                  h.hasLog
+                    ? `<span class="history-bar-stack${isOverGoal ? " over-goal" : ""}" style="height:${barHeight}px"><span class="history-bar-seg snack" style="height:${snackHeight}px"></span><span class="history-bar-seg meal" style="height:${mealHeight}px"></span></span>`
+                    : '<span class="history-empty-bar"></span>'
+                }</span>` +
                 `<span class="history-day-label">${weekday}</span>` +
                 `</button>`
               );
             })
             .join("")}
         </div>
+        <div class="history-legend">
+          <span class="legend-item"><span class="legend-swatch meal"></span>Meals</span>
+          <span class="legend-item"><span class="legend-swatch snack"></span>Snacks</span>
+          <span class="legend-item"><span class="legend-swatch trend"></span>7-day avg intake</span>
+        </div>
         <div class="history-footer">
-          <span>${hist.filter((h) => h.hasLog).length} days logged</span>
-          <span class="history-average">${(() => {
-            const a = hist.filter((h) => h.hasLog),
-              d = a.length
-                ? Math.round(a.reduce((s, h) => s + h.deficit, 0) / a.length)
-                : 0;
-            return `<strong>${Math.abs(d).toLocaleString()} kcal</strong> avg ${d >= 0 ? "deficit" : "surplus"}`;
-          })()}</span>
-          <button class="btn btn-secondary" id="showAllHistoryBtn">Show all</button>
+                    <span class="history-average"><strong>${Math.abs(historyAvgDeficit).toLocaleString()} kcal</strong> avg ${historyAvgDeficit >= 0 ? "deficit" : "surplus"}</span>
+          <span class="history-average"><strong>${Math.abs(projectedKgPerWeek).toFixed(1)} kg </strong> ${projectedKgPerWeek >= 0 ? "loss" : "gain"} per week
+        </span>
         </div>
       </section>
       <section class="manage-section">
@@ -3692,11 +3808,62 @@
           arr.push({
             date: ds,
             total: log ? logTotalKcal(log) : 0,
+            mealK: log ? logMealKcal(log) : 0,
+            snackK: log ? logSnacksKcal(log) : 0,
             deficit: log ? logDeficit(log) : 0,
             hasLog: has,
           });
         }
         return arr;
+      }
+
+      // 7-day trailing moving average of total kcal intake, based only on
+      // logged days within each window. Returns null for indices where no
+      // logged day exists in the trailing window (creates a gap in the line).
+      function historyMovingAverage(hist, windowSize) {
+        const w = windowSize || 7;
+        return hist.map((_, i) => {
+          const start = Math.max(0, i - w + 1);
+          const windowDays = hist.slice(start, i + 1).filter((h) => h.hasLog);
+          if (!windowDays.length) return null;
+          return (
+            windowDays.reduce((sum, h) => sum + h.total, 0) / windowDays.length
+          );
+        });
+      }
+
+      // Builds smooth (Catmull-Rom) SVG path strings through a set of
+      // {x,y} points, splitting on null gaps into separate contiguous paths.
+      function smoothLinePaths(points) {
+        const segments = [];
+        let current = [];
+        points.forEach((p) => {
+          if (p === null) {
+            if (current.length) segments.push(current);
+            current = [];
+          } else {
+            current.push(p);
+          }
+        });
+        if (current.length) segments.push(current);
+        return segments.map((seg) => {
+          if (seg.length === 1) {
+            return `M${seg[0].x},${seg[0].y} L${seg[0].x},${seg[0].y}`;
+          }
+          let d = `M${seg[0].x},${seg[0].y}`;
+          for (let i = 0; i < seg.length - 1; i++) {
+            const p0 = seg[i - 1] || seg[i];
+            const p1 = seg[i];
+            const p2 = seg[i + 1];
+            const p3 = seg[i + 2] || p2;
+            const cp1x = p1.x + (p2.x - p0.x) / 6;
+            const cp1y = p1.y + (p2.y - p0.y) / 6;
+            const cp2x = p2.x - (p3.x - p1.x) / 6;
+            const cp2y = p2.y - (p3.y - p1.y) / 6;
+            d += ` C${cp1x.toFixed(2)},${cp1y.toFixed(2)} ${cp2x.toFixed(2)},${cp2y.toFixed(2)} ${p2.x.toFixed(2)},${p2.y.toFixed(2)}`;
+          }
+          return d;
+        });
       }
 
       /* ===================== Export ===================== */
