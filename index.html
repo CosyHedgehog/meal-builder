@@ -1376,16 +1376,27 @@
         position: relative;
       }
       .history-bar-stack.over-goal {
-        box-shadow: 0 -2px 0 0 var(--history-over) inset;
+        box-shadow: 0 0 0 1px rgba(224, 102, 102, 0.14);
       }
       .history-bar-seg {
         width: 100%;
+        flex: none;
       }
       .history-bar-seg.meal {
         background: var(--green);
       }
       .history-bar-seg.snack {
         background: var(--green-light);
+      }
+      .history-bar-seg.overflow {
+        background: var(--history-over);
+        border-radius: 6px 6px 0 0;
+      }
+      .history-bar-seg.top-cap {
+        border-radius: 6px 6px 0 0;
+      }
+      .history-bar-seg.bottom-cap {
+        border-radius: 0 0 2px 2px;
       }
       .history-empty-bar {
         width: 6px;
@@ -1437,12 +1448,27 @@
       .history-legend .legend-swatch.snack {
         background: var(--green-light);
       }
+      .history-legend .legend-swatch.overflow {
+        background: var(--history-over);
+      }
       .history-legend .legend-swatch.trend {
-        width: 14px;
+        width: 18px;
         height: 2px;
         border-radius: 2px;
         background: var(--trend-line, #3a7dd9);
       }
+.history-legend .legend-swatch.maintenance {
+  width: 18px;
+  height: 2px;
+  border-radius: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--ink-muted) 0px,
+    var(--ink-muted) 4px, /* Dash length */
+    transparent 4px,
+    transparent 7px /* Dash length + gap */
+  );
+}
       .history-projection {
         margin-top: 6px;
         font-size: 13px;
@@ -1502,6 +1528,10 @@
       .history-average strong {
         color: var(--ink);
         font-weight: 700;
+      }
+
+      .history-average.surplus strong {
+        color: var(--history-over);
       }
       .history-footer .btn {
         padding: 6px 16px;
@@ -1666,6 +1696,7 @@
         margin-top: 18px;
         padding: 12px;
         background: var(--surface);
+        border: 1px solid var(--line);
         border-radius: 14px;
       }
       .add-item-select,
@@ -2338,8 +2369,12 @@
         const gridColumns = historyDays;
         const hist = computeHistory(historyDays);
         const historyBarHeight = 108;
+        // Keep breathing room above maintenance when there are no surplus days.
+        // Expand dynamically when a logged intake exceeds the default ceiling.
+        const HISTORY_DEFAULT_CEILING = 2400;
         const historyScale = Math.max(
           maintenanceCal,
+          HISTORY_DEFAULT_CEILING,
           1,
           ...hist.filter((h) => h.hasLog).map((h) => h.total),
         );
@@ -2356,11 +2391,11 @@
         const movingAvg = historyMovingAverage(hist, 7);
         const trendPoints = movingAvg.map((v, i) => {
           if (v === null) return null;
-          const cappedV = Math.min(v, maintenanceCal);
+          const scaledV = Math.min(v, historyScale);
           const x = ((i + 0.5) / gridColumns) * 100;
           const y = Math.max(
             0,
-            historyBarHeight - (cappedV / maintenanceCal) * historyBarHeight,
+            historyBarHeight - (scaledV / historyScale) * historyBarHeight,
           );
           return { x, y };
         });
@@ -2481,27 +2516,41 @@
           <div><h2>History</h2><div class="muted">Last ${historyDays} days</div></div>
         </div>
         <div class="history-grid" style="grid-template-columns:repeat(${gridColumns},minmax(0,1fr));">
-          <div class="history-goal-line" ><span>${maintenanceCal.toLocaleString()} Maintenance</span></div>
+          <div class="history-goal-line" style="bottom:${goalLineBottom}px"></div>
           <svg class="history-trend-svg" viewBox="0 0 100 ${historyBarHeight}" preserveAspectRatio="none" aria-hidden="true">
             ${trendPaths.map((d) => `<path class="history-trend-line" d="${d}"></path>`).join("")}
           </svg>
           ${hist
             .map((h) => {
-              const intake = Math.min(h.total, maintenanceCal) || 0;
+              const total = Math.max(0, h.total || 0);
+              const baseKcal = Math.min(total, maintenanceCal);
+              const overflowKcal = Math.max(0, total - maintenanceCal);
               const barHeight = h.hasLog
                 ? Math.max(
                     5,
-                    Math.round((intake / maintenanceCal) * historyBarHeight),
+                    Math.round((total / historyScale) * historyBarHeight),
                   )
                 : 0;
-              const mealShare = h.total > 0 ? h.mealK / h.total : 0;
-              const mealHeight = h.hasLog
-                ? Math.round(barHeight * mealShare)
+              const baseHeight = h.hasLog
+                ? Math.round((baseKcal / historyScale) * historyBarHeight)
                 : 0;
-              const snackHeight = h.hasLog ? barHeight - mealHeight : 0;
-              const isOverGoal = intake >= maintenanceCal && h.hasLog;
+              const overflowHeight = h.hasLog
+                ? Math.max(
+                    0,
+                    Math.round((overflowKcal / historyScale) * historyBarHeight),
+                  )
+                : 0;
+              const mealShare =
+                total > 0 ? Math.min(1, Math.max(0, h.mealK / total)) : 0;
+              const mealHeight = h.hasLog
+                ? Math.round(baseHeight * mealShare)
+                : 0;
+              const snackHeight = h.hasLog
+                ? Math.max(0, baseHeight - mealHeight)
+                : 0;
+              const isOverGoal = overflowKcal > 0 && h.hasLog;
               const label = h.hasLog
-                ? `${prettyDate(h.date)}: ${intake.toLocaleString()} kcal logged (${h.mealK.toLocaleString()} meals / ${h.snackK.toLocaleString()} snacks), ${h.deficit >= 0 ? `${h.deficit.toLocaleString()} kcal deficit` : `${Math.abs(h.deficit).toLocaleString()} kcal surplus`}`
+                ? `${prettyDate(h.date)}: ${total.toLocaleString()} kcal logged (${h.mealK.toLocaleString()} meals / ${h.snackK.toLocaleString()} snacks), ${h.deficit >= 0 ? `${h.deficit.toLocaleString()} kcal deficit` : `${Math.abs(h.deficit).toLocaleString()} kcal surplus`}`
                 : `${prettyDate(h.date)}: Not logged`;
               const weekday = parseISODate(h.date).toLocaleDateString(
                 undefined,
@@ -2515,8 +2564,14 @@
                 `<button type="button" class="history-day${isActive ? " active" : ""}${isToday ? " today" : ""}" title="${escapeHtml(label)}" data-history-day="${h.date}" data-has-log="${h.hasLog ? "true" : "false"}" style="--bar-height:${h.hasLog ? barHeight : 32}px" aria-label="Load ${escapeHtml(label)}">` +
                 `<span class="history-bar-area">${
                   h.hasLog
-                    ? `<span class="history-bar-stack${isOverGoal ? " over-goal" : ""}" style="height:${barHeight}px"><span class="history-bar-seg snack" style="height:${snackHeight}px"></span><span class="history-bar-seg meal" style="height:${mealHeight}px"></span></span>`
-                    : '<span class="history-empty-bar"></span>'
+                    ? `<span class="history-bar-stack${isOverGoal ? " over-goal has-overflow" : ""}" style="height:${barHeight}px">` +
+                      (overflowHeight > 0
+                        ? `<span class="history-bar-seg overflow" style="height:${overflowHeight}px" aria-hidden="true"></span>`
+                        : "") +
+                      `<span class="history-bar-seg meal${overflowHeight === 0 ? " top-cap" : ""}" style="height:${mealHeight}px"></span>` +
+                      `<span class="history-bar-seg snack bottom-cap${overflowHeight === 0 && mealHeight === 0 ? " top-cap" : ""}" style="height:${snackHeight}px"></span>` +
+                      `</span>`
+                    : '<span class="history-empty-bar"></span>' 
                 }</span>` +
                 `<span class="history-day-label">${weekday}</span>` +
                 `</button>`
@@ -2527,12 +2582,21 @@
         <div class="history-legend">
           <span class="legend-item"><span class="legend-swatch meal"></span>Meals</span>
           <span class="legend-item"><span class="legend-swatch snack"></span>Snacks</span>
+          <span class="legend-item"><span class="legend-swatch overflow"></span>Above maintenance</span>
           <span class="legend-item"><span class="legend-swatch trend"></span>7-day avg intake</span>
+          <span class="legend-item"><span class="legend-swatch maintenance"></span>Maintenance calories</span>
         </div>
         <div class="history-footer">
-                    <span class="history-average"><strong>${Math.abs(historyAvgDeficit).toLocaleString()} kcal</strong> avg ${historyAvgDeficit >= 0 ? "deficit" : "surplus"}</span>
-          <span class="history-average"><strong>${Math.abs(projectedKgPerWeek).toFixed(1)} kg </strong> ${projectedKgPerWeek >= 0 ? "loss" : "gain"} per week
-        </span>
+          <span class="history-average${historyAvgDeficit < 0 ? " surplus" : ""}">
+            <strong>${Math.abs(historyAvgDeficit).toLocaleString()} kcal</strong> avg ${historyAvgDeficit >= 0 ? "deficit" : "surplus"}
+          </span>
+          <span class="history-average${projectedKgPerWeek < 0 ? " surplus" : ""}">
+            ${
+              Math.abs(projectedKgPerWeek) < 0.05
+                ? "<strong>Maintenance</strong> · stable"
+                : `<strong>${Math.abs(projectedKgPerWeek).toFixed(1)} kg</strong> ${projectedKgPerWeek > 0 ? "loss" : "gain"} per week`
+            }
+          </span>
         </div>
       </section>
       <section class="manage-section">
