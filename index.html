@@ -2568,8 +2568,8 @@
                       (overflowHeight > 0
                         ? `<span class="history-bar-seg overflow" style="height:${overflowHeight}px" aria-hidden="true"></span>`
                         : "") +
-                      `<span class="history-bar-seg meal${overflowHeight === 0 ? " top-cap" : ""}" style="height:${mealHeight}px"></span>` +
-                      `<span class="history-bar-seg snack bottom-cap${overflowHeight === 0 && mealHeight === 0 ? " top-cap" : ""}" style="height:${snackHeight}px"></span>` +
+                      `<span class="history-bar-seg snack${overflowHeight === 0 ? " top-cap" : ""}" style="height:${snackHeight}px"></span>` +
+                      `<span class="history-bar-seg meal bottom-cap${overflowHeight === 0 && snackHeight === 0 ? " top-cap" : ""}" style="height:${mealHeight}px"></span>` +
                       `</span>`
                     : '<span class="history-empty-bar"></span>' 
                 }</span>` +
