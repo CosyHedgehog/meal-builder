@@ -10,6 +10,7 @@ HTML_PATH = os.path.join(BASE_DIR, 'index.html')
 HOST = '127.0.0.1'
 PORT = 5500
 SESSIONS = {}
+SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30 * 3  # 90 days
 
 # Static assets: only files under these top-level directories are served,
 # and only with these extensions, to keep this a narrow allowlist rather
@@ -56,8 +57,28 @@ def init_db():
         updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
     );
+    CREATE TABLE IF NOT EXISTS sessions (
+        token TEXT PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        username TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        expires_at TEXT NOT NULL,
+        FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
     ''')
     conn.commit(); conn.close()
+
+def load_sessions():
+    """Repopulate the in-memory session cache from disk on startup, so a
+    server restart (e.g. from a deploy) doesn't log everyone out. Expired
+    sessions are dropped."""
+    conn = db()
+    conn.execute("DELETE FROM sessions WHERE expires_at <= datetime('now')")
+    conn.commit()
+    rows = conn.execute('SELECT token,user_id,username FROM sessions').fetchall()
+    conn.close()
+    for row in rows:
+        SESSIONS[row['token']] = {'user_id': row['user_id'], 'username': row['username']}
 
 def hash_password(password, salt=None):
     salt = salt or secrets.token_bytes(16)
@@ -77,14 +98,37 @@ def valid_credentials(username, password):
 def create_session(user_id, username):
     token = secrets.token_urlsafe(32)
     SESSIONS[token] = {'user_id': user_id, 'username': username}
+    conn = db()
+    conn.execute(
+        "INSERT INTO sessions(token,user_id,username,expires_at) VALUES(?,?,?,datetime('now',?))",
+        (token, user_id, username, f'+{SESSION_MAX_AGE_SECONDS} seconds')
+    )
+    conn.commit(); conn.close()
     return token
+
+def destroy_session(token):
+    SESSIONS.pop(token, None)
+    conn = db(); conn.execute('DELETE FROM sessions WHERE token=?', (token,)); conn.commit(); conn.close()
 
 def current_session(handler):
     raw = handler.headers.get('Cookie', '')
     jar = cookies.SimpleCookie(); jar.load(raw)
     token = jar.get('session')
     if not token: return None
-    return SESSIONS.get(token.value)
+    session = SESSIONS.get(token.value)
+    if session: return session
+    # Not in memory (e.g. server just restarted) — fall back to disk once
+    # and warm the cache so we don't hit the DB on every request.
+    conn = db()
+    row = conn.execute(
+        "SELECT user_id,username FROM sessions WHERE token=? AND expires_at > datetime('now')",
+        (token.value,)
+    ).fetchone()
+    conn.close()
+    if not row: return None
+    session = {'user_id': row['user_id'], 'username': row['username']}
+    SESSIONS[token.value] = session
+    return session
 
 def json_response(handler, status, payload, extra_headers=None):
     body = json.dumps(payload).encode('utf-8')
@@ -170,16 +214,16 @@ class Handler(BaseHTTPRequestHandler):
             except sqlite3.IntegrityError:
                 conn.close(); return json_response(self,409,{'error':'That username is already taken.'})
             conn.close(); token=create_session(uid,username)
-            return json_response(self,200,{'user':{'username':username}}, {'Set-Cookie':f'session={token}; HttpOnly; SameSite=Lax; Path=/'})
+            return json_response(self,200,{'user':{'username':username}}, {'Set-Cookie':f'session={token}; HttpOnly; SameSite=Lax; Path=/; Max-Age={SESSION_MAX_AGE_SECONDS}'})
         if path == '/api/login':
             username=clean_username(data.get('username')); password=str(data.get('password') or '')
             conn=db(); row=conn.execute('SELECT id,username,password_hash,password_salt FROM users WHERE username=? COLLATE NOCASE',(username,)).fetchone(); conn.close()
             if not row or not verify_password(password,row['password_salt'],row['password_hash']): return json_response(self,401,{'error':'Invalid username or password.'})
             token=create_session(row['id'],row['username'])
-            return json_response(self,200,{'user':{'username':row['username']}}, {'Set-Cookie':f'session={token}; HttpOnly; SameSite=Lax; Path=/'})
+            return json_response(self,200,{'user':{'username':row['username']}}, {'Set-Cookie':f'session={token}; HttpOnly; SameSite=Lax; Path=/; Max-Age={SESSION_MAX_AGE_SECONDS}'})
         if path == '/api/logout':
             raw=self.headers.get('Cookie',''); jar=cookies.SimpleCookie(); jar.load(raw); token=jar.get('session')
-            if token: SESSIONS.pop(token.value,None)
+            if token: destroy_session(token.value)
             return json_response(self,200,{'ok':True},{'Set-Cookie':'session=; Max-Age=0; HttpOnly; SameSite=Lax; Path=/'})
         return json_response(self,404,{'error':'Not found'})
 
@@ -208,6 +252,7 @@ class Handler(BaseHTTPRequestHandler):
 # Main entry point
 if __name__ == '__main__':
     init_db()
+    load_sessions()
     print(f'Meal Builder running at http://{HOST}:{PORT}')
     print(f'SQLite database: {DB_PATH}')
     ThreadingHTTPServer((HOST,PORT),Handler).serve_forever()
