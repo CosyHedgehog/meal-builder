@@ -9,6 +9,8 @@ DEPLOY_BRANCH="${DEPLOY_BRANCH:-main}"
 DEPLOY_REMOTE="${DEPLOY_REMOTE:-origin}"
 SSH_KEY="${SSH_KEY:-$HOME/.ssh/meal-builder_deploy}"
 SERVICE_NAME="${SERVICE_NAME:-meal-builder.service}"
+FRONTEND_DIR="${FRONTEND_DIR:-$PROJECT_ROOT/frontend}"
+NPM_BIN="${NPM_BIN:-npm}"
 
 log() {
   printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*"
@@ -21,6 +23,7 @@ log "Repository: $PROJECT_ROOT"
 log "Expected branch: $DEPLOY_BRANCH"
 log "Remote: $DEPLOY_REMOTE"
 log "Service: $SERVICE_NAME"
+log "Frontend: $FRONTEND_DIR"
 log "Log file: $LOG_FILE"
 
 if [ ! -d .git ]; then
@@ -65,6 +68,7 @@ log "Changed files:\n$CHANGED_FILES"
 
 REQUIREMENTS_CHANGED="$(printf '%s\n' "$CHANGED_FILES" | grep -E '^requirements\.txt$' || true)"
 BACKEND_CHANGED="$(printf '%s\n' "$CHANGED_FILES" | grep -E '(^server\.py$|\.py$|^requirements\.txt$)' || true)"
+FRONTEND_CHANGED="$(printf '%s\n' "$CHANGED_FILES" | grep -E '^frontend/' || true)"
 
 if [ -n "$REQUIREMENTS_CHANGED" ]; then
   if [ -x "./venv/bin/pip" ]; then
@@ -76,8 +80,25 @@ if [ -n "$REQUIREMENTS_CHANGED" ]; then
   fi
 fi
 
-if [ -n "$BACKEND_CHANGED" ]; then
-  log "Backend code changed; restarting $SERVICE_NAME"
+if [ -n "$FRONTEND_CHANGED" ]; then
+  if ! command -v "$NPM_BIN" >/dev/null 2>&1; then
+    log "ERROR: npm is not installed or not on PATH"
+    exit 1
+  fi
+  if [ ! -f "$FRONTEND_DIR/package-lock.json" ]; then
+    log "ERROR: frontend/package-lock.json is missing; cannot run npm ci"
+    exit 1
+  fi
+  log "Frontend changes detected; installing dependencies"
+  "$NPM_BIN" --prefix "$FRONTEND_DIR" ci
+  log "Building Vue frontend"
+  "$NPM_BIN" --prefix "$FRONTEND_DIR" run build
+  log "Frontend build complete"
+fi
+
+RESTART_REQUIRED="$BACKEND_CHANGED$FRONTEND_CHANGED"
+if [ -n "$RESTART_REQUIRED" ]; then
+  log "Backend or frontend changes detected; restarting $SERVICE_NAME"
   sudo systemctl restart "$SERVICE_NAME"
   log "Restarted $SERVICE_NAME"
 else

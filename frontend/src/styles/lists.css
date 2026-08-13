@@ -1,0 +1,80 @@
+.manager-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.manager-item-row {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.manager-item-row.dragging {
+  opacity: 0.4;
+}
+
+.manager-item-row.drag-over .manager-item {
+  border-color: var(--green);
+}
+
+.manager-drag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  flex: none;
+  color: var(--ink-muted);
+  cursor: grab;
+  font-size: 14px;
+  letter-spacing: 1px;
+  border-radius: 8px;
+  touch-action: none;
+}
+
+.manager-drag:hover {
+  color: var(--ink);
+  background: var(--surface-alt);
+}
+
+.manager-drag:active {
+  cursor: grabbing;
+}
+
+.manager-drag.disabled {
+  opacity: 0.25;
+  cursor: default;
+  pointer-events: none;
+}
+
+.manager-item {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.manager-item:hover {
+  background: var(--surface-alt);
+}
+
+.manager-item strong,
+.manager-item small {
+  display: block;
+}
+
+.manager-item small {
+  margin-top: 3px;
+  color: var(--ink-muted);
+  font-size: 12px;
+}

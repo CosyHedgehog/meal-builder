@@ -6,19 +6,24 @@ from http import cookies
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, 'meal_builder.sqlite3')
-HTML_PATH = os.path.join(BASE_DIR, 'index.html')
+FRONTEND_DIR = os.path.join(BASE_DIR, 'frontend', 'dist')
+HTML_PATH = os.path.join(FRONTEND_DIR, 'index.html')
 HOST = '127.0.0.1'
 PORT = 5500
 SESSIONS = {}
 SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30 * 3  # 90 days
 
-# Static assets: only files under these top-level directories are served,
-# and only with these extensions, to keep this a narrow allowlist rather
-# than a general-purpose file server.
-STATIC_DIRS = {'css', 'js'}
 STATIC_CONTENT_TYPES = {
     '.css': 'text/css; charset=utf-8',
     '.js': 'application/javascript; charset=utf-8',
+    '.svg': 'image/svg+xml',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.gif': 'image/gif',
+    '.webp': 'image/webp',
+    '.woff': 'font/woff',
+    '.woff2': 'font/woff2',
 }
 
 DEFAULT_DATA = {
@@ -147,16 +152,14 @@ def read_json(handler):
     return json.loads(raw.decode('utf-8') or '{}')
 
 def resolve_static_path(url_path):
-    """Map a request path like /css/base.css to a file on disk, restricted
-    to STATIC_DIRS and STATIC_CONTENT_TYPES. Returns None if the path isn't
-    a servable static asset (including any attempt to escape BASE_DIR)."""
+    """Resolve /assets/* requests inside the Vite dist directory."""
     parts = [p for p in url_path.split('/') if p not in ('', '.')]
-    if len(parts) < 2 or parts[0] not in STATIC_DIRS: return None
+    if len(parts) < 2 or parts[0] != 'assets': return None
     if any(p == '..' for p in parts): return None
     ext = os.path.splitext(parts[-1])[1].lower()
     if ext not in STATIC_CONTENT_TYPES: return None
-    full_path = os.path.normpath(os.path.join(BASE_DIR, *parts))
-    if not full_path.startswith(BASE_DIR + os.sep): return None
+    full_path = os.path.normpath(os.path.join(FRONTEND_DIR, *parts))
+    if not full_path.startswith(FRONTEND_DIR + os.sep): return None
     if not os.path.isfile(full_path): return None
     return full_path, STATIC_CONTENT_TYPES[ext]
 
@@ -183,7 +186,7 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 with open(HTML_PATH, 'rb') as f: body = f.read()
             except FileNotFoundError:
-                return json_response(self, 500, {'error':'index_sqlite.html not found'})
+                return json_response(self, 500, {'error':'Frontend build not found. Run npm run build in frontend/.'})
             self.send_response(200); self.send_header('Content-Type','text/html; charset=utf-8'); self.send_header('Content-Length',str(len(body))); self.end_headers(); self.wfile.write(body); return
         static = resolve_static_path(path)
         if static:

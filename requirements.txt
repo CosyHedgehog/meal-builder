@@ -1,3 +1,0 @@
-# No external Python packages are required for this app.
-# Install Python 3.9+ and run the application with:
-#   python server.py

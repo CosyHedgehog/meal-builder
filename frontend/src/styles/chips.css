@@ -1,0 +1,244 @@
+.today-chips {
+  display: grid;
+  gap: 12px;
+}
+
+.chip-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chip-group-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-muted);
+}
+
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.quick-picks-viewport {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.meal-quick-picks {
+  overflow-x: auto;
+  padding: 2px 2px 5px;
+  scrollbar-width: thin;
+  align-items: center;
+}
+
+.meal-quick-picks::-webkit-scrollbar {
+  height: 4px;
+}
+
+.meal-quick-picks::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 999px;
+}
+
+.snack-quick-picks {
+  align-items: center;
+}
+
+.today-chip {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 999px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 2px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+  white-space: nowrap;
+}
+
+.today-chip:hover {
+  background: var(--surface-alt);
+}
+
+.today-chip.active {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+
+.today-chip.active:hover {
+  background: var(--green-strong);
+  border-color: var(--green-strong);
+  color: #fff;
+}
+
+.chip-kcal {
+  margin-left: 3px;
+  color: var(--ink-muted);
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.today-chip.active .chip-kcal {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.today-chip.chip-add {
+  border-style: dashed;
+  color: var(--ink-muted);
+  background: transparent;
+}
+
+.today-chip.chip-add:hover {
+  color: var(--ink);
+  border-color: var(--ink-muted);
+}
+
+.today-chip.one-off {
+  border-style: dashed;
+}
+
+.today-chip.one-off .chip-kcal {
+  font-style: italic;
+}
+
+.one-off-badge {
+  display: inline-block;
+  margin-left: 5px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.today-chip:not(.active) .one-off-badge {
+  background: var(--surface-alt);
+  color: var(--ink-muted);
+}
+
+/* ---- snack steppers ---- */
+.snack-stepper {
+  display: inline-flex;
+  align-items: stretch;
+  min-height: 30px;
+  max-height: 30px;
+  overflow: hidden;
+  border: 1px solid var(--green);
+  border-radius: 999px;
+  background: var(--green);
+  color: #fff;
+  box-shadow: 0 2px 7px rgba(63, 107, 74, 0.18);
+}
+
+.snack-stepper.one-off {
+  border-style: dashed;
+  filter: brightness(0.92) saturate(1.15);
+}
+
+.snack-stepper-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  background: transparent;
+  color: inherit;
+  font-size: 10px;
+  line-height: 1;
+  transition: background 0.15s ease;
+}
+
+.snack-stepper-control:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.snack-stepper-label {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border-inline: 1px solid rgba(255, 255, 255, 0.28);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.snack-stepper-kcal {
+  margin-left: 3px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* ---- kcal labels hidden ---- */
+.chip-list.kcal-hidden .chip-kcal,
+.chip-list.kcal-hidden .snack-stepper-kcal {
+  display: none;
+}
+
+.chip-list.kcal-hidden .today-chip {
+  min-height: 22px;
+  max-height: 22px;
+  padding: 5px 7px;
+}
+
+.chip-list.kcal-hidden .snack-stepper {
+  min-height: 22px;
+  max-height: 22px;
+}
+
+.chip-more {
+  flex: none;
+  padding: 5px 2px;
+  border: 0;
+  background: transparent;
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.chip-more:hover {
+  color: var(--green-strong);
+}
+
+.chip-more:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Keep the overflow action visually separate from food chips. */
+.today-chip.chip-more {
+  border: 0;
+  color: var(--green);
+  background: transparent;
+}
+
+.today-chip.chip-more:hover {
+  border-color: transparent;
+  background: transparent;
+}
