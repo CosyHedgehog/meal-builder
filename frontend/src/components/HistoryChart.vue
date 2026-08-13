@@ -28,13 +28,11 @@ const useHistoryGroups = computed(() => store.groups.filter((group) => group.id 
         :class="{ active: bar.date === view.logDate, today: bar.isToday }" :title="bar.label"
         :aria-label="`Load ${bar.label}`" @click="setLogDate(bar.date)">
         <span class="history-bar-area">
-          <span v-if="bar.hasLog" class="history-bar-stack" :class="{ 'over-goal': bar.isOverGoal }"
+          <span v-if="bar.hasLog" class="history-bar-stack"
             :style="{ height: bar.barHeight + 'px' }">
-            <span v-if="bar.overflowHeight > 0" class="history-bar-seg overflow"
-              :style="{ height: bar.overflowHeight + 'px' }" aria-hidden="true"></span>
             <span v-for="(segment, index) in bar.groupSegments" :key="segment.id"
               class="history-bar-seg group-segment"
-              :class="[`group-${segment.colorIndex % 5}`, { 'bottom-cap': index === 0, 'top-cap': bar.overflowHeight === 0 && index === bar.groupSegments.length - 1 }]"
+              :class="[`group-${segment.colorIndex % 5}`, { 'bottom-cap': index === 0, 'top-cap': index === bar.groupSegments.length - 1 }]"
               :style="{ height: segment.height + 'px' }"></span>
           </span>
           <span v-else class="history-empty-bar"></span>
@@ -47,7 +45,6 @@ const useHistoryGroups = computed(() => store.groups.filter((group) => group.id 
       <span v-for="(group, index) in useHistoryGroups" :key="group.id" class="legend-item">
         <span class="legend-swatch" :class="`group-${index % 5}`"></span>{{ group.name }}
       </span>
-      <span class="legend-item"><span class="legend-swatch overflow"></span>Surplus</span>
       <span class="legend-item"><span class="legend-swatch trend"></span>7-day rolling avg</span>
       <span class="legend-item"><span class="legend-swatch maintenance"></span>Maintenance calories</span>
     </div>
@@ -111,10 +108,6 @@ const useHistoryGroups = computed(() => store.groups.filter((group) => group.id 
   position: relative;
 }
 
-.history-bar-stack.over-goal {
-  box-shadow: 0 0 0 1px rgba(224, 102, 102, 0.14);
-}
-
 .history-bar-seg {
   width: 100%;
   flex: none;
@@ -132,11 +125,6 @@ const useHistoryGroups = computed(() => store.groups.filter((group) => group.id 
 
 .history-bar-seg.snack {
   background: var(--green-light);
-}
-
-.history-bar-seg.overflow {
-  background: var(--history-over);
-  border-radius: 6px 6px 0 0;
 }
 
 .history-bar-seg.top-cap {
@@ -238,10 +226,6 @@ const useHistoryGroups = computed(() => store.groups.filter((group) => group.id 
 .legend-swatch.group-2 { background: #79a96f; }
 .legend-swatch.group-3 { background: #4f8f58; }
 .legend-swatch.group-4 { background: #a8c98f; }
-
-.legend-swatch.overflow {
-  background: var(--history-over);
-}
 
 .legend-swatch.trend {
   width: 18px;

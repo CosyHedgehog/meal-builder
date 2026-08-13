@@ -102,14 +102,10 @@ export function useHistoryChart() {
     history.value.map((entry) => {
       const total = Math.max(0, entry.total || 0)
       const baseKcal = Math.min(total, store.maintenanceCal)
-      const overflowKcal = Math.max(0, total - store.maintenanceCal)
       const barHeight = entry.hasLog
         ? Math.max(5, Math.round((total / scale.value) * BAR_HEIGHT))
         : 0
       const baseHeight = entry.hasLog ? Math.round((baseKcal / scale.value) * BAR_HEIGHT) : 0
-      const overflowHeight = entry.hasLog
-        ? Math.max(0, Math.round((overflowKcal / scale.value) * BAR_HEIGHT))
-        : 0
       const groupSegments = store.groups
         .filter((group) => group.id !== 'group-uncategorized')
         .map((group, index) => ({
@@ -128,12 +124,10 @@ export function useHistoryChart() {
         ...entry,
         barHeight,
         groupSegments,
-        overflowHeight,
-        isOverGoal: overflowKcal > 0 && entry.hasLog,
         weekday: weekdayNarrow(entry.date),
         isToday: entry.date === todayStr(),
         label: entry.hasLog
-          ? `${prettyDate(entry.date)}: ${entry.total.toLocaleString()} kcal logged, ${entry.deficit >= 0 ? `${entry.deficit.toLocaleString()} kcal deficit` : `${Math.abs(entry.deficit).toLocaleString()} kcal surplus`}`
+          ? `${prettyDate(entry.date)}: ${entry.total.toLocaleString()} kcal logged, ${entry.deficit.toLocaleString()} kcal deficit`
           : `${prettyDate(entry.date)}: Not logged`,
       }
     }),

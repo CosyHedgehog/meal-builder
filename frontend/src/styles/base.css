@@ -16,7 +16,6 @@
   --shadow-rgb: 28, 42, 31;
   --backdrop-rgb: 20, 28, 20;
   --history-empty: #f0f0f0;
-  --history-over: #d98970;
   --green-strong: #2f623f;
   --trend-line: #3a7dd9;
 }
@@ -38,7 +37,6 @@
   --shadow-rgb: 150, 150, 150;
   --backdrop-rgb: 0, 0, 0;
   --history-empty: #262f25;
-  --history-over: #c17457;
   --green-strong: #4a8f5a;
   --trend-line: #6ea8f0;
 }
