@@ -7,6 +7,7 @@ export const Modals = Object.freeze({
   FOOD_EDITOR: 'food-editor',
   FOOD_MANAGER: 'food-manager',
   GROUP_MANAGER: 'group-manager',
+  CUSTOM_ENTRY: 'custom-entry',
 })
 
 /**

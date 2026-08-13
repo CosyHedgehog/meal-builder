@@ -10,8 +10,8 @@ const props = defineProps({ groupId: { type: String, default: '' } })
 const emit = defineEmits(['close'])
 const query = ref('')
 const selectedGroupId = ref(props.groupId)
-const groups = computed(() => store.groups.filter((group) => group.id !== UNCATEGORIZED_GROUP_ID))
-const foods = computed(() => selectedGroupId.value ? foodsInGroup(selectedGroupId.value) : store.foods.filter((food) => food.groupId !== UNCATEGORIZED_GROUP_ID))
+const groups = computed(() => store.groups)
+const foods = computed(() => selectedGroupId.value ? foodsInGroup(selectedGroupId.value) : store.foods)
 const filteredFoods = computed(() => {
   const value = query.value.trim().toLowerCase()
   return value ? foods.value.filter((food) => food.name.toLowerCase().includes(value)) : foods.value

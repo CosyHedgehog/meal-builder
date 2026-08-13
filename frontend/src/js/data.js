@@ -24,7 +24,14 @@ function defaultGroups() {
     { id: LUNCH_GROUP_ID, name: 'Lunch' },
     { id: DINNER_GROUP_ID, name: 'Dinner' },
     { id: SNACKS_GROUP_ID, name: 'Snacks' },
+    { id: UNCATEGORIZED_GROUP_ID, name: 'Uncategorized' },
   ]
+}
+
+function ensureUncategorizedGroup(groups) {
+  return groups.some((group) => group.id === UNCATEGORIZED_GROUP_ID)
+    ? groups
+    : [...groups, { id: UNCATEGORIZED_GROUP_ID, name: 'Uncategorized' }]
 }
 
 export const state = reactive({
@@ -191,10 +198,11 @@ export async function loadData() {
 
     state.ingredients = Array.isArray(normalized.ingredients) ? normalized.ingredients : []
     state.foods = Array.isArray(normalized.foods) ? normalized.foods : []
-    state.groups =
+    state.groups = ensureUncategorizedGroup(
       Array.isArray(normalized.groups) && normalized.groups.length
         ? normalized.groups
-        : defaultGroups()
+        : defaultGroups(),
+    )
     state.logs = normalized.logs && typeof normalized.logs === 'object' ? normalized.logs : {}
     Object.values(state.logs).forEach((log) => {
       if (Array.isArray(log?.entries)) log.entries = log.entries.map(normalizeLogEntry).filter(Boolean)
@@ -506,6 +514,15 @@ export function addCustomLogEntry(dateStr, groupId, name, kcal, qty = 1) {
     kcal: !Number.isFinite(kcal) || kcal < 0 ? 0 : kcal,
     qty: !Number.isFinite(qty) || qty <= 0 ? 1 : qty,
   })
+  save()
+}
+
+export function updateCustomLogEntry(dateStr, entryId, name, kcal) {
+  const log = ensureLog(dateStr)
+  const entry = log.entries.find((item) => item.id === entryId && !item.foodId)
+  if (!entry) return
+  entry.name = (name || 'Custom').trim() || 'Custom'
+  entry.kcal = !Number.isFinite(kcal) || kcal < 0 ? 0 : kcal
   save()
 }
 

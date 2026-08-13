@@ -30,7 +30,7 @@ const ingredientRows = computed(() => draft.items.map((item) => ({
   kcal: Math.round(itemKcal(item)),
 })))
 const totalKcal = computed(() => Math.round(draft.items.reduce((sum, item) => sum + itemKcal(item), 0)))
-const groups = computed(() => store.groups.filter((group) => group.id !== 'group-uncategorized'))
+const groups = computed(() => store.groups)
 const validationMessage = ref('')
 
 function addIngredientRow() {
@@ -78,7 +78,7 @@ async function closeEditor() {
       <div class="input-field food-field">
         <label for="foodGroup">Group</label>
         <select id="foodGroup" v-model="draft.groupId">
-          <option value="">Select a group...</option>
+          <option value="" disabled hidden>Select a group...</option>
           <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
         </select>
       </div>

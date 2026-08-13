@@ -119,11 +119,16 @@ export function useHistoryChart() {
       if (entry.hasLog && segmentHeight < baseHeight && groupSegments.length) {
         groupSegments[groupSegments.length - 1].height += baseHeight - segmentHeight
       }
+      const visibleSegmentIndexes = groupSegments
+        .map((segment, index) => (segment.height > 0 ? index : -1))
+        .filter((index) => index !== -1)
 
       return {
         ...entry,
         barHeight,
         groupSegments,
+        firstSegmentIndex: visibleSegmentIndexes[0] ?? 0,
+        lastSegmentIndex: visibleSegmentIndexes.at(-1) ?? 0,
         weekday: weekdayNarrow(entry.date),
         isToday: entry.date === todayStr(),
         label: entry.hasLog

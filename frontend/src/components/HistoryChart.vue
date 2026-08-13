@@ -32,7 +32,7 @@ const useHistoryGroups = computed(() => store.groups.filter((group) => group.id 
             :style="{ height: bar.barHeight + 'px' }">
             <span v-for="(segment, index) in bar.groupSegments" :key="segment.id"
               class="history-bar-seg group-segment"
-              :class="[`group-${segment.colorIndex % 5}`, { 'bottom-cap': index === 0, 'top-cap': index === bar.groupSegments.length - 1 }]"
+              :class="[`group-${segment.colorIndex % 5}`, { 'bottom-cap': index === bar.firstSegmentIndex, 'top-cap': index === bar.lastSegmentIndex }]"
               :style="{ height: segment.height + 'px' }"></span>
           </span>
           <span v-else class="history-empty-bar"></span>

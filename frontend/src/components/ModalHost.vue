@@ -9,6 +9,7 @@ import IngredientEditorModal from './IngredientEditorModal.vue'
 import FoodManagerModal from './FoodManagerModal.vue'
 import GroupManagerModal from './GroupManagerModal.vue'
 import IngredientModal from './IngredientModal.vue'
+import CustomEntryModal from './CustomEntryModal.vue'
 </script>
 <script>
 const registry = {
@@ -18,6 +19,7 @@ const registry = {
   [Modals.FOOD_MANAGER]: FoodManagerModal,
   [Modals.GROUP_MANAGER]: GroupManagerModal,
   [Modals.INGREDIENT_MANAGER]: IngredientModal,
+  [Modals.CUSTOM_ENTRY]: CustomEntryModal,
 }
 
 function onKeydown(e) {
