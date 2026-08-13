@@ -105,7 +105,7 @@
 }
 
 .manager-delete:hover {
-  background: rgba(181, 70, 57, 0.08);
+  /* background: rgba(181, 70, 57, 0.08); */
   color: var(--red);
-  border-color: rgba(181, 70, 57, 0.25);
+  /* border-color: rgba(181, 70, 57, 0.25); */
 }
