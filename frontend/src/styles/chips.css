@@ -143,8 +143,8 @@
 .snack-stepper {
   display: inline-flex;
   align-items: stretch;
-  min-height: 30px;
-  max-height: 30px;
+  min-height: 28px;
+  max-height: 28px;
   overflow: hidden;
   border: 1px solid var(--green);
   border-radius: 999px;
