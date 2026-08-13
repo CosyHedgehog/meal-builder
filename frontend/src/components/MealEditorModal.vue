@@ -142,8 +142,9 @@ async function removeMeal() {
         </div>
 
         <div class="add-item-row">
-          <select v-model="pendingIngredientId" class="add-item-select">
-            <option value="">Choose an ingredient…</option>
+          <label class="add-item-label" for="addIngredientSelect">Select an ingredient</label>
+          <select id="addIngredientSelect" v-model="pendingIngredientId" class="add-item-select">
+            <option value="">Select…</option>
             <option v-for="i in available" :key="i.id" :value="i.id">
               {{ i.name }} ({{ i.unit === 'g' ? 'g' : 'each' }})
             </option>
@@ -300,18 +301,18 @@ async function removeMeal() {
 
 .quantity-control {
   display: grid;
-  grid-template-columns: 62px 30px;
+  grid-template-columns: 62px 34px;
   align-items: center;
   gap: 6px;
-  width: 98px;
+  width: 102px;
   flex: none;
 }
 
 .quantity-control > span {
   color: var(--ink-muted);
   font-size: 11px;
-  width: 30px;
-  text-align: left;
+  width: 34px;
+  text-align: center;
 }
 
 .item-qty {
@@ -395,6 +396,16 @@ async function removeMeal() {
   background: var(--bg);
   border: 1px solid var(--line);
   border-radius: 14px;
+  align-items: end;
+}
+
+.add-item-label {
+  grid-column: 1 / -1;
+  color: var(--ink-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .add-item-select,
