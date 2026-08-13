@@ -310,8 +310,6 @@ async function removeMeal() {
 .quantity-control > span {
   color: var(--ink-muted);
   font-size: 11px;
-  width: 34px;
-  text-align: center;
 }
 
 .item-qty {
