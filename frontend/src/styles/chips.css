@@ -74,8 +74,8 @@
 }
 
 .today-chip {
-  border: 1px solid var(--line);
-  background: var(--surface);
+  border: 1px solid transparent;
+  background: transparent;
   color: var(--ink);
   border-radius: 999px;
   display: inline-flex;
@@ -94,6 +94,7 @@
 }
 
 .today-chip:hover {
+  border-color: var(--line);
   background: var(--surface-alt);
 }
 
@@ -162,14 +163,16 @@
 .snack-stepper {
   display: inline-flex;
   align-items: stretch;
-  min-height: 28px;
-  max-height: 28px;
+  min-height: 30px;
+  max-height: 30px;
   overflow: hidden;
-  border: 1px solid var(--green);
+  /* border: 1px solid var(--stepper-bg); */
   border-radius: 999px;
-  background: var(--green);
-  color: #fff;
-  box-shadow: 0 2px 7px rgba(63, 107, 74, 0.18);
+  /* background: var(--stepper-bg); */
+  color: var(--stepper-ink);
+  box-shadow: 0 2px 7px rgba(var(--shadow-rgb), 0.1);
+    border: 1px solid var(--line);
+  background: var(--surface);
 }
 
 .snack-stepper.one-off {
@@ -190,7 +193,7 @@
 }
 
 .snack-stepper-control:hover {
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(var(--shadow-rgb), 0.08);
 }
 
 .snack-stepper-label {
@@ -200,7 +203,7 @@
   justify-content: center;
   padding: 0 4px;
   border: 0;
-  border-inline: 1px solid rgba(255, 255, 255, 0.28);
+  border-inline: 1px solid var(--stepper-divider);
   background: transparent;
   color: inherit;
   cursor: pointer;
@@ -211,7 +214,7 @@
 
 .snack-stepper-kcal {
   margin-left: 3px;
-  color: rgba(255, 255, 255, 0.72);
+  color: var(--stepper-muted);
   font-size: 9px;
   font-weight: 500;
   line-height: 1;
@@ -272,8 +275,3 @@
 .snack-stepper.group-2 { --stepper-color: #79a96f; }
 .snack-stepper.group-3 { --stepper-color: #4f8f58; }
 .snack-stepper.group-4 { --stepper-color: #a8c98f; }
-
-.snack-stepper:not(.one-off) {
-  border-color: var(--stepper-color, var(--green));
-  background: var(--stepper-color, var(--green));
-}

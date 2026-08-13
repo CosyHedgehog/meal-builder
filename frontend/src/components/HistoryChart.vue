@@ -1,11 +1,8 @@
 <script setup>
-import { computed } from 'vue'
 import { setLogDate, view } from '../js/ui.js'
-import { state as store } from '../js/data.js'
 import { useHistoryChart } from '../js/useHistoryChart.js'
 
 const { days, bars, trendPaths, goalLineBottom } = useHistoryChart()
-const useHistoryGroups = computed(() => store.groups.filter((group) => group.id !== 'group-uncategorized'))
 </script>
 
 <template>
@@ -28,12 +25,8 @@ const useHistoryGroups = computed(() => store.groups.filter((group) => group.id 
         :class="{ active: bar.date === view.logDate, today: bar.isToday }" :title="bar.label"
         :aria-label="`Load ${bar.label}`" @click="setLogDate(bar.date)">
         <span class="history-bar-area">
-          <span v-if="bar.hasLog" class="history-bar-stack"
+          <span v-if="bar.hasLog" class="history-bar-stack" :class="{ 'over-goal': bar.overGoal }"
             :style="{ height: bar.barHeight + 'px' }">
-            <span v-for="(segment, index) in bar.groupSegments" :key="segment.id"
-              class="history-bar-seg group-segment"
-              :class="[`group-${segment.colorIndex % 5}`, { 'bottom-cap': index === bar.firstSegmentIndex, 'top-cap': index === bar.lastSegmentIndex }]"
-              :style="{ height: segment.height + 'px' }"></span>
           </span>
           <span v-else class="history-empty-bar"></span>
         </span>
@@ -42,9 +35,8 @@ const useHistoryGroups = computed(() => store.groups.filter((group) => group.id 
     </div>
 
     <div class="history-legend">
-      <span v-for="(group, index) in useHistoryGroups" :key="group.id" class="legend-item">
-        <span class="legend-swatch" :class="`group-${index % 5}`"></span>{{ group.name }}
-      </span>
+      <span class="legend-item"><span class="legend-swatch under-goal"></span>Under maintenance</span>
+      <span class="legend-item"><span class="legend-swatch over-goal"></span>Over maintenance</span>
       <span class="legend-item"><span class="legend-swatch trend"></span>7-day rolling avg</span>
       <span class="legend-item"><span class="legend-swatch maintenance"></span>Maintenance calories</span>
     </div>
@@ -99,6 +91,7 @@ const useHistoryGroups = computed(() => store.groups.filter((group) => group.id 
 .history-bar-stack {
   width: 12px;
   min-height: 5px;
+  background: var(--history-under);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -108,31 +101,8 @@ const useHistoryGroups = computed(() => store.groups.filter((group) => group.id 
   position: relative;
 }
 
-.history-bar-seg {
-  width: 100%;
-  flex: none;
-}
-
-.history-bar-seg.meal {
-  background: var(--green);
-}
-
-.history-bar-seg.group-0 { background: var(--green); }
-.history-bar-seg.group-1 { background: var(--green-light); }
-.history-bar-seg.group-2 { background: #79a96f; }
-.history-bar-seg.group-3 { background: #4f8f58; }
-.history-bar-seg.group-4 { background: #a8c98f; }
-
-.history-bar-seg.snack {
-  background: var(--green-light);
-}
-
-.history-bar-seg.top-cap {
-  border-radius: 6px 6px 0 0;
-}
-
-.history-bar-seg.bottom-cap {
-  border-radius: 0 0 2px 2px;
+.history-bar-stack.over-goal {
+  background: var(--history-over);
 }
 
 .history-empty-bar {
@@ -213,25 +183,19 @@ const useHistoryGroups = computed(() => store.groups.filter((group) => group.id 
   display: inline-block;
 }
 
-.legend-swatch.meal {
-  background: var(--green);
-}
-
-.legend-swatch.snack {
-  background: var(--green-light);
-}
-
-.legend-swatch.group-0 { background: var(--green); }
-.legend-swatch.group-1 { background: var(--green-light); }
-.legend-swatch.group-2 { background: #79a96f; }
-.legend-swatch.group-3 { background: #4f8f58; }
-.legend-swatch.group-4 { background: #a8c98f; }
-
 .legend-swatch.trend {
   width: 18px;
   height: 2px;
   border-radius: 2px;
   background: var(--trend-line, #3a7dd9);
+}
+
+.legend-swatch.under-goal {
+  background: var(--history-under);
+}
+
+.legend-swatch.over-goal {
+  background: var(--history-over);
 }
 
 .legend-swatch.maintenance {

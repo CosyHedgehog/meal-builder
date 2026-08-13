@@ -104,20 +104,15 @@ const groupSegments = computed(() => {
 }
 
 .status-seg.group-0,
-.legend-swatch.group-0,
-.history-bar-seg.group-0 { background: var(--green); }
+.legend-swatch.group-0 { background: var(--green); }
 .status-seg.group-1,
-.legend-swatch.group-1,
-.history-bar-seg.group-1 { background: var(--green-light); }
+.legend-swatch.group-1 { background: var(--green-light); }
 .status-seg.group-2,
-.legend-swatch.group-2,
-.history-bar-seg.group-2 { background: #79a96f; }
+.legend-swatch.group-2 { background: #79a96f; }
 .status-seg.group-3,
-.legend-swatch.group-3,
-.history-bar-seg.group-3 { background: #4f8f58; }
+.legend-swatch.group-3 { background: #4f8f58; }
 .status-seg.group-4,
-.legend-swatch.group-4,
-.history-bar-seg.group-4 { background: #a8c98f; }
+.legend-swatch.group-4 { background: #a8c98f; }
 
 .status-seg.snack {
   background: var(--green-light);

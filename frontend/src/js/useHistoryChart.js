@@ -3,8 +3,6 @@ import {
   state as store,
   logDeficit,
   logHasEntries,
-  logEntries,
-  entryKcal,
   logTotalKcal,
 } from './data.js'
 import { prettyDate, shiftDateStr, todayStr, weekdayNarrow } from './date.js'
@@ -74,14 +72,6 @@ export function useHistoryChart() {
       output.push({
         date,
         total: log ? logTotalKcal(log) : 0,
-        groupKcal: store.groups.reduce((totals, group) => {
-          totals[group.id] = log
-            ? logEntries(log)
-                .filter((entry) => entry.groupId === group.id)
-                .reduce((sum, entry) => sum + entryKcal(entry), 0)
-            : 0
-          return totals
-        }, {}),
         deficit: log ? logDeficit(log) : 0,
         hasLog: logHasEntries(log),
       })
@@ -101,34 +91,14 @@ export function useHistoryChart() {
   const bars = computed(() =>
     history.value.map((entry) => {
       const total = Math.max(0, entry.total || 0)
-      const baseKcal = Math.min(total, store.maintenanceCal)
       const barHeight = entry.hasLog
         ? Math.max(5, Math.round((total / scale.value) * BAR_HEIGHT))
         : 0
-      const baseHeight = entry.hasLog ? Math.round((baseKcal / scale.value) * BAR_HEIGHT) : 0
-      const groupSegments = store.groups
-        .filter((group) => group.id !== 'group-uncategorized')
-        .map((group, index) => ({
-          id: group.id,
-          name: group.name,
-          kcal: entry.groupKcal[group.id] || 0,
-          height: entry.hasLog ? Math.round((Math.max(0, entry.groupKcal[group.id] || 0) / scale.value) * BAR_HEIGHT) : 0,
-          colorIndex: index,
-        }))
-      const segmentHeight = groupSegments.reduce((sum, segment) => sum + segment.height, 0)
-      if (entry.hasLog && segmentHeight < baseHeight && groupSegments.length) {
-        groupSegments[groupSegments.length - 1].height += baseHeight - segmentHeight
-      }
-      const visibleSegmentIndexes = groupSegments
-        .map((segment, index) => (segment.height > 0 ? index : -1))
-        .filter((index) => index !== -1)
 
       return {
         ...entry,
         barHeight,
-        groupSegments,
-        firstSegmentIndex: visibleSegmentIndexes[0] ?? 0,
-        lastSegmentIndex: visibleSegmentIndexes.at(-1) ?? 0,
+        overGoal: entry.total > store.maintenanceCal,
         weekday: weekdayNarrow(entry.date),
         isToday: entry.date === todayStr(),
         label: entry.hasLog

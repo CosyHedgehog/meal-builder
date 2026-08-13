@@ -62,13 +62,11 @@ const projectedWeightUnit = computed(() => (store.weightUnit === 'lb' ? 'lb' : '
 
     <section class="manage-section">
       <div class="manage-actions">
-        <button class="manage-toggle" @click="openModal(Modals.FOOD_MANAGER)">
-          <span><strong>Foods</strong><small>Manage foods</small></span>
-          <span class="manage-chevron">›</span>
+        <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.FOOD_MANAGER)">
+          ＋ Manage foods
         </button>
-        <button class="manage-toggle" @click="openModal(Modals.GROUP_MANAGER)">
-          <span><strong>Groups</strong><small>Manage groups</small></span>
-          <span class="manage-chevron">›</span>
+        <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.GROUP_MANAGER)">
+          ＋ Manage groups
         </button>
       </div>
     </section>
@@ -141,46 +139,12 @@ const projectedWeightUnit = computed(() => (store.weightUnit === 'lb' ? 'lb' : '
 .manage-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-  padding-top: 5px;
+  gap: 18px;
+  padding: 5px 12px 0;
 }
 
 .manage-toggle {
   width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  text-align: left;
-  color: var(--ink);
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease;
-}
-
-.manage-toggle:hover {
-  background: var(--surface-alt);
-  border-color: rgba(var(--shadow-rgb), 0.12);
-}
-
-.manage-toggle strong {
-  display: block;
-  font-size: 15px;
-}
-
-.manage-toggle small {
-  display: block;
-  margin-top: 3px;
-  color: var(--ink-muted);
-  font-size: 12px;
-}
-
-.manage-chevron {
-  font-size: 24px;
-  color: var(--ink-muted);
 }
 
 .home-header {
