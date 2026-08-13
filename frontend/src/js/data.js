@@ -390,9 +390,17 @@ export function createFood(draft) {
 export function updateFood(id, draft) {
   const food = state.foods.find((f) => f.id === id)
   if (!food) return
+  const previousGroupId = food.groupId
   food.name = draft.name?.trim() || 'Untitled food'
   food.items = (draft.items || []).map((it) => ({ ...it }))
   if (draft.groupId) food.groupId = draft.groupId
+  if (food.groupId !== previousGroupId) {
+    Object.values(state.logs).forEach((log) => {
+      logEntries(log).forEach((entry) => {
+        if (entry.foodId === id && entry.groupId === previousGroupId) entry.groupId = food.groupId
+      })
+    })
+  }
   save()
 }
 

@@ -11,7 +11,7 @@ export const Modals = Object.freeze({
 
 /**
  * Modal stack: only the top entry is visible, but lower ones stay mounted so
- * their state survives (e.g. Food manager -> Meal editor -> Ingredient editor).
+ * their state survives (e.g. Food manager -> Food editor -> Ingredient editor).
  */
 export const modalStack = reactive([])
 

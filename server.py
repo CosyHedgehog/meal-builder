@@ -238,9 +238,7 @@ class Handler(BaseHTTPRequestHandler):
         try: data=read_json(self)
         except Exception: return json_response(self,400,{'error':'Invalid JSON'})
         if not isinstance(data,dict): return json_response(self,400,{'error':'Invalid data'})
-        # Keep the same simple JSON shape used by the app. Legacy meals/snacks
-        # keys are still accepted so an old cached client doesn't lose data
-        # before it has a chance to load and migrate it.
+        # Keep the same simple JSON shape used by the app.
         safe={
             'ingredients': data.get('ingredients',[]),
             'foods': data.get('foods',[]),
@@ -250,8 +248,6 @@ class Handler(BaseHTTPRequestHandler):
             'showKcal': data.get('showKcal',True),
             'weightUnit': data.get('weightUnit','kg')
         }
-        if 'meals' in data: safe['meals'] = data.get('meals',[])
-        if 'snacks' in data: safe['snacks'] = data.get('snacks',[])
         try: encoded=json.dumps(safe,separators=(',',':'))
         except Exception: return json_response(self,400,{'error':'Data could not be saved'})
         conn=db(); conn.execute('''INSERT INTO user_data(user_id,data,updated_at) VALUES(?,?,CURRENT_TIMESTAMP) ON CONFLICT(user_id) DO UPDATE SET data=excluded.data, updated_at=CURRENT_TIMESTAMP''',(s['user_id'],encoded)); conn.commit(); conn.close()
