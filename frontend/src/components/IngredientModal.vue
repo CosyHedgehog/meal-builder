@@ -14,8 +14,8 @@ import { Modals } from '../js/modals.js'
     search-placeholder="Search ingredients…"
     empty-message="No ingredients match that search."
     count-label="ingredients"
-    :secondary-action-modal="Modals.MEAL_MANAGER"
-    back-label="Meals"
+    :secondary-action-modal="Modals.FOOD_MANAGER"
+    back-label="Foods"
   >
     <template #item="{ item }">
       <span>

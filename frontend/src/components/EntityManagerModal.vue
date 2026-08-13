@@ -2,14 +2,7 @@
 import { computed, ref } from 'vue'
 import BaseModal from './BaseModal.vue'
 import DraggableList from './DraggableList.vue'
-import {
-  state as store,
-  reorderItems,
-  deleteMeal,
-  deleteSnack,
-  deleteIngredient,
-  ingredientUsage,
-} from '../js/data.js'
+import { state as store, reorderItems, deleteIngredient, ingredientUsage } from '../js/data.js'
 import { confirmAction } from '../js/confirm.js'
 import { openModal, replaceModal } from '../js/modals.js'
 
@@ -70,20 +63,7 @@ async function deleteItem(item) {
     })
     if (!ok) return
     deleteIngredient(item.id)
-    return
   }
-
-  const actionLabel = props.collection === 'meals' ? 'Delete meal' : 'Delete snack'
-  const itemType = props.collection === 'meals' ? 'meal' : 'snack'
-  const ok = await confirmAction({
-    title: actionLabel,
-    message: `Delete "${item.name}"?`,
-    okLabel: actionLabel,
-  })
-  if (!ok) return
-
-  if (props.collection === 'meals') deleteMeal(item.id)
-  else if (props.collection === 'snacks') deleteSnack(item.id)
 }
 </script>
 

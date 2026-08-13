@@ -6,21 +6,32 @@ function uid(prefix) {
 }
 
 export const DEFAULT_MAINTENANCE = 2200
-
-const DEFAULT_SNACKS = [
-  { id: 'snack-apple', name: 'Apple', kcal: 95 },
-  { id: 'snack-banana', name: 'Banana', kcal: 105 },
-  { id: 'snack-orange', name: 'Orange', kcal: 62 },
-  { id: 'snack-sardines', name: 'Sardines (tin)', kcal: 220 },
-]
-
 export const DEFAULT_WEIGHT_UNIT = 'kg'
+
+/* ===================== Groups ===================== */
+
+// Fixed ids so migrated data and future logic can reference them directly.
+export const BREAKFAST_GROUP_ID = 'group-breakfast'
+export const LUNCH_GROUP_ID = 'group-lunch'
+export const DINNER_GROUP_ID = 'group-dinner'
+export const SNACKS_GROUP_ID = 'group-snacks'
+// Foods land here when their group is deleted. Never shown on the dashboard.
+export const UNCATEGORIZED_GROUP_ID = 'group-uncategorized'
+
+function defaultGroups() {
+  return [
+    { id: BREAKFAST_GROUP_ID, name: 'Breakfast' },
+    { id: LUNCH_GROUP_ID, name: 'Lunch' },
+    { id: DINNER_GROUP_ID, name: 'Dinner' },
+    { id: SNACKS_GROUP_ID, name: 'Snacks' },
+  ]
+}
 
 export const state = reactive({
   ingredients: [],
-  meals: [],
-  snacks: [],
-  logs: {}, // 'YYYY-MM-DD' -> log entry
+  foods: [],
+  groups: [],
+  logs: {}, // 'YYYY-MM-DD' -> { entries: [...] }
   maintenanceCal: DEFAULT_MAINTENANCE,
   showKcal: true,
   weightUnit: DEFAULT_WEIGHT_UNIT,
@@ -30,12 +41,121 @@ export const state = reactive({
 
 export function defaultLogEntry() {
   return {
-    mode: 'meal', // 'meal' | 'custom'
-    mealId: null,
-    mealServings: 1,
-    manualMealName: '',
-    manualMealKcal: 0,
-    snacks: [],
+    entries: [],
+  }
+}
+
+/* ===================== Legacy migration ===================== */
+
+/** True if the loaded payload still uses the old meals/snacks shape. */
+function isLegacyPayload(parsed) {
+  return Array.isArray(parsed.meals) || Array.isArray(parsed.snacks)
+}
+
+function hasRecoverableLegacyData(parsed) {
+  return isLegacyPayload(parsed) && (parsed.meals?.length || parsed.snacks?.length)
+}
+
+function hasNewData(parsed) {
+  return Array.isArray(parsed.foods) || Array.isArray(parsed.groups)
+}
+
+/**
+ * Converts the old { meals, snacks, logs.mode/mealId/snacks[] } shape into
+ * the new { ingredients, foods, groups, logs.entries[] } shape. Legacy
+ * snacks (flat kcal, no ingredients) become foods backed by a synthetic
+ * ingredient carrying their kcal, so every food stays ingredient-based.
+ */
+function migrateLegacyPayload(parsed) {
+  const ingredients = Array.isArray(parsed.ingredients) ? [...parsed.ingredients] : []
+  const foods = []
+
+  const legacyMeals = Array.isArray(parsed.meals) ? parsed.meals : []
+  legacyMeals.forEach((meal) => {
+    foods.push({
+      id: meal.id || uid('food'),
+      name: meal.name || 'Untitled meal',
+      items: (meal.items || []).map((it) => ({ ...it })),
+      groupId: DINNER_GROUP_ID,
+    })
+  })
+
+  const legacySnacks = Array.isArray(parsed.snacks) ? parsed.snacks : []
+  legacySnacks.forEach((snack) => {
+    const ingredientId = uid('ing')
+    ingredients.push({
+      id: ingredientId,
+      name: snack.name || 'Snack',
+      unit: 'each',
+      kcal: Number.isFinite(snack.kcal) ? snack.kcal : 0,
+    })
+    foods.push({
+      id: snack.id || uid('food'),
+      name: snack.name || 'Snack',
+      items: [{ ingredientId, amount: 1 }],
+      groupId: SNACKS_GROUP_ID,
+    })
+  })
+
+  const legacyLogs = parsed.logs && typeof parsed.logs === 'object' ? parsed.logs : {}
+  const logs = {}
+  Object.entries(legacyLogs).forEach(([dateStr, legacyLog]) => {
+    const entries = []
+
+    if (legacyLog.mode === 'custom') {
+      if (legacyLog.manualMealKcal > 0 || legacyLog.manualMealName) {
+        entries.push({
+          id: uid('entry'),
+          groupId: DINNER_GROUP_ID,
+          foodId: null,
+          name: legacyLog.manualMealName || 'Custom',
+          kcal: Number.isFinite(legacyLog.manualMealKcal) ? legacyLog.manualMealKcal : 0,
+          qty: 1,
+        })
+      }
+    } else if (legacyLog.mealId) {
+      entries.push({
+        id: uid('entry'),
+        groupId: DINNER_GROUP_ID,
+        foodId: legacyLog.mealId,
+        qty:
+          Number.isFinite(legacyLog.mealServings) && legacyLog.mealServings > 0
+            ? legacyLog.mealServings
+            : 1,
+      })
+    }
+
+    ;(legacyLog.snacks || []).forEach((snackEntry) => {
+      if (snackEntry.custom) {
+        entries.push({
+          id: snackEntry.id || uid('entry'),
+          groupId: SNACKS_GROUP_ID,
+          foodId: null,
+          name: snackEntry.name || 'Snack',
+          kcal: Number.isFinite(snackEntry.kcal) ? snackEntry.kcal : 0,
+          qty: Number.isFinite(snackEntry.qty) && snackEntry.qty > 0 ? snackEntry.qty : 1,
+        })
+      } else {
+        entries.push({
+          id: uid('entry'),
+          groupId: SNACKS_GROUP_ID,
+          foodId: snackEntry.snackId,
+          qty: Number.isFinite(snackEntry.qty) && snackEntry.qty > 0 ? snackEntry.qty : 1,
+        })
+      }
+    })
+
+    logs[dateStr] = { entries }
+  })
+
+  return {
+    ingredients,
+    foods,
+    groups: defaultGroups(),
+    logs,
+    maintenanceCal: parsed.maintenanceCal || DEFAULT_MAINTENANCE,
+    showKcal: parsed.showKcal !== false,
+    weightUnit: parsed.weightUnit === 'lb' ? 'lb' : DEFAULT_WEIGHT_UNIT,
   }
 }
 
@@ -44,8 +164,8 @@ export function defaultLogEntry() {
 export function snapshot() {
   return {
     ingredients: state.ingredients,
-    meals: state.meals,
-    snacks: state.snacks,
+    foods: state.foods,
+    groups: state.groups,
     logs: state.logs,
     maintenanceCal: state.maintenanceCal,
     showKcal: state.showKcal,
@@ -55,8 +175,8 @@ export function snapshot() {
 
 function applyDefaults() {
   state.ingredients = []
-  state.meals = []
-  state.snacks = DEFAULT_SNACKS.map((s) => ({ ...s }))
+  state.foods = []
+  state.groups = defaultGroups()
   state.logs = {}
   state.maintenanceCal = DEFAULT_MAINTENANCE
   state.showKcal = true
@@ -67,15 +187,24 @@ export async function loadData() {
   try {
     const result = await dataApi.load()
     const parsed = result.data || {}
-    state.ingredients = Array.isArray(parsed.ingredients) ? parsed.ingredients : []
-    state.meals = Array.isArray(parsed.meals) ? parsed.meals : []
-    state.snacks = Array.isArray(parsed.snacks)
-      ? parsed.snacks
-      : DEFAULT_SNACKS.map((s) => ({ ...s }))
-    state.logs = parsed.logs && typeof parsed.logs === 'object' ? parsed.logs : {}
-    state.maintenanceCal = parsed.maintenanceCal || DEFAULT_MAINTENANCE
-    state.showKcal = parsed.showKcal !== false
-    state.weightUnit = parsed.weightUnit === 'lb' ? 'lb' : DEFAULT_WEIGHT_UNIT
+    const normalized = hasRecoverableLegacyData(parsed) ? migrateLegacyPayload(parsed) : parsed
+
+    state.ingredients = Array.isArray(normalized.ingredients) ? normalized.ingredients : []
+    state.foods = Array.isArray(normalized.foods) ? normalized.foods : []
+    state.groups =
+      Array.isArray(normalized.groups) && normalized.groups.length
+        ? normalized.groups
+        : defaultGroups()
+    state.logs = normalized.logs && typeof normalized.logs === 'object' ? normalized.logs : {}
+    state.maintenanceCal = normalized.maintenanceCal || DEFAULT_MAINTENANCE
+    state.showKcal = normalized.showKcal !== false
+    state.weightUnit = normalized.weightUnit === 'lb' ? 'lb' : DEFAULT_WEIGHT_UNIT
+
+    // Persist the migrated shape immediately so we don't re-migrate next load.
+    if (hasRecoverableLegacyData(parsed) && !hasNewData(parsed)) {
+      state.loaded = true
+      await flushSave()
+    }
   } catch (e) {
     console.error('Load failed', e)
     applyDefaults()
@@ -122,9 +251,21 @@ export function itemKcal(item) {
   return ing.unit === 'g' ? (item.amount / 100) * ing.kcal : item.amount * ing.kcal
 }
 
-export function mealKcal(meal) {
-  if (!meal) return 0
-  return Math.round((meal.items || []).reduce((sum, it) => sum + itemKcal(it), 0))
+export function getFood(id) {
+  return state.foods.find((f) => f.id === id)
+}
+
+export function foodKcal(food) {
+  if (!food) return 0
+  return Math.round((food.items || []).reduce((sum, it) => sum + itemKcal(it), 0))
+}
+
+export function visibleGroups() {
+  return state.groups.filter((g) => g.id !== UNCATEGORIZED_GROUP_ID)
+}
+
+export function foodsInGroup(groupId) {
+  return state.foods.filter((f) => f.groupId === groupId)
 }
 
 export function getLog(dateStr) {
@@ -136,27 +277,25 @@ export function ensureLog(dateStr) {
   return state.logs[dateStr]
 }
 
-export function logMealKcal(log) {
-  if (!log) return 0
-  if (log.mode === 'custom') return Math.round(log.manualMealKcal || 0)
-  const meal = state.meals.find((m) => m.id === log.mealId)
-  if (!meal) return 0
-  return Math.round(mealKcal(meal) * (log.mealServings || 1))
+export function logEntries(log) {
+  return (log && log.entries) || []
 }
 
-export function logSnacksKcal(log) {
-  if (!log) return 0
-  return Math.round(
-    (log.snacks || []).reduce((sum, e) => {
-      if (e.custom) return sum + (e.kcal || 0) * e.qty
-      const snack = state.snacks.find((s) => s.id === e.snackId)
-      return sum + (snack ? snack.kcal * e.qty : 0)
-    }, 0),
-  )
+export function entryKcal(entry) {
+  if (!entry) return 0
+  const qty = Number.isFinite(entry.qty) && entry.qty > 0 ? entry.qty : 1
+  if (entry.foodId) return Math.round(foodKcal(getFood(entry.foodId)) * qty)
+  return Math.round((entry.kcal || 0) * qty)
 }
 
 export function logTotalKcal(log) {
-  return logMealKcal(log) + logSnacksKcal(log)
+  return logEntries(log).reduce((sum, entry) => sum + entryKcal(entry), 0)
+}
+
+export function logGroupKcal(log, groupId) {
+  return logEntries(log)
+    .filter((entry) => entry.groupId === groupId)
+    .reduce((sum, entry) => sum + entryKcal(entry), 0)
 }
 
 export function logDeficit(log) {
@@ -164,14 +303,11 @@ export function logDeficit(log) {
 }
 
 export function logHasEntries(log) {
-  if (!log) return false
-  const hasMeal =
-    log.mode === 'custom' ? log.manualMealKcal > 0 || !!log.manualMealName : !!log.mealId
-  return hasMeal || (log.snacks || []).length > 0
+  return logEntries(log).length > 0
 }
 
 export function ingredientUsage(ingredientId) {
-  return state.meals.filter((m) => (m.items || []).some((it) => it.ingredientId === ingredientId))
+  return state.foods.filter((f) => (f.items || []).some((it) => it.ingredientId === ingredientId))
 }
 
 /* ===================== Settings ===================== */
@@ -205,59 +341,66 @@ export function reorderItems(listName, fromId, toId) {
   save()
 }
 
-/* ===================== Meals ===================== */
+/* ===================== Groups ===================== */
 
-export function createMeal(draft) {
-  const meal = {
-    id: uid('meal'),
-    name: draft.name?.trim() || 'Untitled meal',
-    items: (draft.items || []).map((it) => ({ ...it })),
-  }
-  state.meals.push(meal)
-  save()
-  return meal.id
-}
-
-export function updateMeal(id, draft) {
-  const meal = state.meals.find((m) => m.id === id)
-  if (!meal) return
-  meal.name = draft.name?.trim() || 'Untitled meal'
-  meal.items = (draft.items || []).map((it) => ({ ...it }))
-  save()
-}
-
-export function deleteMeal(id) {
-  state.meals = state.meals.filter((m) => m.id !== id)
-  save()
-}
-
-/* ===================== Snacks ===================== */
-
-export function addSnack(name, kcal) {
+export function createGroup(name) {
   if (!name || !name.trim()) return null
-  const snack = {
-    id: uid('snack'),
-    name: name.trim(),
-    kcal: Number.isFinite(kcal) ? Math.round(kcal) : 0,
+  const group = { id: uid('group'), name: name.trim() }
+  state.groups.push(group)
+  save()
+  return group.id
+}
+
+export function updateGroup(id, name) {
+  const group = state.groups.find((g) => g.id === id)
+  if (!group) return
+  group.name = name?.trim() || group.name
+  save()
+}
+
+/** Reassigns foods and log entries pointing at this group to "uncategorized" instead of deleting them. */
+export function deleteGroup(id) {
+  if (id === UNCATEGORIZED_GROUP_ID) return
+  state.groups = state.groups.filter((g) => g.id !== id)
+  state.foods.forEach((food) => {
+    if (food.groupId === id) food.groupId = UNCATEGORIZED_GROUP_ID
+  })
+  Object.values(state.logs).forEach((log) => {
+    logEntries(log).forEach((entry) => {
+      if (entry.groupId === id) entry.groupId = UNCATEGORIZED_GROUP_ID
+    })
+  })
+  save()
+}
+
+/* ===================== Foods ===================== */
+
+export function createFood(draft) {
+  const food = {
+    id: uid('food'),
+    name: draft.name?.trim() || 'Untitled food',
+    items: (draft.items || []).map((it) => ({ ...it })),
+    groupId: draft.groupId || UNCATEGORIZED_GROUP_ID,
   }
-  state.snacks.push(snack)
+  state.foods.push(food)
   save()
-  return snack.id
+  return food.id
 }
 
-export function updateSnack(id, { name, kcal }) {
-  const snack = state.snacks.find((s) => s.id === id)
-  if (!snack) return
-  if (name !== undefined) snack.name = name.trim() || snack.name
-  if (kcal !== undefined && Number.isFinite(kcal)) snack.kcal = Math.round(kcal)
+export function updateFood(id, draft) {
+  const food = state.foods.find((f) => f.id === id)
+  if (!food) return
+  food.name = draft.name?.trim() || 'Untitled food'
+  food.items = (draft.items || []).map((it) => ({ ...it }))
+  if (draft.groupId) food.groupId = draft.groupId
   save()
 }
 
-export function deleteSnack(id) {
-  state.snacks = state.snacks.filter((s) => s.id !== id)
+export function deleteFood(id) {
+  state.foods = state.foods.filter((f) => f.id !== id)
   // Also drop it from any logged day so totals stay honest.
   Object.values(state.logs).forEach((log) => {
-    log.snacks = (log.snacks || []).filter((e) => e.snackId !== id)
+    log.entries = logEntries(log).filter((e) => e.foodId !== id)
   })
   save()
 }
@@ -293,75 +436,60 @@ export function deleteIngredient(id) {
 
 /* ===================== Daily log mutators ===================== */
 
-export function setLogMode(dateStr, mode) {
-  ensureLog(dateStr).mode = mode
-  save()
-}
-
-export function setLogMeal(dateStr, mealId) {
-  ensureLog(dateStr).mealId = mealId || null
-  save()
-}
-
-export function setManualMeal(dateStr, name, kcal) {
-  const log = ensureLog(dateStr)
-  log.manualMealName = name
-  log.manualMealKcal = Number.isFinite(kcal) ? kcal : 0
-  save()
-}
-
-export function addLogSnack(dateStr, snackId, qty = 1) {
-  if (!snackId) return
+/** Adds qty to the matching food entry for that group, or creates one. */
+export function addLogFood(dateStr, groupId, foodId, qty = 1) {
+  if (!foodId) return
   const log = ensureLog(dateStr)
   const q = !Number.isFinite(qty) || qty <= 0 ? 1 : qty
-  const existing = log.snacks.find((e) => e.snackId === snackId)
+  const existing = log.entries.find((e) => e.groupId === groupId && e.foodId === foodId)
   if (existing) existing.qty += q
-  else log.snacks.push({ snackId, qty: q })
+  else log.entries.push({ id: uid('entry'), groupId, foodId, qty: q })
   save()
 }
 
-export function setLogSnackQty(dateStr, snackId, qty) {
+export function setLogEntryQty(dateStr, entryId, qty) {
   const log = ensureLog(dateStr)
-  const entry = log.snacks.find((e) => e.snackId === snackId)
+  const entry = log.entries.find((e) => e.id === entryId)
   if (!entry) return
   if (!Number.isFinite(qty) || qty <= 0) return
   entry.qty = qty
   save()
 }
 
-export function removeLogSnack(dateStr, snackId) {
+export function bumpLogEntry(dateStr, entryId, delta) {
   const log = ensureLog(dateStr)
-  log.snacks = log.snacks.filter((e) => e.snackId !== snackId)
-  save()
-}
-
-export function addCustomLogSnack(dateStr, name, kcal, qty = 1) {
-  const log = ensureLog(dateStr)
-  log.snacks.push({
-    id: uid('logsnack'),
-    custom: true,
-    name: (name || 'Snack').trim() || 'Snack',
-    kcal: !Number.isFinite(kcal) || kcal < 0 ? 0 : kcal,
-    qty: !Number.isFinite(qty) || qty <= 0 ? 1 : qty,
-  })
-  save()
-}
-
-export function bumpCustomLogSnack(dateStr, id, delta) {
-  const log = ensureLog(dateStr)
-  const entry = log.snacks.find((e) => e.custom && e.id === id)
+  const entry = log.entries.find((e) => e.id === entryId)
   if (!entry) return
   if (entry.qty + delta <= 0) {
-    log.snacks = log.snacks.filter((e) => !(e.custom && e.id === id))
+    log.entries = log.entries.filter((e) => e.id !== entryId)
   } else {
     entry.qty += delta
   }
   save()
 }
 
-export function clearLogSnacks(dateStr) {
+export function removeLogEntry(dateStr, entryId) {
   const log = ensureLog(dateStr)
-  if (!log.snacks?.length) return
-  log.snacks = []
+  log.entries = log.entries.filter((e) => e.id !== entryId)
+  save()
+}
+
+export function addCustomLogEntry(dateStr, groupId, name, kcal, qty = 1) {
+  const log = ensureLog(dateStr)
+  log.entries.push({
+    id: uid('entry'),
+    groupId,
+    foodId: null,
+    name: (name || 'Custom').trim() || 'Custom',
+    kcal: !Number.isFinite(kcal) || kcal < 0 ? 0 : kcal,
+    qty: !Number.isFinite(qty) || qty <= 0 ? 1 : qty,
+  })
+  save()
+}
+
+export function clearLogGroup(dateStr, groupId) {
+  const log = ensureLog(dateStr)
+  if (!log.entries.length) return
+  log.entries = log.entries.filter((e) => e.groupId !== groupId)
   save()
 }

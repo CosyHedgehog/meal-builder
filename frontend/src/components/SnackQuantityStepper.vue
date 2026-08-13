@@ -3,21 +3,22 @@ defineProps({
   name: { type: String, required: true },
   quantity: { type: Number, required: true },
   kcal: { type: Number, required: true },
+  colorIndex: { type: Number, default: 0 },
   oneOff: { type: Boolean, default: false },
 })
 
-defineEmits(['decrement', 'increment'])
+defineEmits(['decrement', 'increment', 'edit'])
 </script>
 
 <template>
-  <div class="snack-stepper" :class="{ 'one-off': oneOff }" role="group" :aria-label="`${name} quantity`">
+  <div class="snack-stepper" :class="[`group-${colorIndex}`, { 'one-off': oneOff }]" role="group" :aria-label="`${name} quantity`">
     <button type="button" class="snack-stepper-control" :aria-label="`Remove one ${name}`" @click="$emit('decrement')">
       −
     </button>
-    <span class="snack-stepper-label">
+    <button type="button" class="snack-stepper-label" @click="$emit('edit')">
       <span>{{ quantity }} {{ name }}<span v-if="oneOff" class="one-off-badge">1-off</span></span>
       <span class="snack-stepper-kcal">{{ Math.round(kcal * quantity).toLocaleString() }} kcal</span>
-    </span>
+    </button>
     <button type="button" class="snack-stepper-control" :aria-label="`Add one ${name}`" @click="$emit('increment')">
       ＋
     </button>

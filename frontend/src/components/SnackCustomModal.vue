@@ -1,7 +1,7 @@
 <script setup>
-import { onDeactivated, ref } from 'vue'
+import { ref } from 'vue'
 import BaseModal from './BaseModal.vue'
-import { addCustomLogSnack, addLogSnack, addSnack } from '../js/data.js'
+import { addCustomLogEntry } from '../js/data.js'
 import { view } from '../js/ui.js'
 
 const emit = defineEmits(['close'])
@@ -16,12 +16,7 @@ function submit() {
   const value = parseFloat(kcal.value)
   if (!Number.isFinite(value) || value < 0) return
   const label = name.value.trim() || 'Snack'
-  if (savePreset.value) {
-    const id = addSnack(label, value)
-    if (id) addLogSnack(view.logDate, id, 1)
-  } else {
-    addCustomLogSnack(view.logDate, label, value, 1)
-  }
+  addCustomLogEntry(view.logDate, 'group-snacks', label, value, 1)
   emit('close')
 }
 </script>

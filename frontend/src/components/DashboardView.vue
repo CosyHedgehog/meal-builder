@@ -6,13 +6,13 @@ import { auth } from '../js/auth.js'
 import { Modals, openModal } from '../js/modals.js'
 import DateNav from './DateNav.vue'
 import CalorieSummary from './CalorieSummary.vue'
-import MealSelector from './MealSelector.vue'
-import SnackSelector from './SnackSelector.vue'
+import GroupSelector from './GroupSelector.vue'
 import HistoryChart from './HistoryChart.vue'
 import { useHistoryChart } from '../js/useHistoryChart.js'
 
 const log = computed(() => getLog(view.logDate))
 const { days, windowAverageKcal, windowAverageDeficit, windowProjectedKgPerWeek } = useHistoryChart()
+const groups = computed(() => store.groups.filter((group) => group.id !== 'group-uncategorized'))
 
 const projectedWeightDisplay = computed(() => {
   const kgValue = Math.abs(windowProjectedKgPerWeek.value) * 4
@@ -30,12 +30,8 @@ const projectedWeightUnit = computed(() => (store.weightUnit === 'lb' ? 'lb' : '
       <CalorieSummary :log="log" />
     </section>
 
-    <section class="today-meal-card">
-      <MealSelector :log="log" />
-    </section>
-
-    <section class="today-snack-card">
-      <SnackSelector :log="log" />
+    <section v-for="group in groups" :key="group.id" class="today-group-card">
+      <GroupSelector :group="group" :log="log" />
     </section>
 
     <HistoryChart />
@@ -66,12 +62,12 @@ const projectedWeightUnit = computed(() => (store.weightUnit === 'lb' ? 'lb' : '
 
     <section class="manage-section">
       <div class="manage-actions">
-        <button class="manage-toggle" @click="openModal(Modals.MEAL_MANAGER)">
-          <span><strong>Meals</strong><small>Manage meals</small></span>
+        <button class="manage-toggle" @click="openModal(Modals.FOOD_MANAGER)">
+          <span><strong>Foods</strong><small>Manage foods</small></span>
           <span class="manage-chevron">›</span>
         </button>
-        <button class="manage-toggle" @click="openModal(Modals.SNACK_MANAGER)">
-          <span><strong>Snacks</strong><small>Manage snacks</small></span>
+        <button class="manage-toggle" @click="openModal(Modals.GROUP_MANAGER)">
+          <span><strong>Groups</strong><small>Manage groups</small></span>
           <span class="manage-chevron">›</span>
         </button>
       </div>

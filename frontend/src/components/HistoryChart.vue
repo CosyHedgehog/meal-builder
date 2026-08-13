@@ -1,8 +1,11 @@
 <script setup>
+import { computed } from 'vue'
 import { setLogDate, view } from '../js/ui.js'
+import { state as store } from '../js/data.js'
 import { useHistoryChart } from '../js/useHistoryChart.js'
 
 const { days, bars, trendPaths, goalLineBottom } = useHistoryChart()
+const useHistoryGroups = computed(() => store.groups.filter((group) => group.id !== 'group-uncategorized'))
 </script>
 
 <template>
@@ -29,11 +32,10 @@ const { days, bars, trendPaths, goalLineBottom } = useHistoryChart()
             :style="{ height: bar.barHeight + 'px' }">
             <span v-if="bar.overflowHeight > 0" class="history-bar-seg overflow"
               :style="{ height: bar.overflowHeight + 'px' }" aria-hidden="true"></span>
-            <span class="history-bar-seg snack" :class="{ 'top-cap': bar.overflowHeight === 0 }"
-              :style="{ height: bar.snackHeight + 'px' }"></span>
-            <span class="history-bar-seg meal bottom-cap"
-              :class="{ 'top-cap': bar.overflowHeight === 0 && bar.snackHeight === 0 }"
-              :style="{ height: bar.mealHeight + 'px' }"></span>
+            <span v-for="(segment, index) in bar.groupSegments" :key="segment.id"
+              class="history-bar-seg group-segment"
+              :class="[`group-${segment.colorIndex % 5}`, { 'bottom-cap': index === 0, 'top-cap': bar.overflowHeight === 0 && index === bar.groupSegments.length - 1 }]"
+              :style="{ height: segment.height + 'px' }"></span>
           </span>
           <span v-else class="history-empty-bar"></span>
         </span>
@@ -42,8 +44,9 @@ const { days, bars, trendPaths, goalLineBottom } = useHistoryChart()
     </div>
 
     <div class="history-legend">
-      <span class="legend-item"><span class="legend-swatch meal"></span>Meals</span>
-      <span class="legend-item"><span class="legend-swatch snack"></span>Snacks</span>
+      <span v-for="(group, index) in useHistoryGroups" :key="group.id" class="legend-item">
+        <span class="legend-swatch" :class="`group-${index % 5}`"></span>{{ group.name }}
+      </span>
       <span class="legend-item"><span class="legend-swatch overflow"></span>Surplus</span>
       <span class="legend-item"><span class="legend-swatch trend"></span>7-day rolling avg</span>
       <span class="legend-item"><span class="legend-swatch maintenance"></span>Maintenance calories</span>
@@ -120,6 +123,12 @@ const { days, bars, trendPaths, goalLineBottom } = useHistoryChart()
 .history-bar-seg.meal {
   background: var(--green);
 }
+
+.history-bar-seg.group-0 { background: var(--green); }
+.history-bar-seg.group-1 { background: var(--green-light); }
+.history-bar-seg.group-2 { background: #79a96f; }
+.history-bar-seg.group-3 { background: #4f8f58; }
+.history-bar-seg.group-4 { background: #a8c98f; }
 
 .history-bar-seg.snack {
   background: var(--green-light);
@@ -223,6 +232,12 @@ const { days, bars, trendPaths, goalLineBottom } = useHistoryChart()
 .legend-swatch.snack {
   background: var(--green-light);
 }
+
+.legend-swatch.group-0 { background: var(--green); }
+.legend-swatch.group-1 { background: var(--green-light); }
+.legend-swatch.group-2 { background: #79a96f; }
+.legend-swatch.group-3 { background: #4f8f58; }
+.legend-swatch.group-4 { background: #a8c98f; }
 
 .legend-swatch.overflow {
   background: var(--history-over);

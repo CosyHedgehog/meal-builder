@@ -2,14 +2,11 @@ import { reactive } from 'vue'
 
 export const Modals = Object.freeze({
   SETTINGS: 'settings',
-  MEAL_EDITOR: 'meal-editor',
-  SNACK_EDITOR: 'snack-editor',
   INGREDIENT_EDITOR: 'ingredient-editor',
-  CUSTOM_MEAL: 'custom-meal',
-  CUSTOM_SNACK: 'custom-snack',
-  MEAL_MANAGER: 'meal-manager',
-  SNACK_MANAGER: 'snack-manager',
   INGREDIENT_MANAGER: 'ingredient-manager',
+  FOOD_EDITOR: 'food-editor',
+  FOOD_MANAGER: 'food-manager',
+  GROUP_MANAGER: 'group-manager',
 })
 
 /**

@@ -3,8 +3,8 @@ import {
   state as store,
   logDeficit,
   logHasEntries,
-  logMealKcal,
-  logSnacksKcal,
+  logEntries,
+  entryKcal,
   logTotalKcal,
 } from './data.js'
 import { prettyDate, shiftDateStr, todayStr, weekdayNarrow } from './date.js'
@@ -74,8 +74,14 @@ export function useHistoryChart() {
       output.push({
         date,
         total: log ? logTotalKcal(log) : 0,
-        mealK: log ? logMealKcal(log) : 0,
-        snackK: log ? logSnacksKcal(log) : 0,
+        groupKcal: store.groups.reduce((totals, group) => {
+          totals[group.id] = log
+            ? logEntries(log)
+                .filter((entry) => entry.groupId === group.id)
+                .reduce((sum, entry) => sum + entryKcal(entry), 0)
+            : 0
+          return totals
+        }, {}),
         deficit: log ? logDeficit(log) : 0,
         hasLog: logHasEntries(log),
       })
@@ -104,21 +110,30 @@ export function useHistoryChart() {
       const overflowHeight = entry.hasLog
         ? Math.max(0, Math.round((overflowKcal / scale.value) * BAR_HEIGHT))
         : 0
-      const mealShare = total > 0 ? Math.min(1, Math.max(0, entry.mealK / total)) : 0
-      const mealHeight = entry.hasLog ? Math.round(baseHeight * mealShare) : 0
-      const snackHeight = entry.hasLog ? Math.max(0, baseHeight - mealHeight) : 0
+      const groupSegments = store.groups
+        .filter((group) => group.id !== 'group-uncategorized')
+        .map((group, index) => ({
+          id: group.id,
+          name: group.name,
+          kcal: entry.groupKcal[group.id] || 0,
+          height: entry.hasLog ? Math.round((Math.max(0, entry.groupKcal[group.id] || 0) / scale.value) * BAR_HEIGHT) : 0,
+          colorIndex: index,
+        }))
+      const segmentHeight = groupSegments.reduce((sum, segment) => sum + segment.height, 0)
+      if (entry.hasLog && segmentHeight < baseHeight && groupSegments.length) {
+        groupSegments[groupSegments.length - 1].height += baseHeight - segmentHeight
+      }
 
       return {
         ...entry,
         barHeight,
-        mealHeight,
-        snackHeight,
+        groupSegments,
         overflowHeight,
         isOverGoal: overflowKcal > 0 && entry.hasLog,
         weekday: weekdayNarrow(entry.date),
         isToday: entry.date === todayStr(),
         label: entry.hasLog
-          ? `${prettyDate(entry.date)}: ${entry.total.toLocaleString()} kcal logged (${entry.mealK.toLocaleString()} meals / ${entry.snackK.toLocaleString()} snacks), ${entry.deficit >= 0 ? `${entry.deficit.toLocaleString()} kcal deficit` : `${Math.abs(entry.deficit).toLocaleString()} kcal surplus`}`
+          ? `${prettyDate(entry.date)}: ${entry.total.toLocaleString()} kcal logged, ${entry.deficit >= 0 ? `${entry.deficit.toLocaleString()} kcal deficit` : `${Math.abs(entry.deficit).toLocaleString()} kcal surplus`}`
           : `${prettyDate(entry.date)}: Not logged`,
       }
     }),

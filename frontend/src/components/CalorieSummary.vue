@@ -1,20 +1,28 @@
 <script setup>
 import { computed } from 'vue'
-import { state as store, logMealKcal, logSnacksKcal } from '../js/data.js'
+import { state as store, logGroupKcal, logTotalKcal } from '../js/data.js'
 
 const props = defineProps({ log: { type: Object, required: true } })
 
-const mealK = computed(() => logMealKcal(props.log))
-const snackK = computed(() => logSnacksKcal(props.log))
-const totalK = computed(() => mealK.value + snackK.value)
+const totalK = computed(() => logTotalKcal(props.log))
 const deficit = computed(() => store.maintenanceCal - totalK.value)
 
 const barTotal = computed(() => Math.max(store.maintenanceCal, totalK.value, 1))
-const mealPct = computed(() => Math.min(100, (mealK.value / barTotal.value) * 100))
-const snackPct = computed(() =>
-  Math.min(100 - mealPct.value, (snackK.value / barTotal.value) * 100),
-)
-const restPct = computed(() => Math.max(0, 100 - mealPct.value - snackPct.value))
+const loggedPct = computed(() => Math.min(100, (totalK.value / barTotal.value) * 100))
+const restPct = computed(() => Math.max(0, 100 - loggedPct.value))
+const groupSegments = computed(() => {
+  let offset = 0
+  return store.groups
+    .filter((group) => group.id !== 'group-uncategorized')
+    .map((group, index) => {
+      const kcal = logGroupKcal(props.log, group.id)
+      const width = Math.min(100 - offset, (kcal / barTotal.value) * 100)
+      const segment = { id: group.id, name: group.name, kcal, width, colorIndex: index }
+      offset += width
+      return segment
+    })
+    .filter((segment) => segment.width > 0)
+})
 </script>
 
 <template>
@@ -29,17 +37,15 @@ const restPct = computed(() => Math.max(0, 100 - mealPct.value - snackPct.value)
 
   <div class="today-status">
     <div class="today-status-bar">
-      <div class="status-seg meal" :style="{ width: mealPct + '%' }"></div>
-      <div class="status-seg snack" :style="{ width: snackPct + '%' }"></div>
+      <div v-for="segment in groupSegments" :key="segment.id" class="status-seg"
+        :class="`group-${segment.colorIndex % 5}`" :style="{ width: segment.width + '%' }"></div>
       <div class="status-seg deficit" :style="{ width: restPct + '%' }"></div>
     </div>
 
     <div class="today-status-labels">
-      <div class="status-pill meal">
-        <span>Meals</span><strong>{{ mealK.toLocaleString() }} <small>kcal</small></strong>
-      </div>
-      <div class="status-pill snack">
-        <span>Snacks</span><strong>{{ snackK.toLocaleString() }} <small>kcal</small></strong>
+      <div v-for="segment in groupSegments" :key="segment.id" class="status-pill">
+        <span><i class="group-swatch" :class="`group-${segment.colorIndex % 5}`"></i>{{ segment.name }}</span>
+        <strong>{{ segment.kcal.toLocaleString() }} <small>kcal</small></strong>
       </div>
       <div class="status-pill" :class="deficit >= 0 ? 'deficit' : 'surplus'">
         <span>{{ deficit >= 0 ? 'Deficit' : 'Surplus' }}</span>
@@ -97,6 +103,22 @@ const restPct = computed(() => Math.max(0, 100 - mealPct.value - snackPct.value)
   background: var(--green);
 }
 
+.status-seg.group-0,
+.legend-swatch.group-0,
+.history-bar-seg.group-0 { background: var(--green); }
+.status-seg.group-1,
+.legend-swatch.group-1,
+.history-bar-seg.group-1 { background: var(--green-light); }
+.status-seg.group-2,
+.legend-swatch.group-2,
+.history-bar-seg.group-2 { background: #79a96f; }
+.status-seg.group-3,
+.legend-swatch.group-3,
+.history-bar-seg.group-3 { background: #4f8f58; }
+.status-seg.group-4,
+.legend-swatch.group-4,
+.history-bar-seg.group-4 { background: #a8c98f; }
+
 .status-seg.snack {
   background: var(--green-light);
 }
@@ -127,6 +149,21 @@ const restPct = computed(() => Math.max(0, 100 - mealPct.value - snackPct.value)
   letter-spacing: 0.12em;
   color: var(--ink-muted);
 }
+
+.group-swatch {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 5px;
+  border-radius: 2px;
+  vertical-align: 1px;
+}
+
+.group-swatch.group-0 { background: var(--green); }
+.group-swatch.group-1 { background: var(--green-light); }
+.group-swatch.group-2 { background: #79a96f; }
+.group-swatch.group-3 { background: #4f8f58; }
+.group-swatch.group-4 { background: #a8c98f; }
 
 .status-pill strong {
   display: flex;

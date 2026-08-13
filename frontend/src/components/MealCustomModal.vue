@@ -1,28 +1,28 @@
 <script setup>
 import { ref } from 'vue'
 import BaseModal from './BaseModal.vue'
-import { getLog, setLogMode, setManualMeal } from '../js/data.js'
+import { addCustomLogEntry, getLog, logEntries, removeLogEntry } from '../js/data.js'
 import { view } from '../js/ui.js'
 import { prettyDate } from '../js/date.js'
 
 const emit = defineEmits(['close'])
 
 const log = getLog(view.logDate)
-const isEdit = log.mode === 'custom'
-const name = ref(log.manualMealName || '')
-const kcal = ref(log.manualMealKcal ? String(log.manualMealKcal) : '')
+const existing = logEntries(log).find((entry) => !entry.foodId && entry.groupId === 'group-dinner')
+const isEdit = !!existing
+const name = ref(existing?.name || '')
+const kcal = ref(existing?.kcal ? String(existing.kcal) : '')
 
 function submit() {
   const value = parseFloat(kcal.value)
   if (!Number.isFinite(value) || value < 0) return
-  setLogMode(view.logDate, 'custom')
-  setManualMeal(view.logDate, name.value.trim() || 'Custom meal', value)
+  if (existing) removeLogEntry(view.logDate, existing.id)
+  addCustomLogEntry(view.logDate, 'group-dinner', name.value.trim() || 'Custom meal', value)
   emit('close')
 }
 
 function remove() {
-  setLogMode(view.logDate, 'meal')
-  setManualMeal(view.logDate, '', 0)
+  if (existing) removeLogEntry(view.logDate, existing.id)
   emit('close')
 }
 </script>
