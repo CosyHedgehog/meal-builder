@@ -14,6 +14,8 @@ const DEFAULT_SNACKS = [
   { id: 'snack-sardines', name: 'Sardines (tin)', kcal: 220 },
 ]
 
+export const DEFAULT_WEIGHT_UNIT = 'kg'
+
 export const state = reactive({
   ingredients: [],
   meals: [],
@@ -21,6 +23,7 @@ export const state = reactive({
   logs: {}, // 'YYYY-MM-DD' -> log entry
   maintenanceCal: DEFAULT_MAINTENANCE,
   showKcal: true,
+  weightUnit: DEFAULT_WEIGHT_UNIT,
   loaded: false,
   saveState: 'idle', // idle | saving | ok | error
 })
@@ -46,6 +49,7 @@ export function snapshot() {
     logs: state.logs,
     maintenanceCal: state.maintenanceCal,
     showKcal: state.showKcal,
+    weightUnit: state.weightUnit,
   }
 }
 
@@ -56,6 +60,7 @@ function applyDefaults() {
   state.logs = {}
   state.maintenanceCal = DEFAULT_MAINTENANCE
   state.showKcal = true
+  state.weightUnit = DEFAULT_WEIGHT_UNIT
 }
 
 export async function loadData() {
@@ -70,6 +75,7 @@ export async function loadData() {
     state.logs = parsed.logs && typeof parsed.logs === 'object' ? parsed.logs : {}
     state.maintenanceCal = parsed.maintenanceCal || DEFAULT_MAINTENANCE
     state.showKcal = parsed.showKcal !== false
+    state.weightUnit = parsed.weightUnit === 'lb' ? 'lb' : DEFAULT_WEIGHT_UNIT
   } catch (e) {
     console.error('Load failed', e)
     applyDefaults()
@@ -178,6 +184,11 @@ export function setMaintenance(value) {
 
 export function setShowKcal(value) {
   state.showKcal = !!value
+  save()
+}
+
+export function setWeightUnit(value) {
+  state.weightUnit = value === 'lb' ? 'lb' : DEFAULT_WEIGHT_UNIT
   save()
 }
 

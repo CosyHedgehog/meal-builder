@@ -13,6 +13,13 @@ import { useHistoryChart } from '../js/useHistoryChart.js'
 
 const log = computed(() => getLog(view.logDate))
 const { days, windowAverageKcal, windowAverageDeficit, windowProjectedKgPerWeek } = useHistoryChart()
+
+const projectedWeightDisplay = computed(() => {
+  const kgValue = Math.abs(windowProjectedKgPerWeek.value)
+  return store.weightUnit === 'lb' ? kgValue * 2.20462 : kgValue
+})
+
+const projectedWeightUnit = computed(() => (store.weightUnit === 'lb' ? 'lb' : 'kg'))
 </script>
 
 <template>
@@ -50,7 +57,7 @@ const { days, windowAverageKcal, windowAverageDeficit, windowProjectedKgPerWeek 
           <span>kcal {{ windowAverageDeficit >= 0 ? 'deficit' : 'surplus' }}</span>
         </div>
         <div :class="{ surplus: windowProjectedKgPerWeek < 0 }">
-          <strong v-if="Math.abs(windowProjectedKgPerWeek) >= 0.05">{{ Math.abs(windowProjectedKgPerWeek).toFixed(1) }} kg</strong>
+          <strong v-if="projectedWeightDisplay >= 0.05">{{ projectedWeightDisplay.toFixed(1) }} {{ projectedWeightUnit }}</strong>
           <strong v-else>Maintenance</strong>
           <span>{{ windowProjectedKgPerWeek >= 0 ? 'loss' : 'gain' }} per week</span>
         </div>

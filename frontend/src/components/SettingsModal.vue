@@ -2,7 +2,14 @@
 import { computed } from 'vue'
 import BaseModal from './BaseModal.vue'
 import ToggleSwitch from './ToggleSwitch.vue'
-import { state as store, setMaintenance, setShowKcal, snapshot, flushSave } from '../js/data.js'
+import {
+  state as store,
+  setMaintenance,
+  setShowKcal,
+  setWeightUnit,
+  snapshot,
+  flushSave,
+} from '../js/data.js'
 import { isDark, toggleTheme } from '../js/ui.js'
 import { signOut } from '../js/auth.js'
 import { closeAllModals } from '../js/modals.js'
@@ -17,6 +24,11 @@ const darkMode = computed({
 const showKcal = computed({
   get: () => store.showKcal,
   set: (value) => setShowKcal(value),
+})
+
+const weightUnit = computed({
+  get: () => store.weightUnit,
+  set: (value) => setWeightUnit(value),
 })
 
 function exportData() {
@@ -53,6 +65,13 @@ function downloadJSON(filename, payload) {
 
     <div class="section-label" style="margin-top: 16px">Appearance</div>
     <div class="settings-row">
+      <label>Weight display</label>
+      <select v-model="weightUnit" class="unit-select">
+        <option value="kg">kg</option>
+        <option value="lb">lb</option>
+      </select>
+    </div>
+    <div class="settings-row" style="margin-top: 12px">
       <label>Dark mode</label>
       <ToggleSwitch v-model="darkMode" label="Toggle dark mode" :knob="isDark ? '🌙' : '☀️'" />
     </div>
@@ -79,7 +98,8 @@ function downloadJSON(filename, payload) {
   font-size: 13px;
 }
 
-.settings-row input {
+.settings-row input,
+.unit-select {
   width: 92px;
   padding: 9px 10px;
   border: 1px solid var(--line);
@@ -87,5 +107,10 @@ function downloadJSON(filename, payload) {
   background: var(--bg);
   font-family: "IBM Plex Mono", monospace;
   text-align: right;
+}
+
+.unit-select {
+  appearance: none;
+  text-align: center;
 }
 </style>
