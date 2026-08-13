@@ -28,9 +28,11 @@ function decrement(entry) {
           <i class="group-header-swatch" :class="`group-${store.groups.findIndex((item) => item.id === group.id) % 5}`"></i>
           {{ group.name }}
         </span>
-        <button type="button" class="group-add-button" @click="openModal(Modals.FOOD_EDITOR, { groupId: group.id })">
-          ＋ Add {{ group.name.toLowerCase() }}
-        </button>
+        <!-- <span class="group-header-actions">
+          <button type="button" class="group-add-button" @click="openModal(Modals.FOOD_EDITOR, { groupId: group.id })">
+            Add {{ group.name.toLowerCase() }}
+          </button>
+        </span> -->
       </div>
       <div class="quick-picks-viewport">
         <div class="chip-list" :class="{ 'kcal-hidden': !store.showKcal }">
@@ -48,13 +50,13 @@ function decrement(entry) {
           />
           <template v-for="food in visibleFoods" :key="food.id">
             <button v-if="!entryFor(food.id)" type="button" class="today-chip" :aria-label="`Add ${food.name}`" @click="addLogFood(view.logDate, group.id, food.id)">
-              <span>＋ {{ food.name }}</span><span class="chip-kcal">{{ foodKcal(food).toLocaleString() }} kcal</span>
+              <span>{{ food.name }}</span><span class="chip-kcal">{{ foodKcal(food).toLocaleString() }} kcal</span>
             </button>
             <SnackQuantityStepper v-else :name="food.name" :quantity="entryFor(food.id).qty" :kcal="foodKcal(food)" @decrement="decrement(entryFor(food.id))" @increment="addLogFood(view.logDate, group.id, food.id)" @edit="openModal(Modals.FOOD_EDITOR, { foodId: food.id })" />
           </template>
           <span v-if="!foods.length" class="empty-note">No foods in this group</span>
           <button type="button" class="today-chip chip-add" @click="openModal(Modals.CUSTOM_ENTRY, { groupId: group.id })">
-            ＋ Custom
+            + Custom
           </button>
           <button v-if="hasMore" type="button" class="chip-more" @click="showAll = true">More…</button>
         </div>

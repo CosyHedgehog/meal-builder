@@ -63,10 +63,10 @@ const projectedWeightUnit = computed(() => (store.weightUnit === 'lb' ? 'lb' : '
     <section class="manage-section">
       <div class="manage-actions">
         <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.FOOD_MANAGER)">
-          ＋ Manage foods
+          Manage foods
         </button>
         <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.GROUP_MANAGER)">
-          ＋ Manage groups
+          Manage groups
         </button>
       </div>
     </section>
@@ -145,6 +145,11 @@ const projectedWeightUnit = computed(() => (store.weightUnit === 'lb' ? 'lb' : '
 
 .manage-toggle {
   width: 100%;
+  color: var(--green);
+}
+
+.manage-toggle:hover {
+  color: var(--green-strong);
 }
 
 .home-header {
