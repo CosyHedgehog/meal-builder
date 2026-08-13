@@ -196,15 +196,16 @@ export async function loadData() {
         ? normalized.groups
         : defaultGroups()
     state.logs = normalized.logs && typeof normalized.logs === 'object' ? normalized.logs : {}
+    Object.values(state.logs).forEach((log) => {
+      if (Array.isArray(log?.entries)) log.entries = log.entries.map(normalizeLogEntry).filter(Boolean)
+    })
     state.maintenanceCal = normalized.maintenanceCal || DEFAULT_MAINTENANCE
     state.showKcal = normalized.showKcal !== false
     state.weightUnit = normalized.weightUnit === 'lb' ? 'lb' : DEFAULT_WEIGHT_UNIT
 
-    // Persist the migrated shape immediately so we don't re-migrate next load.
-    if (hasRecoverableLegacyData(parsed) && !hasNewData(parsed)) {
-      state.loaded = true
-      await flushSave()
-    }
+    // Persist normalized logs so stale food group IDs are repaired permanently.
+    state.loaded = true
+    await flushSave()
   } catch (e) {
     console.error('Load failed', e)
     applyDefaults()
@@ -281,8 +282,21 @@ export function logEntries(log) {
   return (log && log.entries) || []
 }
 
+function isValidLogEntry(entry) {
+  return !entry.foodId || !!getFood(entry.foodId)
+}
+
+function normalizeLogEntry(entry) {
+  if (entry.foodId) {
+    const food = getFood(entry.foodId)
+    if (!food) return null
+    entry.groupId = food.groupId
+  }
+  return entry
+}
+
 export function entryKcal(entry) {
-  if (!entry) return 0
+  if (!entry || !isValidLogEntry(entry)) return 0
   const qty = Number.isFinite(entry.qty) && entry.qty > 0 ? entry.qty : 1
   if (entry.foodId) return Math.round(foodKcal(getFood(entry.foodId)) * qty)
   return Math.round((entry.kcal || 0) * qty)
