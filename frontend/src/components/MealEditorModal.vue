@@ -111,20 +111,22 @@ async function removeMeal() {
         <div v-if="draft.items.length" class="ingredient-list">
           <div v-for="row in ingredientRows" :key="row.item.ingredientId" class="ingredient-row">
             <div class="ingredient-row-main">
-              <div class="item-name">{{ row.ingredient?.name || 'Unknown' }}</div>
+              <div class="ingredient-name-wrap">
+                <div class="item-name">{{ row.ingredient?.name || 'Unknown' }}</div>
+                <button
+                  class="item-edit"
+                  :aria-label="`Edit ${row.ingredient?.name || 'ingredient'}`"
+                  @click="openModal('ingredient-editor', { ingredientId: row.item.ingredientId })"
+                >
+                  ✎
+                </button>
+              </div>
               <div class="quantity-control">
                 <input v-model.number="row.item.amount" class="item-qty" type="number" step="any" min="0" />
                 <span>{{ row.ingredient?.unit === 'g' ? 'g' : 'each' }}</span>
               </div>
             </div>
             <div class="item-kcal mono">{{ row.kcal.toLocaleString() }} kcal</div>
-            <button
-              class="item-edit"
-              :aria-label="`Edit ${row.ingredient?.name || 'ingredient'}`"
-              @click="openModal('ingredient-editor', { ingredientId: row.item.ingredientId })"
-            >
-              ✎
-            </button>
             <button
               class="item-remove"
               :aria-label="`Remove ${row.ingredient?.name || 'ingredient'}`"
@@ -262,10 +264,10 @@ async function removeMeal() {
 
 .ingredient-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto 24px 24px;
+  grid-template-columns: minmax(0, 1fr) auto 24px;
   align-items: center;
-  gap: 12px;
-  padding: 12px 13px;
+  gap: 10px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--line);
 }
 
@@ -274,11 +276,19 @@ async function removeMeal() {
 }
 
 .ingredient-row-main {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
   min-width: 0;
+}
+
+.ingredient-name-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
 }
 
 .item-name {
@@ -289,26 +299,30 @@ async function removeMeal() {
 }
 
 .quantity-control {
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: 62px 30px;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+  width: 98px;
   flex: none;
 }
 
 .quantity-control > span {
   color: var(--ink-muted);
   font-size: 11px;
+  width: 30px;
+  text-align: left;
 }
 
 .item-qty {
   width: 100%;
-  padding: 9px 7px;
+  padding: 7px 6px;
   border: 1px solid var(--line);
   border-radius: 9px;
   background: var(--surface);
   font-family: 'IBM Plex Mono', monospace;
   font-size: 13px;
-  min-height: 40px;
+  min-height: 32px;
 }
 
 .item-qty:focus {
@@ -335,14 +349,16 @@ async function removeMeal() {
 }
 
 .item-edit {
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
   padding: 0;
   border: 1px solid transparent;
   border-radius: 6px;
   background: transparent;
   color: var(--ink-muted);
-  font-size: 13px;
+  font-size: 11px;
+  line-height: 1;
+  flex: none;
 }
 
 .item-edit:hover {
@@ -417,36 +433,43 @@ async function removeMeal() {
 
 @media (max-width: 600px) {
   .ingredient-row {
-    grid-template-columns: minmax(0, 1fr) auto 22px 22px;
+    grid-template-columns: minmax(0, 1fr) 24px;
     gap: 8px;
-    padding: 11px 10px;
+    padding: 10px;
   }
 
   .ingredient-row-main {
     display: contents;
   }
 
-  .ingredient-row .item-name {
-    grid-column: 1 / 3;
-  }
-
-  .ingredient-row .quantity-control {
+  .ingredient-name-wrap {
+    display: flex;
+    align-items: center;
     grid-column: 1;
+    grid-row: 1;
+    gap: 6px;
+    min-width: 0;
   }
 
-  .ingredient-row .item-kcal {
-    grid-column: 2;
+  .quantity-control {
+    grid-column: 1;
     grid-row: 2;
+    width: 104px;
+    grid-template-columns: 56px 24px;
+    gap: 4px;
   }
 
-  .ingredient-row .item-remove {
-    grid-column: 4;
-    grid-row: 1 / 3;
+  .item-kcal {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: end;
+    margin-left: auto;
   }
 
-  .ingredient-row .item-edit {
-    grid-column: 3;
-    grid-row: 1 / 3;
+  .item-remove {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
   }
 }
 </style>
