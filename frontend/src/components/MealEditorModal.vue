@@ -158,9 +158,6 @@ async function removeMeal() {
         <button class="btn btn-primary primary-wide" @click="saveMeal">
           {{ isNew ? 'Create meal' : 'Save meal' }}
         </button>
-        <button v-if="!isNew" class="btn btn-danger-outline primary-wide delete-action" @click="removeMeal">
-          Delete meal
-        </button>
       </div>
     </div>
   </BaseModal>

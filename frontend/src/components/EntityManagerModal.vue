@@ -2,7 +2,15 @@
 import { computed, ref } from 'vue'
 import BaseModal from './BaseModal.vue'
 import DraggableList from './DraggableList.vue'
-import { state as store, reorderItems } from '../js/data.js'
+import {
+  state as store,
+  reorderItems,
+  deleteMeal,
+  deleteSnack,
+  deleteIngredient,
+  ingredientUsage,
+} from '../js/data.js'
+import { confirmAction } from '../js/confirm.js'
 import { openModal, replaceModal } from '../js/modals.js'
 
 const props = defineProps({
@@ -39,6 +47,44 @@ function openEditor(item = null) {
 function reorder(fromId, toId) {
   reorderItems(props.collection, fromId, toId)
 }
+
+async function deleteItem(item) {
+  if (props.collection === 'ingredients') {
+    const usedIn = ingredientUsage(item.id)
+    if (usedIn.length) {
+      await confirmAction({
+        title: 'Unable to delete',
+        message: `This ingredient is used in: ${usedIn
+          .map((meal) => meal.name)
+          .join(', ')}. Remove it from those meals first.`,
+        okLabel: 'Okay',
+        cancelLabel: '',
+      })
+      return
+    }
+
+    const ok = await confirmAction({
+      title: 'Delete ingredient',
+      message: `Delete "${item.name}"?`,
+      okLabel: 'Delete ingredient',
+    })
+    if (!ok) return
+    deleteIngredient(item.id)
+    return
+  }
+
+  const actionLabel = props.collection === 'meals' ? 'Delete meal' : 'Delete snack'
+  const itemType = props.collection === 'meals' ? 'meal' : 'snack'
+  const ok = await confirmAction({
+    title: actionLabel,
+    message: `Delete "${item.name}"?`,
+    okLabel: actionLabel,
+  })
+  if (!ok) return
+
+  if (props.collection === 'meals') deleteMeal(item.id)
+  else if (props.collection === 'snacks') deleteSnack(item.id)
+}
 </script>
 
 <template>
@@ -64,10 +110,13 @@ function reorder(fromId, toId) {
         @reorder="reorder"
       >
         <template #default="{ item }">
-          <button class="manager-item" @click="openEditor(item)">
-            <slot name="item" :item="item" />
-            <span>›</span>
-          </button>
+          <div class="manager-item-wrap">
+            <button class="manager-item" @click="openEditor(item)">
+              <slot name="item" :item="item" />
+              <span>›</span>
+            </button>
+            <button class="manager-delete" type="button" aria-label="Delete item" @click.stop="deleteItem(item)">×</button>
+          </div>
         </template>
       </DraggableList>
       <div v-else class="empty-note">{{ emptyMessage }}</div>

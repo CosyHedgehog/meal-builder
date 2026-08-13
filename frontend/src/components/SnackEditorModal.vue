@@ -59,13 +59,5 @@ async function remove() {
     <button class="btn btn-primary primary-wide" @click="submit">
       {{ isNew ? 'Add snack' : 'Save changes' }}
     </button>
-    <button
-      v-if="!isNew"
-      class="btn btn-danger-outline primary-wide delete-action"
-      style="margin-top: 8px"
-      @click="remove"
-    >
-      Delete snack
-    </button>
   </BaseModal>
 </template>

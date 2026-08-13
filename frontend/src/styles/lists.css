@@ -47,6 +47,14 @@
   pointer-events: none;
 }
 
+.manager-item-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
 .manager-item {
   flex: 1;
   min-width: 0;
@@ -77,4 +85,27 @@
   margin-top: 3px;
   color: var(--ink-muted);
   font-size: 12px;
+}
+
+.manager-delete {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink-muted);
+  border-radius: 8px;
+  padding: 0;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.manager-delete:hover {
+  background: rgba(181, 70, 57, 0.08);
+  color: var(--red);
+  border-color: rgba(181, 70, 57, 0.25);
 }
