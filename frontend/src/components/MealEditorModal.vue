@@ -277,11 +277,10 @@ async function removeMeal() {
 }
 
 .ingredient-row-main {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
+    display: grid;
+    grid-template-columns: 200px auto; 
+    align-items: center;
+    gap: 10px;
 }
 
 .ingredient-name-wrap {
@@ -475,12 +474,6 @@ async function removeMeal() {
     grid-row: 2;
     justify-self: end;
     margin-left: auto;
-  }
-
-  .item-remove {
-    grid-column: 2;
-    grid-row: 1 / span 2;
-    align-self: center;
   }
 }
 </style>
