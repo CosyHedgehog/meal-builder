@@ -98,7 +98,7 @@ function downloadJSON(filename, payload) {
         </div>
         <div class="settings-info-note">
           <span aria-hidden="true">ⓘ</span>
-          <span>When enabled, all days before today are locked and cannot be edited.</span>
+          <span>Food items from previous days cannot be selected. Food updates still apply to them.</span>
         </div>
       </section>
 

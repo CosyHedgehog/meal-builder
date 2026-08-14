@@ -87,7 +87,7 @@ function moveGroup(direction) {
     <div class="chip-group" :class="{ 'dashboard-drop-target': editMode, 'dashboard-drop-active': dragOver, 'dashboard-locked': locked }"
       @dragover.prevent="editMode && (dragOver = true)" @dragleave="dragOver = false" @drop.prevent="editMode && view.dragType === 'food' && dropFood(group.id)">
       <div class="chip-group-header">
-        <span>
+        <span class="chip-group-header">
           <i class="group-header-swatch" :class="`group-${store.groups.findIndex((item) => item.id === group.id) % 5}`"></i>
           <input
             v-if="editingGroupName"
@@ -99,7 +99,7 @@ function moveGroup(direction) {
             @keydown.esc="editingGroupName = false"
             @blur="saveGroupName"
           />
-          <span v-else>{{ group.name }}</span>
+          <span v-else class="chip-group-header-name" role="button" tabindex="0" @click.stop="openModal(Modals.FOOD_MANAGER, { groupId: group.id })" @keydown.enter.prevent.stop="openModal(Modals.FOOD_MANAGER, { groupId: group.id })" @keydown.space.prevent.stop="openModal(Modals.FOOD_MANAGER, { groupId: group.id })">{{ group.name }}</span>
           <button
             v-if="editMode && group.id !== 'group-uncategorized'"
             type="button"
@@ -127,7 +127,15 @@ function moveGroup(direction) {
             @click.stop="removeGroup"
           >× Delete group</button>
         </span>
-        <span v-if="editMode" class="dashboard-group-order-controls">
+        <span class="group-header-actions">
+          <button
+            type="button"
+            class="group-add-food-button"
+            :aria-label="`Add food to ${group.name}`"
+            :title="`Add food to ${group.name}`"
+            @click.stop="openModal(Modals.FOOD_EDITOR, { groupId: group.id })"
+          >+</button>
+          <span v-if="editMode" class="dashboard-group-order-controls">
           <button
             type="button"
             class="dashboard-group-order-button"
@@ -144,12 +152,8 @@ function moveGroup(direction) {
             title="Move group down"
             @click.stop="moveGroup(1)"
           >↓</button>
+          </span>
         </span>
-        <!-- <span class="group-header-actions">
-          <button type="button" class="group-add-button" @click="openModal(Modals.FOOD_EDITOR, { groupId: group.id })">
-            Add {{ group.name.toLowerCase() }}
-          </button>
-        </span> -->
       </div>
       <div class="quick-picks-viewport">
         <div class="chip-list" :class="{ 'kcal-hidden': !store.showKcal }">
@@ -205,6 +209,21 @@ function moveGroup(direction) {
 .group-header-swatch.group-2 { background: #79a96f; }
 .group-header-swatch.group-3 { background: #4f8f58; }
 .group-header-swatch.group-4 { background: #a8c98f; }
+
+.chip-group-header-name {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+
+.chip-group-header-name:hover,
+.chip-group-header-name:focus-visible {
+  color: var(--green-strong);
+  text-decoration-color: currentColor;
+  outline: none;
+}
 
 .group-edit-button {
   margin-left: 4px;
@@ -270,6 +289,25 @@ function moveGroup(direction) {
 .dashboard-group-order-controls {
   display: inline-flex;
   gap: 2px;
+}
+
+.group-add-food-button {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--green);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.group-add-food-button:hover,
+.group-add-food-button:focus-visible {
+  background: var(--surface-alt);
+  color: var(--green-strong);
 }
 
 .dashboard-group-order-button {

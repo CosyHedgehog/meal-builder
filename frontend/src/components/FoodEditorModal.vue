@@ -16,7 +16,7 @@ const emit = defineEmits(['close'])
 const source = store.foods.find((food) => food.id === props.foodId)
 const isNew = !source
 const draft = reactive({
-  name: source ? `${source.name}${props.duplicate ? ' copy' : ''}` : 'New food',
+  name: source ? `${source.name}${props.duplicate ? ' copy' : ''}` : '',
   groupId: source ? source.groupId : props.groupId,
   items: source ? source.items.map((item) => ({ ...item })) : [],
   kcal: source ? String(source.kcal || '') : '',
@@ -116,14 +116,11 @@ async function closeEditor() {
     <div class="food-editor-content">
       <div class="input-field food-field">
         <label for="foodName">Name</label>
-        <input id="foodName" v-model="draft.name" placeholder="e.g. Protein pancakes" />
+        <input id="foodName" v-model="draft.name" placeholder="New food" />
       </div>
       <div class="input-field food-field">
         <div class="food-group-label-row">
           <label for="foodGroup">Group</label>
-          <button class="link-btn create-group-link" type="button" @click="openModal(Modals.GROUP_MANAGER)">
-            <span aria-hidden="true">＋</span> Create group
-          </button>
         </div>
         <select id="foodGroup" v-model="draft.groupId">
           <option value="" disabled hidden>Select a group...</option>
@@ -144,48 +141,47 @@ async function closeEditor() {
       </div>
 
       <section v-if="foodMode === 'ingredients'" class="food-ingredients-section">
-        <div class="meal-section-heading">
+        <div v-if="draft.items.length" class="meal-section-heading">
           <div>
             <div class="meal-section-label">Ingredients <span class="meal-section-note">[{{ draft.items.length }} added]</span></div>
           </div>
-        </div>
-        <div v-if="draft.items.length" class="ingredient-list">
-          <div
-            v-for="row in ingredientRows"
-            :key="row.item.ingredientId"
-            class="ingredient-row"
-          >
-            <div class="ingredient-row-main">
-              <div class="ingredient-name-wrap">
-                <button
-                  type="button"
-                  class="item-name"
-                  @click="openModal('ingredient-editor', { ingredientId: row.item.ingredientId })"
-                >
-                  <span class="item-edit-icon" aria-hidden="true">✎</span>
-                  <span>{{ row.ingredient?.name || 'Unknown' }}</span>
-                </button>
-              </div>
-              <div class="quantity-control">
-                <input v-model.number="row.item.amount" class="item-qty" type="number" step="any" min="0" @click.stop />
-                <span>{{ row.ingredient?.unit === 'g' ? 'g' : '' }}</span>
-              </div>
-            </div>
-            <div class="item-kcal mono">{{ row.kcal.toLocaleString() }} kcal</div>
-            <button class="item-remove" :aria-label="`Remove ${row.ingredient?.name || 'ingredient'}`"
-              @click.stop="removeRow(row.item.ingredientId)">×</button>
+          <div class="food-total" aria-label="Calculated food calorie total">
+            <span>Calculated total</span>
+            <strong>{{ totalKcal.toLocaleString() }} <small>kcal</small></strong>
           </div>
         </div>
-        <div class="food-total" aria-label="Calculated food calorie total">
-          <span>Calculated total</span>
-          <strong>{{ totalKcal.toLocaleString() }} <small>kcal</small></strong>
+        <div v-if="draft.items.length" class="food-ingredients-list-container">
+          <div class="ingredient-list">
+            <div
+              v-for="row in ingredientRows"
+              :key="row.item.ingredientId"
+              class="ingredient-row"
+            >
+              <div class="ingredient-row-main">
+                <div class="ingredient-name-wrap">
+                  <button
+                    type="button"
+                    class="item-name"
+                    @click="openModal('ingredient-editor', { ingredientId: row.item.ingredientId })"
+                  >
+                    <span class="item-edit-icon" aria-hidden="true">✎</span>
+                    <span>{{ row.ingredient?.name || 'Unknown' }}</span>
+                  </button>
+                </div>
+                <div class="quantity-control">
+                  <input v-model.number="row.item.amount" class="item-qty" type="number" step="any" min="0" @click.stop />
+                  <span>{{ row.ingredient?.unit === 'g' ? 'g' : '' }}</span>
+                </div>
+              </div>
+              <div class="item-kcal mono">{{ row.kcal.toLocaleString() }} kcal</div>
+              <button class="item-remove" :aria-label="`Remove ${row.ingredient?.name || 'ingredient'}`"
+                @click.stop="removeRow(row.item.ingredientId)">×</button>
+            </div>
+          </div>
         </div>
         <div class="add-item-row">
           <div class="add-item-label-row">
-            <label class="add-item-label">Select an ingredient</label>
-            <button class="link-btn create-ingredient-link" type="button" @click="openModal('ingredient-editor')">
-              <span aria-hidden="true">＋</span> Create ingredient
-            </button>
+            <label class="add-item-label">Add an ingredient</label>
           </div>
           <div class="ingredient-picker-trigger">
             <button
@@ -214,10 +210,9 @@ async function closeEditor() {
           <label for="foodKcal">Calories per serving</label>
           <input id="foodKcal" v-model="draft.kcal" type="number" min="1" step="1" placeholder="e.g. 95" />
         </div>
-        <p>For foods such as an apple with a known calorie value.</p>
       </div>
 
-      <div v-if="foodMode === 'simple'" class="food-total" aria-label="Food calorie total">
+      <div v-if="foodMode === 'simple' && draft.kcal" class="food-total" aria-label="Food calorie total">
         <span>Calories per serving</span>
         <strong>{{ totalKcal.toLocaleString() }} <small>kcal</small></strong>
       </div>
@@ -276,9 +271,9 @@ async function closeEditor() {
 
 .food-mode-control {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
   margin: 2px 0 4px;
 }
 
@@ -349,6 +344,15 @@ async function closeEditor() {
   gap: 7px;
 }
 
+.food-ingredients-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 6px 6px 6px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
 .food-validation {
   margin: 2px 0 -4px;
   color: var(--red);
@@ -401,6 +405,17 @@ async function closeEditor() {
   text-transform: uppercase;
 }
 
+.meal-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.meal-section-heading .food-total {
+  flex: none;
+}
+
 .meal-section-heading .meal-section-note {
   color: var(--ink-muted);
   font-size: 12px;
@@ -411,8 +426,7 @@ async function closeEditor() {
 
 .ingredient-list {
   overflow: hidden;
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
+  border-radius: 8px;
   background: var(--surface);
 }
 
@@ -421,13 +435,9 @@ async function closeEditor() {
   grid-template-columns: minmax(0, 1fr) auto 24px;
   align-items: center;
   gap: 8px;
-  min-height: 38px;
-  padding: 4px 2px;
-  border-bottom: 1px solid var(--line);
-}
-
-.ingredient-row:last-child {
-  border-bottom: 0;
+  min-height: 40px;
+  padding: 5px 6px;
+  border-radius: 8px;
 }
 
 .ingredient-row-main {
@@ -504,7 +514,8 @@ async function closeEditor() {
 
 .item-kcal {
   color: var(--ink-muted);
-  font-size: 11px;
+  font-family: inherit;
+  font-size: 13px;
   white-space: nowrap;
 }
 
@@ -523,7 +534,7 @@ async function closeEditor() {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 72px 52px;
   gap: 5px;
-  padding: 15px 0 3px;
+  padding: 10px 0 3px;
   align-items: end;
 }
 

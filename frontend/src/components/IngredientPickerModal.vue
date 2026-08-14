@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import BaseModal from './BaseModal.vue'
 import { state as store } from '../js/data.js'
+import { openModal } from '../js/modals.js'
 
 const props = defineProps({
   excludedIds: { type: Array, default: () => [] },
@@ -52,6 +53,9 @@ function choose(ingredient) {
         </button>
       </div>
       <div v-else class="empty-note">No matching ingredients.</div>
+      <button class="link-btn create-ingredient-link" type="button" @click="openModal('ingredient-editor')">
+        <span aria-hidden="true">＋</span> Create ingredient
+      </button>
     </div>
   </BaseModal>
 </template>
@@ -86,6 +90,13 @@ function choose(ingredient) {
 .ingredient-picker-count {
   color: var(--ink-muted);
   font-size: 12px;
+}
+
+.create-ingredient-link {
+  align-self: flex-start;
+  margin: 2px 0 0;
+  padding: 0;
+  font-size: 11px;
 }
 
 .ingredient-picker-list {
