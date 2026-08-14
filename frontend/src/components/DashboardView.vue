@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { state as store, getLog, logEntries } from '../js/data.js'
 import { view, clearDragState } from '../js/ui.js'
 import { Modals, openModal } from '../js/modals.js'
@@ -25,6 +25,10 @@ const projectedWeightDisplay = computed(() => {
 
 const projectedWeightUnit = computed(() => (store.weightUnit === 'lb' ? 'lb' : 'kg'))
 const dayLocked = computed(() => store.allowPreviousDayLocking && view.logDate < new Date().toISOString().slice(0, 10))
+
+watch(dayLocked, (locked) => {
+  if (locked) finishDashboardEdit()
+})
 
 function finishDashboardEdit() {
   clearDragState()
@@ -55,10 +59,10 @@ function finishDashboardEdit() {
     </div>
 
     <div class="dashboard-edit-toolbar">
-      <button v-if="!view.dashboardEditMode" class="manage-toggle group-add-button" type="button" :disabled="dayLocked" @click="view.dashboardEditMode = true">
+      <button v-if="!view.dashboardEditMode && !dayLocked" class="manage-toggle group-add-button" type="button" @click="view.dashboardEditMode = true">
         ✎ Edit dashboard
       </button>
-      <button v-else class="btn btn-primary" type="button" @click="finishDashboardEdit">
+      <button v-else-if="!dayLocked" class="btn btn-primary" type="button" @click="finishDashboardEdit">
         Done
       </button>
       <span v-if="view.dashboardEditMode" class="dashboard-edit-note">Drag food handles into another group.</span>

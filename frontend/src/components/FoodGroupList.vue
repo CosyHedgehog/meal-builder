@@ -84,7 +84,7 @@ function moveGroup(direction) {
 
 <template>
   <div class="today-chips" @click="handleHeaderClick">
-    <div class="chip-group" :class="{ 'dashboard-drop-target': editMode, 'dashboard-drop-active': dragOver }"
+    <div class="chip-group" :class="{ 'dashboard-drop-target': editMode, 'dashboard-drop-active': dragOver, 'dashboard-locked': locked }"
       @dragover.prevent="editMode && (dragOver = true)" @dragleave="dragOver = false" @drop.prevent="editMode && view.dragType === 'food' && dropFood(group.id)">
       <div class="chip-group-header">
         <span>
@@ -334,6 +334,31 @@ function moveGroup(direction) {
 .dashboard-drop-active {
   background: var(--green-soft);
   border-color: var(--green);
+}
+
+.dashboard-locked .today-chip:hover,
+.dashboard-locked .today-chip.active:hover,
+.dashboard-locked .food-stepper-control:hover,
+.dashboard-locked .food-stepper-label:hover {
+  border-color: transparent;
+  background: transparent;
+  color: inherit;
+}
+
+.dashboard-locked .today-chip,
+.dashboard-locked .food-stepper-control,
+.dashboard-locked .food-stepper-label {
+  cursor: default;
+}
+
+.dashboard-locked .food-stepper,
+.dashboard-locked .food-stepper-control:hover,
+.dashboard-locked .food-stepper-label:hover {
+  background: var(--surface);
+}
+
+.dashboard-locked .quick-picks-viewport {
+  pointer-events: none;
 }
 
 .dashboard-food-item {
