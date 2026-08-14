@@ -61,56 +61,96 @@ function downloadJSON(filename, payload) {
 
 <template>
   <BaseModal title="Settings" subtitle="A couple of account and app settings." @close="emit('close')">
-    <div class="settings-account">
-      <span>Signed in as</span>
-      <strong>{{ auth.user?.username || 'Unknown user' }}</strong>
-    </div>
-    <div class="section-label">Values</div>
-    <div class="settings-row">
-      <label for="maintenanceInput">Daily maintenance calories</label>
-      <input id="maintenanceInput" type="number" min="1" step="10" :value="store.maintenanceCal"
-        @change="setMaintenance($event.target.value)" />
-    </div>
+    <div class="settings-sections">
+      <section class="settings-section">
+        <div class="section-label">Values</div>
+        <div class="settings-row">
+          <label for="maintenanceInput">Daily maintenance calories</label>
+          <input id="maintenanceInput" type="number" min="1" step="10" :value="store.maintenanceCal"
+            @change="setMaintenance($event.target.value)" />
+        </div>
+        <div class="settings-row">
+          <label>Weight display</label>
+          <select v-model="weightUnit" class="unit-select">
+            <option value="kg">kg</option>
+            <option value="lb">lb</option>
+          </select>
+        </div>
+      </section>
 
-    <div class="section-label" style="margin-top: 16px">Appearance</div>
-    <div class="settings-row">
-      <label>Weight display</label>
-      <select v-model="weightUnit" class="unit-select">
-        <option value="kg">kg</option>
-        <option value="lb">lb</option>
-      </select>
+      <section class="settings-section">
+        <div class="section-label">Appearance</div>
+        <div class="settings-row">
+          <label>Dark mode</label>
+          <ToggleSwitch v-model="darkMode" label="Toggle dark mode" :knob="isDark ? '🌙' : '☀️'" />
+        </div>
+        <div class="settings-row">
+          <label>Show kcal on chips</label>
+          <ToggleSwitch v-model="showKcal" label="Toggle kcal on chips" />
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <div class="section-label">Behavior</div>
+        <div class="settings-row">
+          <label>Allow locking previous days</label>
+          <ToggleSwitch v-model="allowPreviousDayLocking" label="Allow locking previous days" />
+        </div>
+        <div class="settings-info-note">
+          <span aria-hidden="true">ⓘ</span>
+          <span>When enabled, all days before today are locked and cannot be edited.</span>
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <div class="section-label">Data</div>
+        <div class="settings-row data-actions">
+          <label>Import data</label>
+          <button class="btn btn-secondary" aria-label="Import data" @click="openModal(Modals.IMPORT_DATA)">↑</button>
+        </div>
+        <div class="settings-row data-actions">
+          <label>Download data</label>
+          <button class="btn btn-secondary" aria-label="Download data" @click="exportData">↓</button>
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <div class="section-label">Account</div>
+        <div class="settings-row account-row">
+          <div class="settings-account">
+            <span>Signed in as <strong>{{ auth.user?.username || 'Unknown user' }}</strong></span>
+          </div>
+          <button class="btn btn-danger-outline" @click="logOut">
+            ↪ Log out
+          </button>
+        </div>
+      </section>
     </div>
-    <div class="settings-row" style="margin-top: 12px">
-      <label>Dark mode</label>
-      <ToggleSwitch v-model="darkMode" label="Toggle dark mode" :knob="isDark ? '🌙' : '☀️'" />
-    </div>
-    <div class="settings-row" style="margin-top: 12px">
-      <label>Show kcal on chips</label>
-      <ToggleSwitch v-model="showKcal" label="Toggle kcal on chips" />
-    </div>
-    <div class="section-label" style="margin-top: 16px">Data</div>
-    <div class="settings-row">
-      <label>Allow locking previous days</label>
-      <ToggleSwitch v-model="allowPreviousDayLocking" label="Allow locking previous days" />
-    </div>
-    <div class="settings-info-note">
-      <span aria-hidden="true">ⓘ</span>
-      <span>When enabled, all days before today are locked and cannot be edited.</span>
-    </div>
-    <div class="settings-row data-actions">
-      <label>Import data</label>
-      <button class="btn btn-secondary" aria-label="Import data" @click="openModal(Modals.IMPORT_DATA)">↑</button>
-    </div>
-    <div class="settings-row data-actions">
-      <label>Download data</label>
-      <button class="btn btn-secondary" aria-label="Download data" @click="exportData">↓</button>
-    </div>
-    <button class="btn btn-danger-outline primary-wide" @click="logOut">
-      ↪ Log out
-    </button>
   </BaseModal>
 </template>
 <style scoped>
+.settings-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.settings-section {
+  padding-top: 2px;
+}
+
+.settings-section + .settings-section {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.settings-section .section-label {
+  margin: 0 0 10px;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .settings-account {
   display: flex;
   justify-content: space-between;
@@ -133,8 +173,13 @@ function downloadJSON(filename, payload) {
   gap: 12px;
 }
 
+.settings-row + .settings-row {
+  margin-top: 12px;
+}
+
 .settings-row label {
   font-size: 13px;
+  color: var(--ink-muted);
 }
 
 .settings-info-note {
@@ -170,11 +215,19 @@ function downloadJSON(filename, payload) {
   border-radius: 9px;
   background: var(--bg);
   font-family: "IBM Plex Mono", monospace;
-  text-align: right;
+  text-align: center;
 }
 
 .unit-select {
   appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 26px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-muted) 50%),
+    linear-gradient(135deg, var(--ink-muted) 50%, transparent 50%);
+  background-repeat: no-repeat;
+  background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50%;
+  background-size: 5px 5px, 5px 5px;
   text-align: center;
 }
 </style>
