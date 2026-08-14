@@ -24,6 +24,7 @@ const projectedWeightDisplay = computed(() => {
 })
 
 const projectedWeightUnit = computed(() => (store.weightUnit === 'lb' ? 'lb' : 'kg'))
+const dayLocked = computed(() => store.allowPreviousDayLocking && view.logDate < new Date().toISOString().slice(0, 10))
 
 function finishDashboardEdit() {
   clearDragState()
@@ -45,11 +46,16 @@ function finishDashboardEdit() {
     </div>
 
     <section v-for="group in groups" :key="group.id" class="today-group-card">
-      <FoodGroupList :group="group" :log="log" :edit-mode="view.dashboardEditMode" />
+      <FoodGroupList :group="group" :log="log" :edit-mode="view.dashboardEditMode && !dayLocked" :locked="dayLocked" />
     </section>
 
+    <div v-if="dayLocked" class="locked-day-note">
+      <span aria-hidden="true">🔒</span>
+      <span>Previous days are locked. <button type="button" @click="openModal(Modals.SETTINGS)">Change in Settings</button></span>
+    </div>
+
     <div class="dashboard-edit-toolbar">
-      <button v-if="!view.dashboardEditMode" class="manage-toggle group-add-button" type="button" @click="view.dashboardEditMode = true">
+      <button v-if="!view.dashboardEditMode" class="manage-toggle group-add-button" type="button" :disabled="dayLocked" @click="view.dashboardEditMode = true">
         ✎ Edit dashboard
       </button>
       <button v-else class="btn btn-primary" type="button" @click="finishDashboardEdit">
@@ -131,6 +137,31 @@ function finishDashboardEdit() {
 .dashboard-edit-note {
   color: var(--ink-muted);
   font-size: 12px;
+}
+
+.locked-day-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.locked-day-note > span:first-child {
+  flex: none;
+}
+
+.locked-day-note button {
+  padding: 0;
+  background: transparent;
+  color: var(--green);
+  font: inherit;
+  font-weight: 700;
 }
 
 .food-order-mode {

@@ -37,7 +37,8 @@ DEFAULT_DATA = {
     ],
     'logs': {},
     'maintenanceCal': 2200,
-    'showKcal': True
+    'showKcal': True,
+    'allowPreviousDayLocking': False
 }
 
 def db():
@@ -246,7 +247,8 @@ class Handler(BaseHTTPRequestHandler):
             'logs': data.get('logs',{}),
             'maintenanceCal': data.get('maintenanceCal',2200),
             'showKcal': data.get('showKcal',True),
-            'weightUnit': data.get('weightUnit','kg')
+            'weightUnit': data.get('weightUnit','kg'),
+            'allowPreviousDayLocking': data.get('allowPreviousDayLocking',False)
         }
         try: encoded=json.dumps(safe,separators=(',',':'))
         except Exception: return json_response(self,400,{'error':'Data could not be saved'})

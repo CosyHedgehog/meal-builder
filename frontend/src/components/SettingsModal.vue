@@ -7,6 +7,7 @@ import {
   setMaintenance,
   setShowKcal,
   setWeightUnit,
+  setAllowPreviousDayLocking,
   snapshot,
   flushSave,
 } from '../js/data.js'
@@ -28,6 +29,11 @@ const showKcal = computed({
 const weightUnit = computed({
   get: () => store.weightUnit,
   set: (value) => setWeightUnit(value),
+})
+
+const allowPreviousDayLocking = computed({
+  get: () => store.allowPreviousDayLocking,
+  set: (value) => setAllowPreviousDayLocking(value),
 })
 
 function exportData() {
@@ -83,6 +89,14 @@ function downloadJSON(filename, payload) {
       <ToggleSwitch v-model="showKcal" label="Toggle kcal on chips" />
     </div>
     <div class="section-label" style="margin-top: 16px">Data</div>
+    <div class="settings-row">
+      <label>Allow locking previous days</label>
+      <ToggleSwitch v-model="allowPreviousDayLocking" label="Allow locking previous days" />
+    </div>
+    <div class="settings-info-note">
+      <span aria-hidden="true">ⓘ</span>
+      <span>When enabled, all days before today are locked and cannot be edited.</span>
+    </div>
     <div class="settings-row data-actions">
       <label>Import data</label>
       <button class="btn btn-secondary" aria-label="Import data" @click="openModal(Modals.IMPORT_DATA)">↑</button>
@@ -121,6 +135,23 @@ function downloadJSON(filename, payload) {
 
 .settings-row label {
   font-size: 13px;
+}
+
+.settings-info-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 2px;
+  color: var(--ink-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.settings-info-note > span:first-child {
+  flex: none;
+  color: var(--green);
+  font-size: 13px;
+  line-height: 1;
 }
 
 .data-actions {

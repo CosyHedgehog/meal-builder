@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { state as store } from '../js/data.js'
 import { prettyDateNoYear, shiftDateStr, todayStr } from '../js/date.js'
 import { setLogDate, view } from '../js/ui.js'
 
@@ -66,6 +67,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
     >
       ›
     </button>
+
 
         <button
       v-if="!isToday"

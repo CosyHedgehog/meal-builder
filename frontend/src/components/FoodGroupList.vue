@@ -6,7 +6,7 @@ import { view, clearDragState } from '../js/ui.js'
 import { Modals, openModal } from '../js/modals.js'
 import { confirmAction } from '../js/confirm.js'
 
-const props = defineProps({ group: { type: Object, required: true }, log: { type: Object, required: true }, editMode: { type: Boolean, default: false } })
+const props = defineProps({ group: { type: Object, required: true }, log: { type: Object, required: true }, editMode: { type: Boolean, default: false }, locked: { type: Boolean, default: false } })
 const dragOver = ref(false)
 const showAll = ref(false)
 const editingGroupName = ref(false)
@@ -27,9 +27,11 @@ function entryFor(foodId) {
   return entries.value.find((entry) => entry.foodId === foodId)
 }
 function decrement(entry) {
+  if (props.locked) return
   bumpLogEntry(view.logDate, entry.id, -1)
 }
 function startDrag(foodId, event) {
+  if (props.locked) return
   view.draggedFoodId = foodId
   view.dragType = 'food'
   view.draggedGroupId = ''
@@ -159,8 +161,8 @@ function moveGroup(direction) {
               :color-index="store.groups.findIndex((item) => item.id === group.id) % 5"
               one-off
               @decrement="decrement(entry)"
-              @increment="bumpLogEntry(view.logDate, entry.id, 1)"
-              @edit="openModal(Modals.CUSTOM_ENTRY, { groupId: group.id, entry })"
+              @increment="!locked && bumpLogEntry(view.logDate, entry.id, 1)"
+              @edit="!locked && openModal(Modals.CUSTOM_ENTRY, { groupId: group.id, entry })"
             />
           </div>
           <template v-for="food in visibleFoods" :key="food.id">
@@ -171,14 +173,14 @@ function moveGroup(direction) {
               @drop.prevent="editMode && dropFood(group.id)"
             >
               <span v-if="editMode" class="dashboard-drag-handle" draggable="true" title="Drag food to another group" @dragstart="startDrag(food.id, $event)" @dragend="endDrag">⠿</span>
-              <button v-if="!entryFor(food.id)" type="button" class="today-chip" :aria-label="`Add ${food.name}`" @click="addLogFood(view.logDate, group.id, food.id)">
+              <button v-if="!entryFor(food.id)" type="button" class="today-chip" :aria-label="`Add ${food.name}`" @click="!locked && addLogFood(view.logDate, group.id, food.id)">
                 <span>{{ food.name }}</span><span class="chip-kcal">{{ foodKcal(food).toLocaleString() }} kcal</span>
               </button>
-              <FoodQuantityStepper v-else :name="food.name" :quantity="entryFor(food.id).qty" :kcal="foodKcal(food)" @decrement="decrement(entryFor(food.id))" @increment="addLogFood(view.logDate, group.id, food.id)" @edit="openModal(Modals.FOOD_EDITOR, { foodId: food.id })" />
+              <FoodQuantityStepper v-else :name="food.name" :quantity="entryFor(food.id).qty" :kcal="foodKcal(food)" @decrement="decrement(entryFor(food.id))" @increment="!locked && addLogFood(view.logDate, group.id, food.id)" @edit="!locked && openModal(Modals.FOOD_EDITOR, { foodId: food.id })" />
             </div>
           </template>
           <span v-if="!foods.length" class="empty-note">No foods in this group</span>
-          <button v-if="!editMode" type="button" class="today-chip chip-add" @click="openModal(Modals.CUSTOM_ENTRY, { groupId: group.id })">
+          <button v-if="!editMode" type="button" class="today-chip chip-add" :disabled="locked" @click="!locked && openModal(Modals.CUSTOM_ENTRY, { groupId: group.id })">
             + Custom
           </button>
           <button v-if="hasMore" type="button" class="chip-more" @click="showAll = true">More…</button>

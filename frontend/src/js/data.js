@@ -42,6 +42,7 @@ export const state = reactive({
   maintenanceCal: DEFAULT_MAINTENANCE,
   showKcal: true,
   weightUnit: DEFAULT_WEIGHT_UNIT,
+  allowPreviousDayLocking: false,
   loaded: false,
   saveState: 'idle', // idle | saving | ok | error
 })
@@ -163,6 +164,7 @@ function migrateLegacyPayload(parsed) {
     maintenanceCal: parsed.maintenanceCal || DEFAULT_MAINTENANCE,
     showKcal: parsed.showKcal !== false,
     weightUnit: parsed.weightUnit === 'lb' ? 'lb' : DEFAULT_WEIGHT_UNIT,
+    allowPreviousDayLocking: false,
   }
 }
 
@@ -177,6 +179,7 @@ export function snapshot() {
     maintenanceCal: state.maintenanceCal,
     showKcal: state.showKcal,
     weightUnit: state.weightUnit,
+    allowPreviousDayLocking: state.allowPreviousDayLocking,
   }
 }
 
@@ -188,6 +191,7 @@ function applyDefaults() {
   state.maintenanceCal = DEFAULT_MAINTENANCE
   state.showKcal = true
   state.weightUnit = DEFAULT_WEIGHT_UNIT
+  state.allowPreviousDayLocking = false
 }
 
 export async function loadData() {
@@ -213,6 +217,7 @@ export async function loadData() {
     state.maintenanceCal = normalized.maintenanceCal || DEFAULT_MAINTENANCE
     state.showKcal = normalized.showKcal !== false
     state.weightUnit = normalized.weightUnit === 'lb' ? 'lb' : DEFAULT_WEIGHT_UNIT
+  state.allowPreviousDayLocking = normalized.allowPreviousDayLocking === true
 
     // Persist normalized logs so stale food group IDs are repaired permanently.
     state.loaded = true
@@ -242,6 +247,7 @@ export async function importData(payload) {
   state.maintenanceCal = normalized.maintenanceCal || DEFAULT_MAINTENANCE
   state.showKcal = normalized.showKcal !== false
   state.weightUnit = normalized.weightUnit === 'lb' ? 'lb' : DEFAULT_WEIGHT_UNIT
+  state.allowPreviousDayLocking = normalized.allowPreviousDayLocking === true
   state.loaded = true
   await flushSave()
 }
@@ -374,6 +380,12 @@ export function setWeightUnit(value) {
   state.weightUnit = value === 'lb' ? 'lb' : DEFAULT_WEIGHT_UNIT
   save()
 }
+
+export function setAllowPreviousDayLocking(value) {
+  state.allowPreviousDayLocking = !!value
+  save()
+}
+
 
 /* ===================== Ordering ===================== */
 
