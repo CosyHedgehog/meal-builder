@@ -11,48 +11,6 @@ const BAR_HEIGHT = 108
 const DEFAULT_CEILING = 2400
 const KCAL_PER_KG = 7700
 
-function movingAverage(history, windowSize = 7) {
-  return history.map((_, index) => {
-    const start = Math.max(0, index - windowSize + 1)
-    const logged = history.slice(start, index + 1).filter((entry) => entry.hasLog)
-    if (!logged.length) return null
-    return logged.reduce((sum, entry) => sum + entry.total, 0) / logged.length
-  })
-}
-
-function smoothLinePaths(points) {
-  const segments = []
-  let current = []
-  points.forEach((point) => {
-    if (point === null) {
-      if (current.length) segments.push(current)
-      current = []
-    } else {
-      current.push(point)
-    }
-  })
-  if (current.length) segments.push(current)
-
-  return segments.map((segment) => {
-    if (segment.length === 1) {
-      return `M${segment[0].x},${segment[0].y} L${segment[0].x},${segment[0].y}`
-    }
-    let path = `M${segment[0].x},${segment[0].y}`
-    for (let index = 0; index < segment.length - 1; index += 1) {
-      const p0 = segment[index - 1] || segment[index]
-      const p1 = segment[index]
-      const p2 = segment[index + 1]
-      const p3 = segment[index + 2] || p2
-      const cp1x = p1.x + (p2.x - p0.x) / 6
-      const cp1y = p1.y + (p2.y - p0.y) / 6
-      const cp2x = p2.x - (p3.x - p1.x) / 6
-      const cp2y = p2.y - (p3.y - p1.y) / 6
-      path += ` C${cp1x.toFixed(2)},${cp1y.toFixed(2)} ${cp2x.toFixed(2)},${cp2y.toFixed(2)} ${p2.x.toFixed(2)},${p2.y.toFixed(2)}`
-    }
-    return path
-  })
-}
-
 export function useHistoryChart() {
   const days = ref(window.innerWidth <= 480 ? 14 : 30)
 
@@ -108,18 +66,6 @@ export function useHistoryChart() {
     }),
   )
 
-  const trendPaths = computed(() => {
-    const points = movingAverage(history.value, 7).map((value, index) => {
-      if (value === null) return null
-      const scaled = Math.min(value, scale.value)
-      return {
-        x: ((index + 0.5) / days.value) * 100,
-        y: Math.max(0, BAR_HEIGHT - (scaled / scale.value) * BAR_HEIGHT),
-      }
-    })
-    return smoothLinePaths(points)
-  })
-
   const goalLineBottom = computed(() =>
     Math.round(24 + (store.maintenanceCal / scale.value) * BAR_HEIGHT),
   )
@@ -146,7 +92,6 @@ export function useHistoryChart() {
   return {
     days,
     bars,
-    trendPaths,
     goalLineBottom,
     avgDeficit,
     projectedKgPerWeek,

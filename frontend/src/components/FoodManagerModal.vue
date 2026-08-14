@@ -16,7 +16,7 @@ const filteredFoods = computed(() => {
   const value = query.value.trim().toLowerCase()
   return value ? foods.value.filter((food) => food.name.toLowerCase().includes(value)) : foods.value
 })
-const dragDisabled = computed(() => !!query.value.trim() || filteredFoods.value.length < 2)
+const dragDisabled = computed(() => !selectedGroupId.value || !!query.value.trim() || filteredFoods.value.length < 2)
 
 function openEditor(food = null) {
   openModal(Modals.FOOD_EDITOR, food ? { foodId: food.id } : { groupId: selectedGroupId.value })
@@ -42,7 +42,17 @@ async function removeFood(food) {
         <input v-model="query" class="manager-search" type="search" placeholder="Search foods..." />
       </div>
       <div class="food-count">{{ filteredFoods.length }} food{{ filteredFoods.length === 1 ? '' : 's' }}</div>
-      <DraggableList v-if="filteredFoods.length" :items="filteredFoods" :disabled="dragDisabled" @reorder="reorder">
+      <div v-if="selectedGroupId && !query.trim()" class="food-order-note">
+        <span class="order-note-icon" aria-hidden="true">ⓘ</span>
+        <span>Drag foods to change the order they appear on the dashboard.</span>
+      </div>
+      <DraggableList
+        v-if="filteredFoods.length"
+        :items="filteredFoods"
+        :disabled="dragDisabled"
+        :show-drag-handle="!!selectedGroupId && !query.trim()"
+        @reorder="reorder"
+      >
         <template #default="{ item }">
           <div class="manager-item-wrap">
             <button class="manager-item" type="button" @click="openEditor(item)">
@@ -99,6 +109,21 @@ async function removeFood(food) {
   margin: 6px 0 8px;
   color: var(--ink-muted);
   font-size: 12px;
+}
+
+.food-order-note {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: -2px 0 8px;
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
+.order-note-icon {
+  color: var(--green);
+  font-size: 13px;
+  line-height: 1;
 }
 
 @media (max-width: 480px) {

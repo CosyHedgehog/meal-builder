@@ -41,6 +41,7 @@ export const state = reactive({
   logs: {}, // 'YYYY-MM-DD' -> { entries: [...] }
   maintenanceCal: DEFAULT_MAINTENANCE,
   showKcal: true,
+  showUncategorized: false,
   weightUnit: DEFAULT_WEIGHT_UNIT,
   loaded: false,
   saveState: 'idle', // idle | saving | ok | error
@@ -162,6 +163,7 @@ function migrateLegacyPayload(parsed) {
     logs,
     maintenanceCal: parsed.maintenanceCal || DEFAULT_MAINTENANCE,
     showKcal: parsed.showKcal !== false,
+    showUncategorized: parsed.showUncategorized === true,
     weightUnit: parsed.weightUnit === 'lb' ? 'lb' : DEFAULT_WEIGHT_UNIT,
   }
 }
@@ -176,6 +178,7 @@ export function snapshot() {
     logs: state.logs,
     maintenanceCal: state.maintenanceCal,
     showKcal: state.showKcal,
+    showUncategorized: state.showUncategorized,
     weightUnit: state.weightUnit,
   }
 }
@@ -187,6 +190,7 @@ function applyDefaults() {
   state.logs = {}
   state.maintenanceCal = DEFAULT_MAINTENANCE
   state.showKcal = true
+  state.showUncategorized = false
   state.weightUnit = DEFAULT_WEIGHT_UNIT
 }
 
@@ -209,6 +213,7 @@ export async function loadData() {
     })
     state.maintenanceCal = normalized.maintenanceCal || DEFAULT_MAINTENANCE
     state.showKcal = normalized.showKcal !== false
+    state.showUncategorized = normalized.showUncategorized === true
     state.weightUnit = normalized.weightUnit === 'lb' ? 'lb' : DEFAULT_WEIGHT_UNIT
 
     // Persist normalized logs so stale food group IDs are repaired permanently.
@@ -342,6 +347,11 @@ export function setMaintenance(value) {
 
 export function setShowKcal(value) {
   state.showKcal = !!value
+  save()
+}
+
+export function setShowUncategorized(value) {
+  state.showUncategorized = !!value
   save()
 }
 

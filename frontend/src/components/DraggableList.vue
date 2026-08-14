@@ -5,6 +5,7 @@ const props = defineProps({
   items: { type: Array, required: true },
   /** Disable dragging (e.g. while a search filter is active). */
   disabled: { type: Boolean, default: false },
+  showDragHandle: { type: Boolean, default: true },
 })
 
 const emit = defineEmits(['reorder'])
@@ -54,6 +55,7 @@ function onDrop(item) {
       @drop.prevent="onDrop(item)"
     >
       <span
+        v-if="props.showDragHandle"
         class="manager-drag"
         :class="{ disabled: props.disabled }"
         title="Drag to reorder"

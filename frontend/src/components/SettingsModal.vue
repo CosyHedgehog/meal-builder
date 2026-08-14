@@ -6,6 +6,7 @@ import {
   state as store,
   setMaintenance,
   setShowKcal,
+  setShowUncategorized,
   setWeightUnit,
   snapshot,
   flushSave,
@@ -24,6 +25,11 @@ const darkMode = computed({
 const showKcal = computed({
   get: () => store.showKcal,
   set: (value) => setShowKcal(value),
+})
+
+const showUncategorized = computed({
+  get: () => store.showUncategorized,
+  set: (value) => setShowUncategorized(value),
 })
 
 const weightUnit = computed({
@@ -78,6 +84,10 @@ function downloadJSON(filename, payload) {
     <div class="settings-row" style="margin-top: 12px">
       <label>Show kcal on chips</label>
       <ToggleSwitch v-model="showKcal" label="Toggle kcal on chips" />
+    </div>
+    <div class="settings-row" style="margin-top: 12px">
+      <label>Show uncategorized foods</label>
+      <ToggleSwitch v-model="showUncategorized" label="Toggle uncategorized foods" />
     </div>
 
     <button class="btn btn-secondary primary-wide" @click="exportData">Download data</button>

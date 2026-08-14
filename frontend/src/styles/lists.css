@@ -1,13 +1,23 @@
 .manager-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  max-height: 52vh;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
 }
 
 .manager-item-row {
   display: flex;
   align-items: stretch;
-  gap: 4px;
+  min-height: 64px;
+  border-bottom: 1px solid var(--line);
+  padding: 4px;
+}
+
+.manager-item-row:last-child {
+  border-bottom: 0;
 }
 
 .manager-item-row.dragging {
@@ -59,21 +69,23 @@
   flex: 1;
   min-width: 0;
   width: 100%;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  border-radius: 12px;
-  padding: 12px 14px;
+  border: 0;
+  background: transparent;
+  border-radius: 8px;
+  padding: 11px 13px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   text-align: left;
   color: var(--ink);
   cursor: pointer;
-  transition: background 0.12s ease;
+  transition: background 0.12s ease, color 0.12s ease;
 }
 
-.manager-item:hover {
+.manager-item:hover,
+.manager-item:focus-visible {
   background: var(--surface-alt);
+  color: var(--green-strong);
 }
 
 .manager-item strong,

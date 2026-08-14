@@ -29,10 +29,14 @@ async function removeGroup(group) {
         <button class="btn btn-primary" type="button" @click="addGroup">Add</button>
       </div>
     </div>
+    <div class="group-order-note">
+      <span class="order-note-icon" aria-hidden="true">ⓘ</span>
+      <span>Drag groups to change the order they appear on the dashboard.</span>
+    </div>
     <DraggableList :items="groups()" @reorder="(fromId, toId) => reorderItems('groups', fromId, toId)">
       <template #default="{ item }">
         <div class="manager-item-wrap">
-          <div class="manager-item">
+          <div class="manager-item manager-item-editable">
             <input :value="item.name" aria-label="Group name" @change="updateGroup(item.id, $event.target.value)" />
           </div>
           <button class="manager-delete" type="button" aria-label="Delete group" @click="removeGroup(item)">×</button>
@@ -45,5 +49,24 @@ async function removeGroup(group) {
 <style scoped>
 .inline-form { display: flex; gap: 8px; }
 .inline-form input { flex: 1; min-width: 0; }
-.manager-item input { width: 100%; border: 0; background: transparent; color: var(--ink); font: inherit; }
+.group-order-note {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: -2px 0 8px;
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
+.order-note-icon {
+  color: var(--green);
+  font-size: 13px;
+  line-height: 1;
+}
+.manager-item-editable:hover input,
+.manager-item-editable:focus-within input {
+  color: var(--green-strong);
+}
+
+.manager-item input { width: 100%; border: 0; background: transparent; color: inherit; font: inherit; }
 </style>

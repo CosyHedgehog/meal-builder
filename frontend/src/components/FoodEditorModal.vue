@@ -44,6 +44,10 @@ function addIngredientRow() {
   pendingQty.value = ''
 }
 
+function selectIngredient(ingredientId) {
+  pendingIngredientId.value = ingredientId
+}
+
 function removeRow(ingredientId) {
   draft.items = draft.items.filter((item) => item.ingredientId !== ingredientId)
 }
@@ -65,6 +69,7 @@ function saveFood() {
 async function closeEditor() {
   if (await confirmDiscard('Your unsaved food changes will be lost.')) emit('close')
 }
+
 </script>
 
 <template>
@@ -123,12 +128,16 @@ async function closeEditor() {
           <span>Build the food by adding ingredients below.</span>
         </div>
         <div class="add-item-row">
-          <label class="add-item-label" for="foodIngredientSelect">Select an ingredient</label>
-          <select id="foodIngredientSelect" v-model="pendingIngredientId" class="add-item-select">
-            <option value="">Select ingredient...</option>
-            <option v-for="ingredient in available" :key="ingredient.id" :value="ingredient.id">{{ ingredient.name }}
-            </option>
-          </select>
+          <label class="add-item-label">Select an ingredient</label>
+          <div class="ingredient-picker-trigger">
+            <button
+              type="button"
+              class="add-item-select ingredient-picker-button"
+              @click="openModal(Modals.INGREDIENT_PICKER, { excludedIds: [...usedIds], selectedId: pendingIngredientId, onSelect: selectIngredient })"
+            >
+              {{ getIngredient(pendingIngredientId)?.name || 'Choose an ingredient...' }}
+            </button>
+          </div>
           <input v-model="pendingQty" class="add-item-qty" type="number" step="any" min="0" placeholder="Qty" />
           <button class="btn btn-primary add-item-button" type="button" @click="addIngredientRow">Add</button>
         </div>
@@ -210,12 +219,6 @@ async function closeEditor() {
   font-family: 'Inter', sans-serif;
   font-size: 11px;
   font-weight: 600;
-}
-
-.meal-section-heading>div {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
 }
 
 .meal-section-heading .meal-section-label {
@@ -393,23 +396,8 @@ async function closeEditor() {
   font-size: 13px;
 }
 
-.add-item-select {
-  appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, var(--ink-muted) 50%), linear-gradient(135deg, var(--ink-muted) 50%, transparent 50%);
-  background-repeat: no-repeat;
-  background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50%;
-  background-size: 5px 5px;
-  padding-right: 28px;
-}
-
 .add-item-qty {
   font-family: 'IBM Plex Mono', monospace;
-}
-
-.add-item-select:focus,
-.add-item-qty:focus {
-  outline: 2px solid var(--green);
-  outline-offset: 1px;
 }
 
 .add-item-button {

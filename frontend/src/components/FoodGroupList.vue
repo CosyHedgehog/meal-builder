@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
-import SnackQuantityStepper from './SnackQuantityStepper.vue'
+import FoodQuantityStepper from './FoodQuantityStepper.vue'
 import { state as store, addLogFood, bumpLogEntry, logEntries, foodsInGroup, foodKcal } from '../js/data.js'
 import { view } from '../js/ui.js'
 import { Modals, openModal } from '../js/modals.js'
@@ -36,7 +36,7 @@ function decrement(entry) {
       </div>
       <div class="quick-picks-viewport">
         <div class="chip-list" :class="{ 'kcal-hidden': !store.showKcal }">
-          <SnackQuantityStepper
+          <FoodQuantityStepper
             v-for="entry in entries.filter((item) => !item.foodId)"
             :key="entry.id"
             :name="entry.name || 'Custom'"
@@ -52,7 +52,7 @@ function decrement(entry) {
             <button v-if="!entryFor(food.id)" type="button" class="today-chip" :aria-label="`Add ${food.name}`" @click="addLogFood(view.logDate, group.id, food.id)">
               <span>{{ food.name }}</span><span class="chip-kcal">{{ foodKcal(food).toLocaleString() }} kcal</span>
             </button>
-            <SnackQuantityStepper v-else :name="food.name" :quantity="entryFor(food.id).qty" :kcal="foodKcal(food)" @decrement="decrement(entryFor(food.id))" @increment="addLogFood(view.logDate, group.id, food.id)" @edit="openModal(Modals.FOOD_EDITOR, { foodId: food.id })" />
+            <FoodQuantityStepper v-else :name="food.name" :quantity="entryFor(food.id).qty" :kcal="foodKcal(food)" @decrement="decrement(entryFor(food.id))" @increment="addLogFood(view.logDate, group.id, food.id)" @edit="openModal(Modals.FOOD_EDITOR, { foodId: food.id })" />
           </template>
           <span v-if="!foods.length" class="empty-note">No foods in this group</span>
           <button type="button" class="today-chip chip-add" @click="openModal(Modals.CUSTOM_ENTRY, { groupId: group.id })">

@@ -2,7 +2,7 @@
 import { setLogDate, view } from '../js/ui.js'
 import { useHistoryChart } from '../js/useHistoryChart.js'
 
-const { days, bars, trendPaths, goalLineBottom } = useHistoryChart()
+const { days, bars, goalLineBottom } = useHistoryChart()
 </script>
 
 <template>
@@ -16,10 +16,6 @@ const { days, bars, trendPaths, goalLineBottom } = useHistoryChart()
 
     <div class="history-grid" :style="{ gridTemplateColumns: `repeat(${days}, minmax(0, 1fr))` }">
       <div class="history-goal-line" :style="{ bottom: goalLineBottom + 'px' }"></div>
-
-      <svg class="history-trend-svg" :viewBox="`0 0 100 ${108}`" preserveAspectRatio="none" aria-hidden="true">
-        <path v-for="(d, i) in trendPaths" :key="i" class="history-trend-line" :d="d"></path>
-      </svg>
 
       <button v-for="bar in bars" :key="bar.date" type="button" class="history-day"
         :class="{ active: bar.date === view.logDate, today: bar.isToday }" :title="bar.label"
@@ -37,7 +33,6 @@ const { days, bars, trendPaths, goalLineBottom } = useHistoryChart()
     <div class="history-legend">
       <span class="legend-item"><span class="legend-swatch under-goal"></span>Under maintenance</span>
       <span class="legend-item"><span class="legend-swatch over-goal"></span>Over maintenance</span>
-      <span class="legend-item"><span class="legend-swatch trend"></span>7-day rolling avg</span>
       <span class="legend-item"><span class="legend-swatch maintenance"></span>Maintenance calories</span>
     </div>
 
@@ -112,27 +107,6 @@ const { days, bars, trendPaths, goalLineBottom } = useHistoryChart()
   background: var(--history-empty);
 }
 
-.history-trend-svg {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 108px;
-  z-index: 3;
-  pointer-events: none;
-  overflow: visible;
-}
-
-.history-trend-line {
-  fill: none;
-  stroke: var(--trend-line, #3a7dd9);
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
-  opacity: 0.9;
-}
-
 .history-goal-line {
   position: absolute;
   z-index: 1;
@@ -181,13 +155,6 @@ const { days, bars, trendPaths, goalLineBottom } = useHistoryChart()
   height: 10px;
   border-radius: 3px;
   display: inline-block;
-}
-
-.legend-swatch.trend {
-  width: 18px;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--trend-line, #3a7dd9);
 }
 
 .legend-swatch.under-goal {

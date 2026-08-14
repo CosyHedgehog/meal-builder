@@ -1,18 +1,18 @@
 <script setup>
 import { computed } from 'vue'
-import { state as store, getLog } from '../js/data.js'
+import { state as store, getLog, UNCATEGORIZED_GROUP_ID } from '../js/data.js'
 import { view } from '../js/ui.js'
 import { auth } from '../js/auth.js'
 import { Modals, openModal } from '../js/modals.js'
 import DateNav from './DateNav.vue'
 import CalorieSummary from './CalorieSummary.vue'
-import GroupSelector from './GroupSelector.vue'
+import FoodGroupList from './FoodGroupList.vue'
 import HistoryChart from './HistoryChart.vue'
 import { useHistoryChart } from '../js/useHistoryChart.js'
 
 const log = computed(() => getLog(view.logDate))
 const { days, windowAverageKcal, windowAverageDeficit, windowProjectedKgPerWeek } = useHistoryChart()
-const groups = computed(() => store.groups.filter((group) => group.id !== 'group-uncategorized'))
+const groups = computed(() => store.groups.filter((group) => store.showUncategorized || group.id !== UNCATEGORIZED_GROUP_ID))
 
 const projectedWeightDisplay = computed(() => {
   const kgValue = Math.abs(windowProjectedKgPerWeek.value) * 4
@@ -31,7 +31,7 @@ const projectedWeightUnit = computed(() => (store.weightUnit === 'lb' ? 'lb' : '
     </section>
 
     <section v-for="group in groups" :key="group.id" class="today-group-card">
-      <GroupSelector :group="group" :log="log" />
+      <FoodGroupList :group="group" :log="log" />
     </section>
 
     <HistoryChart />

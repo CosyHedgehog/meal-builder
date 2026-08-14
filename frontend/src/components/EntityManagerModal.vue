@@ -1,8 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import BaseModal from './BaseModal.vue'
-import DraggableList from './DraggableList.vue'
-import { state as store, reorderItems, deleteIngredient, ingredientUsage } from '../js/data.js'
+import { state as store, deleteIngredient, ingredientUsage } from '../js/data.js'
 import { confirmAction } from '../js/confirm.js'
 import { openModal, replaceModal } from '../js/modals.js'
 
@@ -31,14 +30,8 @@ const filteredItems = computed(() => {
     ? items.value.filter((item) => item.name.toLowerCase().includes(normalized))
     : items.value
 })
-const dragDisabled = computed(() => !!query.value.trim() || filteredItems.value.length < 2)
-
 function openEditor(item = null) {
   openModal(props.editorModal, item ? { [props.editorProp]: item.id } : {})
-}
-
-function reorder(fromId, toId) {
-  reorderItems(props.collection, fromId, toId)
 }
 
 async function deleteItem(item) {
@@ -83,22 +76,17 @@ async function deleteItem(item) {
         {{ filteredItems.length }} of {{ items.length }} {{ countLabel }} shown.
       </div>
 
-      <DraggableList
-        v-if="filteredItems.length"
-        :items="filteredItems"
-        :disabled="dragDisabled"
-        @reorder="reorder"
-      >
-        <template #default="{ item }">
+      <div v-if="filteredItems.length" class="manager-list">
+        <div v-for="item in filteredItems" :key="item.id" class="manager-item-row">
           <div class="manager-item-wrap">
-            <button class="manager-item" @click="openEditor(item)">
+            <button class="manager-item" type="button" @click="openEditor(item)">
               <slot name="item" :item="item" />
               <span>›</span>
             </button>
             <button class="manager-delete" type="button" aria-label="Delete item" @click.stop="deleteItem(item)">×</button>
           </div>
-        </template>
-      </DraggableList>
+        </div>
+      </div>
       <div v-else class="empty-note">{{ emptyMessage }}</div>
     </div>
   </BaseModal>

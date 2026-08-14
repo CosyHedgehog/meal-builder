@@ -4,6 +4,7 @@ export const Modals = Object.freeze({
   SETTINGS: 'settings',
   INGREDIENT_EDITOR: 'ingredient-editor',
   INGREDIENT_MANAGER: 'ingredient-manager',
+  INGREDIENT_PICKER: 'ingredient-picker',
   FOOD_EDITOR: 'food-editor',
   FOOD_MANAGER: 'food-manager',
   GROUP_MANAGER: 'group-manager',
