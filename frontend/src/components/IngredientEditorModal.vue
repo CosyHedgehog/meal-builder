@@ -75,15 +75,22 @@ async function remove() {
       <input id="ingName" v-model="draft.name" placeholder="e.g. Chicken breast" />
     </div>
     <div class="input-field">
-      <label for="ingUnit">Unit</label>
+      <label for="ingUnit">How is this measured?</label>
       <select id="ingUnit" v-model="draft.unit">
-        <option value="g">g</option>
-        <option value="each">each</option>
+        <option value="g">Weight (per 100g)</option>
+        <option value="each">Count (per item)</option>
       </select>
     </div>
     <div class="input-field">
-      <label for="ingKcal">Calories</label>
-      <input id="ingKcal" v-model="draft.kcal" type="number" min="0" step="any" placeholder="kcal" />
+      <label for="ingKcal">Calories {{ draft.unit === 'g' ? 'per 100g' : 'per item' }}</label>
+      <input
+        id="ingKcal"
+        v-model="draft.kcal"
+        type="number"
+        min="0"
+        step="any"
+        :placeholder="draft.unit === 'g' ? 'e.g. 165 per 100g' : 'e.g. 95 per item'"
+      />
     </div>
 
     <button class="btn btn-primary primary-wide" @click="submit">

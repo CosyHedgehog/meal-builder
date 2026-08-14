@@ -11,6 +11,7 @@ const emit = defineEmits(['close'])
 const query = ref('')
 const selectedGroupId = ref(props.groupId)
 const groups = computed(() => store.groups)
+const groupNames = computed(() => new Map(groups.value.map((group) => [group.id, group.name])))
 const foods = computed(() => selectedGroupId.value ? foodsInGroup(selectedGroupId.value) : store.foods)
 const filteredFoods = computed(() => {
   const value = query.value.trim().toLowerCase()
@@ -31,7 +32,7 @@ async function removeFood(food) {
 </script>
 
 <template>
-  <BaseModal title="Foods" subtitle="Manage reusable foods built from ingredients." @close="emit('close')" @back="selectedGroupId ? replaceModal(Modals.GROUP_MANAGER) : replaceModal(Modals.INGREDIENT_MANAGER)">
+  <BaseModal title="Foods" subtitle="Manage reusable foods made from ingredients or fixed calories." @close="emit('close')" @back="selectedGroupId ? replaceModal(Modals.GROUP_MANAGER) : replaceModal(Modals.INGREDIENT_MANAGER)">
     <div class="manager-group">
       <button class="btn btn-primary btn-full" type="button" @click="openEditor()">＋ New food</button>
       <div class="food-browse-label">Browse foods</div>
@@ -59,7 +60,13 @@ async function removeFood(food) {
         <template #default="{ item }">
           <div class="manager-item-wrap">
             <button class="manager-item" type="button" @click="openEditor(item)">
-              <span><strong>{{ item.name }}</strong><small>{{ foodKcal(item).toLocaleString() }} kcal · {{ item.items.length }} ingredient{{ item.items.length === 1 ? '' : 's' }}</small></span>
+              <span>
+                <strong>{{ item.name }}</strong>
+                <small>
+                  {{ foodKcal(item).toLocaleString() }} kcal · {{ item.items.length ? `${item.items.length} ingredient${item.items.length === 1 ? '' : 's'}` : 'simple food' }}
+                  <template v-if="!selectedGroupId"> · {{ groupNames.get(item.groupId) || 'Uncategorized' }}</template>
+                </small>
+              </span>
               <span>›</span>
             </button>
             <button class="manager-delete" type="button" aria-label="Delete food" @click.stop="removeFood(item)">×</button>
