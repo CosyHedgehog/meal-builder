@@ -167,7 +167,7 @@ async function closeEditor() {
               </div>
               <div class="quantity-control">
                 <input v-model.number="row.item.amount" class="item-qty" type="number" step="any" min="0" @click.stop />
-                <span>{{ row.ingredient?.unit === 'g' ? 'g' : 'each' }}</span>
+                <span>{{ row.ingredient?.unit === 'g' ? 'g' : '' }}</span>
               </div>
             </div>
             <div class="item-kcal mono">{{ row.kcal.toLocaleString() }} kcal</div>
@@ -481,6 +481,7 @@ async function closeEditor() {
   border-radius: 9px;
   background: var(--surface);
   font-family: 'IBM Plex Mono', monospace;
+  text-align: center;
 }
 
 .item-kcal {
@@ -592,8 +593,10 @@ async function closeEditor() {
 
 @media (max-width: 600px) {
   .ingredient-row {
-    grid-template-columns: minmax(0, 1fr) 22px;
-    gap: 8px;
+    grid-template-columns: minmax(0, 1fr) 56px 22px 48px 18px;
+    gap: 4px;
+    min-height: 36px;
+    padding: 3px 0;
   }
 
   .ingredient-row-main {
@@ -603,25 +606,27 @@ async function closeEditor() {
   .ingredient-name-wrap {
     grid-column: 1;
     grid-row: 1;
+    min-width: 0;
   }
 
   .quantity-control {
-    grid-column: 1;
-    grid-row: 2;
-    width: 104px;
-    grid-template-columns: 56px 24px;
-    gap: 4px;
+    grid-column: 2 / span 2;
+    grid-row: 1;
+    width: auto;
+    grid-template-columns: 56px 18px;
+    gap: 3px;
   }
 
   .item-kcal {
-    grid-column: 1;
-    grid-row: 2;
-    justify-self: end;
+    grid-column: 4;
+    grid-row: 1;
+    text-align: right;
   }
 
   .item-remove {
-    grid-column: 2;
-    grid-row: 1 / span 2;
+    grid-column: 5;
+    grid-row: 1;
+    padding: 2px 0;
   }
 
   .add-item-row {
