@@ -31,7 +31,7 @@ async function removeFood(food) {
 </script>
 
 <template>
-  <BaseModal title="Foods" subtitle="Manage reusable foods built from ingredients." :back-label="selectedGroupId ? 'Dashboard' : 'Ingredients'" @close="emit('close')" @back="selectedGroupId ? replaceModal(Modals.GROUP_MANAGER) : replaceModal(Modals.INGREDIENT_MANAGER)">
+  <BaseModal title="Foods" subtitle="Manage reusable foods built from ingredients." @close="emit('close')" @back="selectedGroupId ? replaceModal(Modals.GROUP_MANAGER) : replaceModal(Modals.INGREDIENT_MANAGER)">
     <div class="manager-group">
       <button class="btn btn-primary btn-full" type="button" @click="openEditor()">＋ New food</button>
       <div class="food-browse-label">Browse foods</div>

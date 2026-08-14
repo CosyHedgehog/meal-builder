@@ -1,9 +1,10 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import FoodQuantityStepper from './FoodQuantityStepper.vue'
-import { state as store, addLogFood, bumpLogEntry, logEntries, foodsInGroup, foodKcal, moveFoodToGroupEnd, reorderFood, insertFood, reorderGroups, updateGroup, toggleGroupVisibility, UNCATEGORIZED_GROUP_ID } from '../js/data.js'
+import { state as store, addLogFood, bumpLogEntry, logEntries, foodsInGroup, foodKcal, moveFoodToGroupEnd, reorderFood, insertFood, reorderGroups, updateGroup, deleteGroup, toggleGroupVisibility, UNCATEGORIZED_GROUP_ID } from '../js/data.js'
 import { view, clearDragState } from '../js/ui.js'
 import { Modals, openModal } from '../js/modals.js'
+import { confirmAction } from '../js/confirm.js'
 
 const props = defineProps({ group: { type: Object, required: true }, log: { type: Object, required: true }, editMode: { type: Boolean, default: false } })
 const dragOver = ref(false)
@@ -16,7 +17,10 @@ const visibleFoods = computed(() => showAll.value ? foods.value : foods.value.sl
 const hasMore = computed(() => !showAll.value && visibleFoods.value.length < foods.value.length)
 
 watch(() => props.editMode, (isEditing) => {
-  if (!isEditing) dragOver.value = false
+  if (!isEditing) {
+    dragOver.value = false
+    editingGroupName.value = false
+  }
 })
 
 function entryFor(foodId) {
@@ -53,6 +57,17 @@ function saveGroupName() {
   updateGroup(props.group.id, groupNameDraft.value)
   editingGroupName.value = false
 }
+async function removeGroup() {
+  const ok = await confirmAction({
+    title: 'Delete group',
+    message: `Foods in "${props.group.name}" will become uncategorized and hidden. Continue?`,
+    okLabel: 'Delete group',
+  })
+  if (ok) deleteGroup(props.group.id)
+}
+function handleHeaderClick(event) {
+  if (editingGroupName.value && event.target.tagName !== 'INPUT') saveGroupName()
+}
 function endDrag() {
   view.draggedFoodId = ''
   view.draggedOverFoodId = ''
@@ -66,11 +81,10 @@ function moveGroup(direction) {
 </script>
 
 <template>
-  <div class="today-chips">
+  <div class="today-chips" @click="handleHeaderClick">
     <div class="chip-group" :class="{ 'dashboard-drop-target': editMode, 'dashboard-drop-active': dragOver }"
       @dragover.prevent="editMode && (dragOver = true)" @dragleave="dragOver = false" @drop.prevent="editMode && view.dragType === 'food' && dropFood(group.id)">
-      <div class="chip-group-header"
-      >
+      <div class="chip-group-header">
         <span>
           <i class="group-header-swatch" :class="`group-${store.groups.findIndex((item) => item.id === group.id) % 5}`"></i>
           <input
@@ -102,6 +116,14 @@ function moveGroup(direction) {
             :title="`${group.visible !== false ? 'Hide' : 'Show'} group on dashboard`"
             @click.stop="toggleGroupVisibility(group.id)"
           >{{ group.visible !== false ? '◉ Shown' : '○ Hidden' }}</button>
+          <button
+            v-if="editMode && group.id !== UNCATEGORIZED_GROUP_ID"
+            type="button"
+            class="group-delete-button"
+            :aria-label="`Delete ${group.name}`"
+            title="Delete group"
+            @click.stop="removeGroup"
+          >× Delete group</button>
         </span>
         <span v-if="editMode" class="dashboard-group-order-controls">
           <button
@@ -212,6 +234,22 @@ function moveGroup(direction) {
 .group-visibility-button:hover {
   background: var(--surface-alt);
   color: var(--green);
+}
+
+.group-delete-button {
+  margin-left: 4px;
+  padding: 2px 5px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.group-delete-button:hover {
+  background: var(--red-soft);
+  color: var(--red);
 }
 
 .dashboard-group-drag-handle {

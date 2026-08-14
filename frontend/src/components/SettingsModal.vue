@@ -11,11 +11,10 @@ import {
   flushSave,
 } from '../js/data.js'
 import { isDark, toggleTheme } from '../js/ui.js'
-import { signOut } from '../js/auth.js'
-import { closeAllModals } from '../js/modals.js'
+import { auth, signOut } from '../js/auth.js'
+import { closeAllModals, Modals, openModal } from '../js/modals.js'
 
 const emit = defineEmits(['close'])
-
 const darkMode = computed({
   get: () => isDark.value,
   set: () => toggleTheme(),
@@ -56,6 +55,10 @@ function downloadJSON(filename, payload) {
 
 <template>
   <BaseModal title="Settings" subtitle="A couple of account and app settings." @close="emit('close')">
+    <div class="settings-account">
+      <span>Signed in as</span>
+      <strong>{{ auth.user?.username || 'Unknown user' }}</strong>
+    </div>
     <div class="section-label">Values</div>
     <div class="settings-row">
       <label for="maintenanceInput">Daily maintenance calories</label>
@@ -79,13 +82,36 @@ function downloadJSON(filename, payload) {
       <label>Show kcal on chips</label>
       <ToggleSwitch v-model="showKcal" label="Toggle kcal on chips" />
     </div>
-    <button class="btn btn-secondary primary-wide" @click="exportData">Download data</button>
-    <button class="btn btn-secondary primary-wide" @click="logOut">
-      Log out
+    <div class="section-label" style="margin-top: 16px">Data</div>
+    <div class="settings-row data-actions">
+      <label>Import data</label>
+      <button class="btn btn-secondary" aria-label="Import data" @click="openModal(Modals.IMPORT_DATA)">↑</button>
+    </div>
+    <div class="settings-row data-actions">
+      <label>Download data</label>
+      <button class="btn btn-secondary" aria-label="Download data" @click="exportData">↓</button>
+    </div>
+    <button class="btn btn-danger-outline primary-wide" @click="logOut">
+      ↪ Log out
     </button>
   </BaseModal>
 </template>
 <style scoped>
+.settings-account {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0 2px;
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.settings-account strong {
+  color: var(--ink);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+}
+
 .settings-row {
   display: flex;
   align-items: center;
@@ -95,6 +121,14 @@ function downloadJSON(filename, payload) {
 
 .settings-row label {
   font-size: 13px;
+}
+
+.data-actions {
+  min-height: 42px;
+}
+
+.data-actions+.data-actions {
+  margin-top: 8px;
 }
 
 .settings-row input,

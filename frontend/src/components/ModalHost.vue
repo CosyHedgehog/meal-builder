@@ -4,6 +4,7 @@ import { closeModal, modalStack, Modals } from '../js/modals.js'
 import { confirmState } from '../js/confirm.js'
 
 import SettingsModal from './SettingsModal.vue'
+import ImportDataModal from './ImportDataModal.vue'
 import FoodEditorModal from './FoodEditorModal.vue'
 import IngredientEditorModal from './IngredientEditorModal.vue'
 import FoodManagerModal from './FoodManagerModal.vue'
@@ -15,6 +16,7 @@ import CustomEntryModal from './CustomEntryModal.vue'
 <script>
 const registry = {
   [Modals.SETTINGS]: SettingsModal,
+  [Modals.IMPORT_DATA]: ImportDataModal,
   [Modals.FOOD_EDITOR]: FoodEditorModal,
   [Modals.INGREDIENT_EDITOR]: IngredientEditorModal,
   [Modals.FOOD_MANAGER]: FoodManagerModal,

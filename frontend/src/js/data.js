@@ -224,6 +224,28 @@ export async function loadData() {
   state.loaded = true
 }
 
+export async function importData(payload) {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) throw new Error('Invalid data file')
+  const normalized = hasRecoverableLegacyData(payload) ? migrateLegacyPayload(payload) : payload
+  state.ingredients = Array.isArray(normalized.ingredients) ? normalized.ingredients : []
+  state.foods = Array.isArray(normalized.foods) ? normalized.foods : []
+  state.groups = ensureUncategorizedGroup(
+    Array.isArray(normalized.groups) && normalized.groups.length ? normalized.groups : defaultGroups(),
+  )
+  state.groups.forEach((group) => {
+    if (group.visible === undefined) group.visible = group.id !== UNCATEGORIZED_GROUP_ID
+  })
+  state.logs = normalized.logs && typeof normalized.logs === 'object' ? normalized.logs : {}
+  Object.values(state.logs).forEach((log) => {
+    if (Array.isArray(log?.entries)) log.entries = log.entries.map(normalizeLogEntry).filter(Boolean)
+  })
+  state.maintenanceCal = normalized.maintenanceCal || DEFAULT_MAINTENANCE
+  state.showKcal = normalized.showKcal !== false
+  state.weightUnit = normalized.weightUnit === 'lb' ? 'lb' : DEFAULT_WEIGHT_UNIT
+  state.loaded = true
+  await flushSave()
+}
+
 export function resetData() {
   applyDefaults()
   state.loaded = false

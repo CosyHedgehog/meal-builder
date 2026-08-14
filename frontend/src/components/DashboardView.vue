@@ -2,7 +2,6 @@
 import { computed } from 'vue'
 import { state as store, getLog, logEntries } from '../js/data.js'
 import { view, clearDragState } from '../js/ui.js'
-import { auth } from '../js/auth.js'
 import { Modals, openModal } from '../js/modals.js'
 import DateNav from './DateNav.vue'
 import CalorieSummary from './CalorieSummary.vue'
@@ -93,23 +92,17 @@ function finishDashboardEdit() {
     <section class="manage-section">
       <div class="manage-actions">
         <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.FOOD_MANAGER)">
-          ✎ Manage foods
+          ✎ Foods
         </button>
         <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.GROUP_MANAGER)">
-          ✎ Manage groups
+          ✎ Groups
+        </button>
+        <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.SETTINGS)">
+          ⚙ Settings
         </button>
       </div>
     </section>
 
-    <header class="home-header">
-      <div></div>
-      <div class="header-actions">
-        <button class="header-profile-btn" aria-label="Open settings" @click="openModal(Modals.SETTINGS)">
-          <span class="header-profile-name">{{ auth.user?.username || 'Settings' }}</span>
-          <span class="header-profile-icon" aria-hidden="true">⚙</span>
-        </button>
-      </div>
-    </header>
   </div>
 </template>
 
@@ -233,7 +226,7 @@ function finishDashboardEdit() {
 
 .manage-actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
   padding: 5px 12px 0;
 }
@@ -247,56 +240,4 @@ function finishDashboardEdit() {
   color: var(--green-strong);
 }
 
-.home-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  margin-top: 6px;
-}
-
-.home-header .eyebrow {
-  margin: 0;
-}
-
-.header-actions {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.header-profile-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--ink);
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
-}
-
-.header-profile-btn:hover {
-  background: var(--surface-alt);
-  border-color: rgba(var(--shadow-rgb), 0.12);
-  box-shadow: 0 2px 8px rgba(var(--shadow-rgb), 0.06);
-}
-
-.header-profile-name {
-  font-size: 13px;
-  color: var(--ink-muted);
-  line-height: 1.2;
-}
-
-.header-profile-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
-  color: var(--ink);
-}
 </style>
