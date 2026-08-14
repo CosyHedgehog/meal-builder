@@ -542,3 +542,93 @@ export function toggleGroupVisibility(id) {
   group.visible = group.visible !== false ? false : true
   save()
 }
+
+export function moveFoodToGroup(foodId, groupId) {
+  const food = getFood(foodId)
+  if (!food || !groupId || food.groupId === groupId) return
+  const previousGroupId = food.groupId
+  food.groupId = groupId
+  Object.values(state.logs).forEach((log) => {
+    logEntries(log).forEach((entry) => {
+      if (entry.foodId === foodId && entry.groupId === previousGroupId) entry.groupId = groupId
+    })
+  })
+  save()
+}
+
+export function moveFoodToGroupEnd(foodId, groupId) {
+  const food = getFood(foodId)
+  if (!food || !groupId) return
+  const previousGroupId = food.groupId
+  if (previousGroupId === groupId) return
+  food.groupId = groupId
+  const index = state.foods.findIndex((item) => item.id === foodId)
+  if (index !== -1) {
+    const [moved] = state.foods.splice(index, 1)
+    state.foods.push(moved)
+  }
+  Object.values(state.logs).forEach((log) => {
+    logEntries(log).forEach((entry) => {
+      if (entry.foodId === foodId && entry.groupId === previousGroupId) entry.groupId = groupId
+    })
+  })
+  save()
+}
+
+export function reorderFood(foodId, targetFoodId) {
+  if (!foodId || !targetFoodId || foodId === targetFoodId) return
+  const fromIndex = state.foods.findIndex((food) => food.id === foodId)
+  const targetIndex = state.foods.findIndex((food) => food.id === targetFoodId)
+  if (fromIndex === -1 || targetIndex === -1) return
+  const moved = state.foods[fromIndex]
+  state.foods[fromIndex] = state.foods[targetIndex]
+  state.foods[targetIndex] = moved
+  save()
+}
+
+export function insertFood(foodId, targetFoodId) {
+  if (!foodId || !targetFoodId || foodId === targetFoodId) return
+  const fromIndex = state.foods.findIndex((food) => food.id === foodId)
+  const targetIndex = state.foods.findIndex((food) => food.id === targetFoodId)
+  if (fromIndex === -1 || targetIndex === -1) return
+  const [moved] = state.foods.splice(fromIndex, 1)
+  const adjustedTargetIndex = fromIndex < targetIndex ? targetIndex - 1 : targetIndex
+  state.foods.splice(adjustedTargetIndex, 0, moved)
+  save()
+}
+
+export function reorderGroups(fromId, toId) {
+  if (!fromId || !toId || fromId === toId) return
+  const fromIndex = state.groups.findIndex((group) => group.id === fromId)
+  const toIndex = state.groups.findIndex((group) => group.id === toId)
+  if (fromIndex === -1 || toIndex === -1) return
+  const moved = state.groups[fromIndex]
+  state.groups[fromIndex] = state.groups[toIndex]
+  state.groups[toIndex] = moved
+  save()
+}
+
+export function moveLogEntryToGroup(dateStr, entryId, groupId) {
+  const log = ensureLog(dateStr)
+  const entry = log.entries.find((item) => item.id === entryId && !item.foodId)
+  if (!entry || !groupId) return
+  entry.groupId = groupId
+  const index = log.entries.findIndex((item) => item.id === entryId)
+  if (index !== -1) {
+    const [moved] = log.entries.splice(index, 1)
+    log.entries.push(moved)
+  }
+  save()
+}
+
+export function reorderLogEntry(dateStr, entryId, targetEntryId) {
+  if (!entryId || !targetEntryId || entryId === targetEntryId) return
+  const log = ensureLog(dateStr)
+  const fromIndex = log.entries.findIndex((entry) => entry.id === entryId && !entry.foodId)
+  const targetIndex = log.entries.findIndex((entry) => entry.id === targetEntryId && !entry.foodId)
+  if (fromIndex === -1 || targetIndex === -1) return
+  const moved = log.entries[fromIndex]
+  log.entries[fromIndex] = log.entries[targetIndex]
+  log.entries[targetIndex] = moved
+  save()
+}

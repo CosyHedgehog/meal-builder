@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { state as store, getLog, logEntries } from '../js/data.js'
-import { view } from '../js/ui.js'
+import { view, clearDragState } from '../js/ui.js'
 import { auth } from '../js/auth.js'
 import { Modals, openModal } from '../js/modals.js'
 import DateNav from './DateNav.vue'
@@ -12,7 +12,7 @@ import { useHistoryChart } from '../js/useHistoryChart.js'
 
 const log = computed(() => getLog(view.logDate))
 const { days, windowAverageKcal, windowAverageDeficit, windowProjectedKgPerWeek } = useHistoryChart()
-const groups = computed(() => store.groups.filter((group) => group.visible !== false))
+const groups = computed(() => view.dashboardEditMode ? store.groups : store.groups.filter((group) => group.visible !== false))
 const hiddenLoggedGroups = computed(() => {
   const hiddenIds = new Set(store.groups.filter((group) => group.visible === false).map((group) => group.id))
   const ids = new Set(logEntries(log.value).filter((entry) => hiddenIds.has(entry.groupId)).map((entry) => entry.groupId))
@@ -25,6 +25,11 @@ const projectedWeightDisplay = computed(() => {
 })
 
 const projectedWeightUnit = computed(() => (store.weightUnit === 'lb' ? 'lb' : 'kg'))
+
+function finishDashboardEdit() {
+  clearDragState()
+  view.dashboardEditMode = false
+}
 </script>
 
 <template>
@@ -41,8 +46,23 @@ const projectedWeightUnit = computed(() => (store.weightUnit === 'lb' ? 'lb' : '
     </div>
 
     <section v-for="group in groups" :key="group.id" class="today-group-card">
-      <FoodGroupList :group="group" :log="log" />
+      <FoodGroupList :group="group" :log="log" :edit-mode="view.dashboardEditMode" />
     </section>
+
+    <div class="dashboard-edit-toolbar">
+      <button v-if="!view.dashboardEditMode" class="manage-toggle group-add-button" type="button" @click="view.dashboardEditMode = true">
+        ✎ Edit dashboard
+      </button>
+      <button v-else class="btn btn-primary" type="button" @click="finishDashboardEdit">
+        Done
+      </button>
+      <span v-if="view.dashboardEditMode" class="dashboard-edit-note">Drag food handles into another group.</span>
+      <div v-if="view.dashboardEditMode" class="food-order-mode" role="group" aria-label="Food ordering mode">
+        <span>Food order</span>
+        <button type="button" :class="{ active: view.foodOrderMode === 'swap' }" @click="view.foodOrderMode = 'swap'">Swap</button>
+        <button type="button" :class="{ active: view.foodOrderMode === 'insert' }" @click="view.foodOrderMode = 'insert'">Insert</button>
+      </div>
+    </div>
 
     <HistoryChart />
 
@@ -73,16 +93,16 @@ const projectedWeightUnit = computed(() => (store.weightUnit === 'lb' ? 'lb' : '
     <section class="manage-section">
       <div class="manage-actions">
         <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.FOOD_MANAGER)">
-          Manage foods
+          ✎ Manage foods
         </button>
         <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.GROUP_MANAGER)">
-          Manage groups
+          ✎ Manage groups
         </button>
       </div>
     </section>
 
     <header class="home-header">
-      <div><div class="eyebrow">Pantry to Plate</div></div>
+      <div></div>
       <div class="header-actions">
         <button class="header-profile-btn" aria-label="Open settings" @click="openModal(Modals.SETTINGS)">
           <span class="header-profile-name">{{ auth.user?.username || 'Settings' }}</span>
@@ -106,6 +126,44 @@ const projectedWeightUnit = computed(() => (store.weightUnit === 'lb' ? 'lb' : '
   border-radius: 20px;
   padding: 12px 12px 10px;
   box-shadow: 1px 2px 8px rgba(var(--shadow-rgb), 0.06);
+}
+
+.dashboard-edit-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+}
+
+.dashboard-edit-note {
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.food-order-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.food-order-mode button {
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-muted);
+  font: inherit;
+}
+
+.food-order-mode button:first-of-type { border-radius: 6px 0 0 6px; }
+.food-order-mode button:last-of-type { border-radius: 0 6px 6px 0; }
+
+.food-order-mode button.active {
+  border-color: var(--green);
+  background: var(--green-soft);
+  color: var(--green-strong);
+  font-weight: 700;
 }
 
 .hidden-food-note {

@@ -2,7 +2,17 @@ import { computed, reactive, ref, watch } from 'vue'
 import { todayStr } from './date.js'
 
 /* ---- selected log date ---- */
-export const view = reactive({ logDate: todayStr() })
+export const view = reactive({ logDate: todayStr(), dashboardEditMode: false, foodOrderMode: 'swap', draggedFoodId: '', draggedOverFoodId: '', draggedGroupId: '', draggedOverGroupId: '', draggedEntryId: '', draggedOverEntryId: '', dragType: '' })
+
+export function clearDragState() {
+  view.draggedFoodId = ''
+  view.draggedOverFoodId = ''
+  view.draggedGroupId = ''
+  view.draggedOverGroupId = ''
+  view.draggedEntryId = ''
+  view.draggedOverEntryId = ''
+  view.dragType = ''
+}
 
 export function setLogDate(dateStr) {
   view.logDate = dateStr
