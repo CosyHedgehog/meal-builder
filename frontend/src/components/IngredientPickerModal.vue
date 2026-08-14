@@ -32,7 +32,9 @@ function choose(ingredient) {
   <BaseModal title="Choose ingredient" subtitle="Search your ingredients and select one to add to this food." panel-class="ingredient-picker-modal" @close="emit('close')">
     <div class="ingredient-picker-content">
       <input v-model="query" class="ingredient-picker-search" type="search" placeholder="Search ingredients..." autofocus />
-      <div class="ingredient-picker-count">{{ results.length }} ingredient{{ results.length === 1 ? '' : 's' }} available</div>
+      <div class="ingredient-picker-count">
+        {{ results.length }} available of {{ ingredients.length }} ingredient{{ ingredients.length === 1 ? '' : 's' }}
+      </div>
       <div v-if="results.length" class="ingredient-picker-list">
         <button
           v-for="ingredient in results"

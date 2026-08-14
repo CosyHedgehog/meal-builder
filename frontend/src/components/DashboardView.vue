@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { state as store, getLog, UNCATEGORIZED_GROUP_ID } from '../js/data.js'
+import { state as store, getLog, logEntries } from '../js/data.js'
 import { view } from '../js/ui.js'
 import { auth } from '../js/auth.js'
 import { Modals, openModal } from '../js/modals.js'
@@ -12,7 +12,12 @@ import { useHistoryChart } from '../js/useHistoryChart.js'
 
 const log = computed(() => getLog(view.logDate))
 const { days, windowAverageKcal, windowAverageDeficit, windowProjectedKgPerWeek } = useHistoryChart()
-const groups = computed(() => store.groups.filter((group) => store.showUncategorized || group.id !== UNCATEGORIZED_GROUP_ID))
+const groups = computed(() => store.groups.filter((group) => group.visible !== false))
+const hiddenLoggedGroups = computed(() => {
+  const hiddenIds = new Set(store.groups.filter((group) => group.visible === false).map((group) => group.id))
+  const ids = new Set(logEntries(log.value).filter((entry) => hiddenIds.has(entry.groupId)).map((entry) => entry.groupId))
+  return store.groups.filter((group) => ids.has(group.id))
+})
 
 const projectedWeightDisplay = computed(() => {
   const kgValue = Math.abs(windowProjectedKgPerWeek.value) * 4
@@ -29,6 +34,11 @@ const projectedWeightUnit = computed(() => (store.weightUnit === 'lb' ? 'lb' : '
     <section class="today-card">
       <CalorieSummary :log="log" />
     </section>
+
+    <div v-if="hiddenLoggedGroups.length" class="hidden-food-note">
+      <span class="hidden-food-note-icon" aria-hidden="true">ⓘ</span>
+      <span>Food logged in hidden group{{ hiddenLoggedGroups.length === 1 ? '' : 's' }}: {{ hiddenLoggedGroups.map((group) => group.name).join(', ') }}. <button type="button" @click="openModal(Modals.GROUP_MANAGER)">Manage groups</button></span>
+    </div>
 
     <section v-for="group in groups" :key="group.id" class="today-group-card">
       <FoodGroupList :group="group" :log="log" />
@@ -96,6 +106,33 @@ const projectedWeightUnit = computed(() => (store.weightUnit === 'lb' ? 'lb' : '
   border-radius: 20px;
   padding: 12px 12px 10px;
   box-shadow: 1px 2px 8px rgba(var(--shadow-rgb), 0.06);
+}
+
+.hidden-food-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.hidden-food-note-icon {
+  flex: none;
+  color: var(--green);
+  font-size: 14px;
+  line-height: 1.1;
+}
+
+.hidden-food-note button {
+  padding: 0;
+  background: transparent;
+  color: var(--green);
+  font: inherit;
+  font-weight: 700;
 }
 
 .today-meal-card,

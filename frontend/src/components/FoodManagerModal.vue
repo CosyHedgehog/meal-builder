@@ -34,6 +34,7 @@ async function removeFood(food) {
   <BaseModal title="Foods" subtitle="Manage reusable foods built from ingredients." :back-label="selectedGroupId ? 'Dashboard' : 'Ingredients'" @close="emit('close')" @back="selectedGroupId ? replaceModal(Modals.GROUP_MANAGER) : replaceModal(Modals.INGREDIENT_MANAGER)">
     <div class="manager-group">
       <button class="btn btn-primary btn-full" type="button" @click="openEditor()">＋ New food</button>
+      <div class="food-browse-label">Browse foods</div>
       <div class="food-filters">
         <select v-model="selectedGroupId" class="manager-filter" aria-label="Filter foods by group">
           <option value="">All groups</option>
@@ -41,7 +42,9 @@ async function removeFood(food) {
         </select>
         <input v-model="query" class="manager-search" type="search" placeholder="Search foods..." />
       </div>
-      <div class="food-count">{{ filteredFoods.length }} food{{ filteredFoods.length === 1 ? '' : 's' }}</div>
+      <div class="food-list-meta">
+        <div class="food-count">{{ filteredFoods.length }} food{{ filteredFoods.length === 1 ? '' : 's' }}</div>
+      </div>
       <div v-if="selectedGroupId && !query.trim()" class="food-order-note">
         <span class="order-note-icon" aria-hidden="true">ⓘ</span>
         <span>Drag foods to change the order they appear on the dashboard.</span>
@@ -87,7 +90,16 @@ async function removeFood(food) {
   display: grid;
   grid-template-columns: minmax(130px, 0.7fr) minmax(0, 1.3fr);
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 6px;
+}
+
+.food-browse-label {
+  margin-top: 18px;
+  color: var(--ink-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .manager-filter {
@@ -106,7 +118,7 @@ async function removeFood(food) {
 }
 
 .food-count {
-  margin: 6px 0 8px;
+  margin: 8px 0 6px;
   color: var(--ink-muted);
   font-size: 12px;
 }

@@ -20,18 +20,18 @@ export const UNCATEGORIZED_GROUP_ID = 'group-uncategorized'
 
 function defaultGroups() {
   return [
-    { id: BREAKFAST_GROUP_ID, name: 'Breakfast' },
-    { id: LUNCH_GROUP_ID, name: 'Lunch' },
-    { id: DINNER_GROUP_ID, name: 'Dinner' },
-    { id: SNACKS_GROUP_ID, name: 'Snacks' },
-    { id: UNCATEGORIZED_GROUP_ID, name: 'Uncategorized' },
+    { id: BREAKFAST_GROUP_ID, name: 'Breakfast', visible: true },
+    { id: LUNCH_GROUP_ID, name: 'Lunch', visible: true },
+    { id: DINNER_GROUP_ID, name: 'Dinner', visible: true },
+    { id: SNACKS_GROUP_ID, name: 'Snacks', visible: true },
+    { id: UNCATEGORIZED_GROUP_ID, name: 'Uncategorized', visible: false },
   ]
 }
 
 function ensureUncategorizedGroup(groups) {
   return groups.some((group) => group.id === UNCATEGORIZED_GROUP_ID)
     ? groups
-    : [...groups, { id: UNCATEGORIZED_GROUP_ID, name: 'Uncategorized' }]
+    : [...groups, { id: UNCATEGORIZED_GROUP_ID, name: 'Uncategorized', visible: false }]
 }
 
 export const state = reactive({
@@ -41,7 +41,6 @@ export const state = reactive({
   logs: {}, // 'YYYY-MM-DD' -> { entries: [...] }
   maintenanceCal: DEFAULT_MAINTENANCE,
   showKcal: true,
-  showUncategorized: false,
   weightUnit: DEFAULT_WEIGHT_UNIT,
   loaded: false,
   saveState: 'idle', // idle | saving | ok | error
@@ -163,7 +162,6 @@ function migrateLegacyPayload(parsed) {
     logs,
     maintenanceCal: parsed.maintenanceCal || DEFAULT_MAINTENANCE,
     showKcal: parsed.showKcal !== false,
-    showUncategorized: parsed.showUncategorized === true,
     weightUnit: parsed.weightUnit === 'lb' ? 'lb' : DEFAULT_WEIGHT_UNIT,
   }
 }
@@ -178,7 +176,6 @@ export function snapshot() {
     logs: state.logs,
     maintenanceCal: state.maintenanceCal,
     showKcal: state.showKcal,
-    showUncategorized: state.showUncategorized,
     weightUnit: state.weightUnit,
   }
 }
@@ -190,7 +187,6 @@ function applyDefaults() {
   state.logs = {}
   state.maintenanceCal = DEFAULT_MAINTENANCE
   state.showKcal = true
-  state.showUncategorized = false
   state.weightUnit = DEFAULT_WEIGHT_UNIT
 }
 
@@ -207,13 +203,15 @@ export async function loadData() {
         ? normalized.groups
         : defaultGroups(),
     )
+    state.groups.forEach((group) => {
+      if (group.visible === undefined) group.visible = group.id !== UNCATEGORIZED_GROUP_ID
+    })
     state.logs = normalized.logs && typeof normalized.logs === 'object' ? normalized.logs : {}
     Object.values(state.logs).forEach((log) => {
       if (Array.isArray(log?.entries)) log.entries = log.entries.map(normalizeLogEntry).filter(Boolean)
     })
     state.maintenanceCal = normalized.maintenanceCal || DEFAULT_MAINTENANCE
     state.showKcal = normalized.showKcal !== false
-    state.showUncategorized = normalized.showUncategorized === true
     state.weightUnit = normalized.weightUnit === 'lb' ? 'lb' : DEFAULT_WEIGHT_UNIT
 
     // Persist normalized logs so stale food group IDs are repaired permanently.
@@ -347,11 +345,6 @@ export function setMaintenance(value) {
 
 export function setShowKcal(value) {
   state.showKcal = !!value
-  save()
-}
-
-export function setShowUncategorized(value) {
-  state.showUncategorized = !!value
   save()
 }
 
@@ -540,5 +533,12 @@ export function clearLogGroup(dateStr, groupId) {
   const log = ensureLog(dateStr)
   if (!log.entries.length) return
   log.entries = log.entries.filter((e) => e.groupId !== groupId)
+  save()
+}
+
+export function toggleGroupVisibility(id) {
+  const group = state.groups.find((item) => item.id === id)
+  if (!group) return
+  group.visible = group.visible !== false ? false : true
   save()
 }

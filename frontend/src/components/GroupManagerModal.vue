@@ -2,12 +2,13 @@
 import { ref } from 'vue'
 import BaseModal from './BaseModal.vue'
 import DraggableList from './DraggableList.vue'
-import { state as store, createGroup, updateGroup, deleteGroup, reorderItems, UNCATEGORIZED_GROUP_ID } from '../js/data.js'
+import ToggleSwitch from './ToggleSwitch.vue'
+import { state as store, createGroup, updateGroup, deleteGroup, reorderItems, toggleGroupVisibility, UNCATEGORIZED_GROUP_ID } from '../js/data.js'
 import { confirmAction } from '../js/confirm.js'
 
 const emit = defineEmits(['close'])
 const newName = ref('')
-const groups = () => store.groups.filter((group) => group.id !== UNCATEGORIZED_GROUP_ID)
+const groups = () => store.groups
 function addGroup() {
   if (newName.value.trim()) {
     createGroup(newName.value)
@@ -37,9 +38,22 @@ async function removeGroup(group) {
       <template #default="{ item }">
         <div class="manager-item-wrap">
           <div class="manager-item manager-item-editable">
-            <input :value="item.name" aria-label="Group name" @change="updateGroup(item.id, $event.target.value)" />
+            <input v-if="item.id !== UNCATEGORIZED_GROUP_ID" :value="item.name" aria-label="Group name" @change="updateGroup(item.id, $event.target.value)" />
+            <span v-else class="protected-group-name">{{ item.name }} <small>Default group</small></span>
           </div>
-          <button class="manager-delete" type="button" aria-label="Delete group" @click="removeGroup(item)">×</button>
+          <ToggleSwitch
+            :model-value="item.visible !== false"
+            :label="`${item.visible !== false ? 'Hide' : 'Show'} ${item.name} on dashboard`"
+            @update:model-value="(value) => value !== (item.visible !== false) && toggleGroupVisibility(item.id)"
+          />
+          <button
+            v-if="item.id !== UNCATEGORIZED_GROUP_ID"
+            class="manager-delete"
+            type="button"
+            aria-label="Delete group"
+            @click="removeGroup(item)"
+          >×</button>
+          <span v-else class="manager-protected" title="This group cannot be deleted" aria-label="This group cannot be deleted">•</span>
         </div>
       </template>
     </DraggableList>
@@ -69,4 +83,28 @@ async function removeGroup(group) {
 }
 
 .manager-item input { width: 100%; border: 0; background: transparent; color: inherit; font: inherit; }
+
+.protected-group-name {
+  display: flex;
+  flex-direction: column;
+  color: inherit;
+  font: inherit;
+}
+
+.protected-group-name small {
+  margin-top: 2px;
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
+.manager-protected {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  color: var(--ink-muted);
+  font-size: 18px;
+  cursor: help;
+}
 </style>

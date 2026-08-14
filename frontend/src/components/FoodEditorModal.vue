@@ -3,6 +3,7 @@ import { computed, reactive, ref } from 'vue'
 import BaseModal from './BaseModal.vue'
 import { state as store, createFood, getIngredient, itemKcal, updateFood } from '../js/data.js'
 import { Modals, openModal } from '../js/modals.js'
+import { confirmAction } from '../js/confirm.js'
 import { useDiscardChanges } from '../js/useDiscardChanges.js'
 
 const props = defineProps({
@@ -48,7 +49,14 @@ function selectIngredient(ingredientId) {
   pendingIngredientId.value = ingredientId
 }
 
-function removeRow(ingredientId) {
+async function removeRow(ingredientId) {
+  const ingredient = getIngredient(ingredientId)
+  const ok = await confirmAction({
+    title: 'Remove ingredient',
+    message: `Remove "${ingredient?.name || 'this ingredient'}" from this food?`,
+    okLabel: 'Remove ingredient',
+  })
+  if (!ok) return
   draft.items = draft.items.filter((item) => item.ingredientId !== ingredientId)
 }
 
@@ -104,23 +112,28 @@ async function closeEditor() {
           </div>
         </div>
         <div v-if="draft.items.length" class="ingredient-list">
-          <div v-for="row in ingredientRows" :key="row.item.ingredientId" class="ingredient-row">
+          <div
+            v-for="row in ingredientRows"
+            :key="row.item.ingredientId"
+            class="ingredient-row"
+            role="button"
+            tabindex="0"
+            @click="openModal('ingredient-editor', { ingredientId: row.item.ingredientId })"
+            @keydown.enter="openModal('ingredient-editor', { ingredientId: row.item.ingredientId })"
+            @keydown.space.prevent="openModal('ingredient-editor', { ingredientId: row.item.ingredientId })"
+          >
             <div class="ingredient-row-main">
               <div class="ingredient-name-wrap">
                 <div class="item-name">{{ row.ingredient?.name || 'Unknown' }}</div>
-                <button class="item-edit" :aria-label="`Edit ${row.ingredient?.name || 'ingredient'}`"
-                  @click="openModal('ingredient-editor', { ingredientId: row.item.ingredientId })">
-                  ✎
-                </button>
               </div>
               <div class="quantity-control">
-                <input v-model.number="row.item.amount" class="item-qty" type="number" step="any" min="0" />
+                <input v-model.number="row.item.amount" class="item-qty" type="number" step="any" min="0" @click.stop />
                 <span>{{ row.ingredient?.unit === 'g' ? 'g' : 'each' }}</span>
               </div>
             </div>
             <div class="item-kcal mono">{{ row.kcal.toLocaleString() }} kcal</div>
             <button class="item-remove" :aria-label="`Remove ${row.ingredient?.name || 'ingredient'}`"
-              @click="removeRow(row.item.ingredientId)">×</button>
+              @click.stop="removeRow(row.item.ingredientId)">×</button>
           </div>
         </div>
         <div v-else class="empty-note meal-empty-note">
@@ -135,7 +148,7 @@ async function closeEditor() {
               class="add-item-select ingredient-picker-button"
               @click="openModal(Modals.INGREDIENT_PICKER, { excludedIds: [...usedIds], selectedId: pendingIngredientId, onSelect: selectIngredient })"
             >
-              {{ getIngredient(pendingIngredientId)?.name || 'Choose an ingredient...' }}
+              {{ getIngredient(pendingIngredientId)?.name || '🔎︎ Choose an ingredient...' }}
             </button>
           </div>
           <input v-model="pendingQty" class="add-item-qty" type="number" step="any" min="0" placeholder="Qty" />
@@ -267,6 +280,15 @@ async function closeEditor() {
   gap: 8px;
   padding: 7px 12px;
   border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.ingredient-row:hover,
+.ingredient-row:focus-visible {
+  background: var(--surface-alt);
+  color: var(--green-strong);
+  outline: none;
 }
 
 .ingredient-row:last-child {
@@ -331,25 +353,6 @@ async function closeEditor() {
 
 .item-remove:hover {
   color: var(--red);
-}
-
-.item-edit {
-  width: 18px;
-  height: 18px;
-  padding: 0;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--ink-muted);
-  font-size: 11px;
-  line-height: 1;
-  flex: none;
-}
-
-.item-edit:hover {
-  border-color: var(--line);
-  background: var(--surface-alt);
-  color: var(--green);
 }
 
 .ingredient-actions {

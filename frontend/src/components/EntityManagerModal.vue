@@ -70,8 +70,10 @@ async function deleteItem(item) {
   >
     <div class="manager-group">
       <button class="btn btn-primary btn-full" @click="openEditor()">＋ {{ newLabel }}</button>
+      <div class="manager-browse-label">Browse {{ countLabel }}</div>
       <input v-model="query" class="manager-search" type="search" :placeholder="searchPlaceholder" />
 
+      <div class="manager-count">{{ filteredItems.length }} {{ countLabel }}</div>
       <div v-if="query.trim()" class="manager-search-note">
         {{ filteredItems.length }} of {{ items.length }} {{ countLabel }} shown.
       </div>
@@ -102,6 +104,21 @@ async function deleteItem(item) {
   color: var(--ink);
   font-size: 13px;
   margin: 14px 0 12px;
+}
+
+.manager-browse-label {
+  margin-top: 18px;
+  color: var(--ink-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.manager-count {
+  margin: 8px 0 6px;
+  color: var(--ink-muted);
+  font-size: 12px;
 }
 
 .manager-search:focus {
