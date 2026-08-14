@@ -45,7 +45,7 @@ function decrement(entry) {
             :color-index="store.groups.findIndex((item) => item.id === group.id) % 5"
             one-off
             @decrement="decrement(entry)"
-            @increment="undefined"
+            @increment="bumpLogEntry(view.logDate, entry.id, 1)"
             @edit="openModal(Modals.CUSTOM_ENTRY, { groupId: group.id, entry })"
           />
           <template v-for="food in visibleFoods" :key="food.id">
