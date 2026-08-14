@@ -297,6 +297,7 @@ export function getFood(id) {
 
 export function foodKcal(food) {
   if (!food) return 0
+  if (food.mode === 'simple') return Math.round(Number(food.kcal) || 0)
   if (!(food.items || []).length) return Math.round(Number(food.kcal) || 0)
   return Math.round((food.items || []).reduce((sum, it) => sum + itemKcal(it), 0))
 }
@@ -440,6 +441,7 @@ export function createFood(draft) {
     id: uid('food'),
     name: draft.name?.trim() || 'Untitled food',
     items: (draft.items || []).map((it) => ({ ...it })),
+    mode: draft.mode === 'simple' ? 'simple' : 'ingredients',
     kcal: Number.isFinite(draft.kcal) ? Math.round(draft.kcal) : 0,
     groupId: draft.groupId || UNCATEGORIZED_GROUP_ID,
   }
@@ -454,6 +456,7 @@ export function updateFood(id, draft) {
   const previousGroupId = food.groupId
   food.name = draft.name?.trim() || 'Untitled food'
   food.items = (draft.items || []).map((it) => ({ ...it }))
+  food.mode = draft.mode === 'simple' ? 'simple' : 'ingredients'
   food.kcal = Number.isFinite(draft.kcal) ? Math.round(draft.kcal) : 0
   if (draft.groupId) food.groupId = draft.groupId
   if (food.groupId !== previousGroupId) {

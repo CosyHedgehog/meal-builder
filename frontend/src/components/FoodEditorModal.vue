@@ -21,7 +21,7 @@ const draft = reactive({
   items: source ? source.items.map((item) => ({ ...item })) : [],
   kcal: source ? String(source.kcal || '') : '',
 })
-const foodMode = ref(source && source.items.length ? 'ingredients' : 'simple')
+const foodMode = ref(source?.mode || (source && source.items.length ? 'ingredients' : 'simple'))
 const pendingIngredientId = ref('')
 const pendingQty = ref('')
 const { isDirty, confirmDiscard: confirmDraftDiscard } = useDiscardChanges(draft)
@@ -86,7 +86,8 @@ function saveFood() {
   }
   const payload = {
     ...draft,
-    items: foodMode.value === 'ingredients' ? draft.items : [],
+    items: draft.items,
+    mode: foodMode.value,
     kcal: foodMode.value === 'simple' ? fixedKcal : 0,
   }
   if (isNew || isDraftCopy.value) createFood(payload)
@@ -180,7 +181,12 @@ async function closeEditor() {
           <strong>{{ totalKcal.toLocaleString() }} <small>kcal</small></strong>
         </div>
         <div class="add-item-row">
-          <label class="add-item-label">Select an ingredient</label>
+          <div class="add-item-label-row">
+            <label class="add-item-label">Select an ingredient</label>
+            <button class="link-btn create-ingredient-link" type="button" @click="openModal('ingredient-editor')">
+              <span aria-hidden="true">＋</span> Create ingredient
+            </button>
+          </div>
           <div class="ingredient-picker-trigger">
             <button
               type="button"
@@ -200,12 +206,6 @@ async function closeEditor() {
             :placeholder="getIngredient(pendingIngredientId)?.unit === 'g' ? 'g' : 'each'"
           />
           <button class="btn btn-primary add-item-button" type="button" @click="addIngredientRow">Add</button>
-        </div>
-        <div class="ingredient-actions">
-          <span class="ingredient-actions-hint">Can't find it?</span>
-          <button class="link-btn create-ingredient-link" type="button" @click="openModal('ingredient-editor')">
-            <span aria-hidden="true">＋</span> Create ingredient
-          </button>
         </div>
       </section>
 
@@ -251,6 +251,24 @@ async function closeEditor() {
 }
 
 .create-group-link {
+  margin: 0;
+  padding: 0;
+  font-size: 11px;
+}
+
+.add-item-label-row {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.add-item-label-row .add-item-label {
+  grid-column: auto;
+}
+
+.add-item-label-row .create-ingredient-link {
   margin: 0;
   padding: 0;
   font-size: 11px;
@@ -501,18 +519,6 @@ async function closeEditor() {
   color: var(--red);
 }
 
-.ingredient-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 1px 2px 0;
-}
-
-.ingredient-actions-hint {
-  color: var(--ink-muted);
-  font-size: 11px;
-}
-
 .add-item-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 72px 52px;
@@ -630,15 +636,23 @@ async function closeEditor() {
   }
 
   .add-item-row {
-    grid-template-columns: minmax(0, 1fr) 72px;
+    grid-template-columns: minmax(0, 1fr) 58px 42px;
   }
 
   .add-item-select {
-    grid-column: 1 / -1;
+    grid-column: 1;
+    min-width: 0;
+    padding-right: 22px;
+  }
+
+  .add-item-qty {
+    grid-column: 2;
   }
 
   .add-item-button {
-    grid-column: 2;
+    grid-column: 3;
+    padding-right: 6px;
+    padding-left: 6px;
   }
 }
 </style>
