@@ -291,6 +291,8 @@ function toggleCollapsed() {
   font-size: 18px;
   font-weight: 400;
   line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .group-add-food-button:hover,

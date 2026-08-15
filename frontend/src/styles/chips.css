@@ -20,6 +20,8 @@
   text-transform: uppercase;
   letter-spacing: 0.14em;
   color: var(--ink-muted);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 .group-add-button {
