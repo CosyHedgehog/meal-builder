@@ -29,12 +29,20 @@ function shiftDay(amount) {
 
 function onTouchStart(event) {
   if (!auth.user || !store.loaded) return
+  if (event.target.closest('.mobile-action-sheet, .mobile-actions-backdrop')) {
+    swipeStart.value = null
+    return
+  }
   const touch = event.changedTouches[0]
   swipeStart.value = { x: touch.clientX, y: touch.clientY }
 }
 
 function onTouchEnd(event) {
   if (!swipeStart.value) return
+  if (event.target.closest('.mobile-action-sheet, .mobile-actions-backdrop')) {
+    swipeStart.value = null
+    return
+  }
   const touch = event.changedTouches[0]
   const deltaX = touch.clientX - swipeStart.value.x
   const deltaY = touch.clientY - swipeStart.value.y
