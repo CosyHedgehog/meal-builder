@@ -2,7 +2,8 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { state as store, getLog, logEntries } from '../js/data.js'
 import { view, clearDragState, getCollapseState, setCollapseState, dateNavDirection, boundaryBounce } from '../js/ui.js'
-import { Modals, openModal } from '../js/modals.js'
+import { Modals, modalStack, openModal } from '../js/modals.js'
+import { confirmState } from '../js/confirm.js'
 import DateNav from './DateNav.vue'
 import CalorieSummary from './CalorieSummary.vue'
 import FoodGroupList from './FoodGroupList.vue'
@@ -25,6 +26,7 @@ const projectedWeightDisplay = computed(() => {
 
 const projectedWeightUnit = computed(() => (store.weightUnit === 'lb' ? 'lb' : 'kg'))
 const dayLocked = computed(() => store.allowPreviousDayLocking && view.logDate < new Date().toISOString().slice(0, 10))
+const hasOpenModal = computed(() => modalStack.length > 0 || confirmState.open)
 const mobileActionsOpen = ref(false)
 const mobileActionStartY = ref(null)
 const historyCollapsed = ref(getCollapseState('history'))
@@ -164,8 +166,8 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
         </button>
       </div>
     </section>
-    <div v-if="mobileActionsOpen" class="mobile-actions-backdrop" @click="closeMobileActions" @touchmove.prevent></div>
-    <section class="mobile-action-sheet" :class="{ open: mobileActionsOpen }" aria-label="Dashboard actions"
+    <div v-if="mobileActionsOpen && !hasOpenModal" class="mobile-actions-backdrop" @click="closeMobileActions" @touchmove.prevent></div>
+    <section v-show="!hasOpenModal" class="mobile-action-sheet" :class="{ open: mobileActionsOpen }" aria-label="Dashboard actions"
       @touchstart="startMobileActionSwipe" @touchmove.prevent @touchend="endMobileActionSwipe">
       <button class="mobile-action-handle" type="button" aria-label="Show dashboard actions"
         @click="toggleMobileActions">
