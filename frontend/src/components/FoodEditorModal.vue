@@ -387,9 +387,10 @@ async function closeEditor() {
   display: flex;
   flex-direction: column;
   gap: 7px;
-  padding: 6px 6px 6px;
+  padding: 5px;
   border: 1px solid var(--line);
   border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 92%, var(--surface-alt));
 }
 
 .food-validation {
@@ -449,6 +450,7 @@ async function closeEditor() {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  padding: 0 2px;
 }
 
 .meal-section-heading .food-total {
@@ -476,7 +478,14 @@ async function closeEditor() {
   gap: 8px;
   min-height: 40px;
   padding: 5px 6px;
-  border-radius: 8px;
+}
+
+.ingredient-row + .ingredient-row {
+  border-top: 1px solid var(--line);
+}
+
+.ingredient-row:hover {
+  background: var(--surface-alt);
 }
 
 .ingredient-row-main {
@@ -527,6 +536,12 @@ async function closeEditor() {
   outline: none;
 }
 
+.item-name:focus-visible {
+  border-radius: 4px;
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
 .quantity-control {
   display: grid;
   grid-template-columns: 62px 30px;
@@ -555,6 +570,7 @@ async function closeEditor() {
   color: var(--ink-muted);
   font-family: inherit;
   font-size: 13px;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
@@ -567,6 +583,12 @@ async function closeEditor() {
 
 .item-remove:hover {
   color: var(--red);
+}
+
+.item-remove:focus-visible {
+  border-radius: 4px;
+  outline: 2px solid var(--green);
+  outline-offset: 1px;
 }
 
 .add-item-row {
