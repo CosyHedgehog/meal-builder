@@ -56,6 +56,7 @@ function endMobileActionSwipe(event) {
   const endY = event.changedTouches[0]?.clientY ?? mobileActionStartY.value
   const deltaY = endY - mobileActionStartY.value
   mobileActionStartY.value = null
+  if (Math.abs(deltaY) >= 40) event.preventDefault()
   if (Math.abs(deltaY) < 40) return
   if (deltaY < 0) mobileActionsOpen.value = true
   else if (mobileActionsOpen.value) closeMobileActions()
@@ -90,15 +91,15 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
           @click="openModal(Modals.GROUP_MANAGER)">Manage groups</button></span>
     </div>
 
-    <section v-for="group in groups" :key="group.id" class="today-group-card">
-      <FoodGroupList :group="group" :log="log" :edit-mode="view.dashboardEditMode && !dayLocked" :locked="dayLocked" />
-    </section>
-
     <div v-if="dayLocked" class="locked-day-note">
       <span aria-hidden="true">🔒</span>
       <span>Previous days are locked. <button type="button" @click="openModal(Modals.SETTINGS)">Change in
           Settings</button></span>
     </div>
+
+    <section v-for="group in groups" :key="group.id" class="today-group-card">
+      <FoodGroupList :group="group" :log="log" :edit-mode="view.dashboardEditMode && !dayLocked" :locked="dayLocked" />
+    </section>
     <div class="desktop-history-section history-panel-layout">
       <div class="history-panel-heading">
         <div class="history-panel-title">
@@ -158,7 +159,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
     </section>
     <div v-if="mobileActionsOpen" class="mobile-actions-backdrop" @click="closeMobileActions"></div>
     <section class="mobile-action-sheet" :class="{ open: mobileActionsOpen }" aria-label="Dashboard actions"
-      @touchstart.passive="startMobileActionSwipe" @touchend.passive="endMobileActionSwipe">
+      @touchstart="startMobileActionSwipe" @touchend="endMobileActionSwipe">
       <button class="mobile-action-handle" type="button" aria-label="Show dashboard actions"
         @click="toggleMobileActions">
         <span aria-hidden="true">{{ mobileActionsOpen ? '↓' : '↑' }}</span> Manage
