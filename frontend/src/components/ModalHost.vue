@@ -32,18 +32,26 @@ function onKeydown(e) {
   if (modalStack.length) closeModal()
 }
 
+function onPopState() {
+  if (modalStack.length) closeModal()
+}
+
 watch(
   () => modalStack.length,
-  (length) => {
+  (length, previousLength) => {
     document.body.style.overflow = length ? 'hidden' : ''
+    if (length > previousLength) history.pushState({ mealBuilderModal: true }, '')
+    else if (!length && previousLength) history.replaceState(null, '', location.href)
   },
 )
 
 onMounted(() => document.addEventListener('keydown', onKeydown))
 onUnmounted(() => {
   document.removeEventListener('keydown', onKeydown)
+  window.removeEventListener('popstate', onPopState)
   document.body.style.overflow = ''
 })
+window.addEventListener('popstate', onPopState)
 </script>
 
 <template>
