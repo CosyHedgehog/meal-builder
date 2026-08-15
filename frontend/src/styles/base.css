@@ -75,6 +75,10 @@ body {
     color 0.2s ease;
 }
 
+.app-touch-surface {
+  min-height: 100vh;
+}
+
 h1,
 h2,
 h3 {

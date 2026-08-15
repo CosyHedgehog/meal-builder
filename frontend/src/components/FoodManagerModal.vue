@@ -157,7 +157,19 @@ async function removeFood(food) {
 
 @media (max-width: 480px) {
   .food-filters {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(112px, 0.75fr) minmax(0, 1.25fr);
+    gap: 6px;
+  }
+
+  .manager-filter,
+  .manager-search {
+    min-height: 36px;
+    padding: 7px 9px;
+  }
+
+  .manager-filter {
+    padding-right: 24px;
+    background-position: calc(100% - 12px) 50%, calc(100% - 7px) 50%;
   }
 }
 </style>

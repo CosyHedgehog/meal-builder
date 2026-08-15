@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { state as store, getLog, logEntries } from '../js/data.js'
-import { view, clearDragState } from '../js/ui.js'
+import { view, clearDragState, getCollapseState, setCollapseState } from '../js/ui.js'
 import { Modals, openModal } from '../js/modals.js'
 import DateNav from './DateNav.vue'
 import CalorieSummary from './CalorieSummary.vue'
@@ -27,7 +27,7 @@ const projectedWeightUnit = computed(() => (store.weightUnit === 'lb' ? 'lb' : '
 const dayLocked = computed(() => store.allowPreviousDayLocking && view.logDate < new Date().toISOString().slice(0, 10))
 const mobileActionsOpen = ref(false)
 const mobileActionStartY = ref(null)
-const historyCollapsed = ref(false)
+const historyCollapsed = ref(getCollapseState('history'))
 
 watch(dayLocked, (locked) => {
   if (locked) finishDashboardEdit()
@@ -100,14 +100,16 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
     </div>
     <div class="desktop-history-section history-panel-layout">
       <div class="history-panel-heading">
-        <button type="button" class="history-panel-toggle" :aria-expanded="!historyCollapsed"
-          aria-controls="dashboard-history-content"
-          :aria-label="`${historyCollapsed ? 'Show' : 'Hide'} history chart and summary`"
-          @click="historyCollapsed = !historyCollapsed">
-          <h2>HISTORY</h2>
-          <span class="history-panel-chevron" aria-hidden="true">{{ historyCollapsed ? '▶' : '▼' }}</span>
-        </button>
-        <div class="muted">Averages from the last {{ days }} days</div>
+        <div class="history-panel-title">
+          <button type="button" class="history-panel-toggle" :aria-expanded="!historyCollapsed"
+            aria-controls="dashboard-history-content"
+            :aria-label="`${historyCollapsed ? 'Show' : 'Hide'} history chart and summary`"
+            @click="historyCollapsed = !historyCollapsed; setCollapseState('history', historyCollapsed)">
+            <h2>HISTORY</h2>
+            <span class="history-panel-chevron" aria-hidden="true">{{ historyCollapsed ? '▶' : '▼' }}</span>
+          </button>
+          <div v-if="!historyCollapsed" class="muted">Averages from the last {{ days }} days</div>
+        </div>
       </div>
       <div v-if="!historyCollapsed" id="dashboard-history-content" class="history-panel-content">
         <HistoryChart />
@@ -293,8 +295,14 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
 .history-panel-heading {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
   gap: 16px;
+}
+
+.history-panel-title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
 }
 
 .history-panel-toggle {
@@ -403,11 +411,17 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
     box-shadow: 0 -5px 20px rgba(var(--shadow-rgb), 0.14);
     transform: translateY(calc(100% - 36px));
     transition: transform 0.2s ease;
+    pointer-events: none;
     z-index: 21;
   }
 
   .mobile-action-sheet.open {
     transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .mobile-action-handle {
+    pointer-events: auto;
   }
 
   .mobile-action-handle {

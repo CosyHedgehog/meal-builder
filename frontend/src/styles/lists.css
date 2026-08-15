@@ -8,6 +8,12 @@
   background: var(--surface);
 }
 
+@media (max-width: 480px) {
+  .manager-list {
+    max-height: 62dvh;
+  }
+}
+
 .manager-item-row {
   display: flex;
   align-items: stretch;

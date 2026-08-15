@@ -108,13 +108,28 @@
     overflow-y: auto;
   }
 
-  .modal.confirm-modal {
+  .modal.confirm-modal,
+  .modal.confirm-modal.confirm-modal {
     width: min(460px, calc(100vw - 32px));
     height: auto;
     min-height: 0;
     max-width: calc(100vw - 32px);
     max-height: calc(100dvh - 32px);
     border-radius: 18px;
-    padding-bottom: 20px;
+    padding: 16px 18px 14px;
+    align-self: center;
+  }
+
+  .modal.confirm-modal h2 {
+    font-size: 18px;
+  }
+
+  .modal.confirm-modal > .subtitle {
+    margin-bottom: 10px;
+  }
+
+  .modal.confirm-modal .modal-footer {
+    margin-top: 14px;
+    padding-top: 10px;
   }
 }

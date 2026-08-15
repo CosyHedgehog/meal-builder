@@ -114,6 +114,7 @@ async function closeEditor() {
   <BaseModal :title="isNew ? 'New food' : `Edit ${draft.name}`"
     subtitle="Create or update a food using ingredients or fixed calories." @close="closeEditor">
     <div class="food-editor-content">
+      <div v-if="isDraftCopy" class="copy-food-badge">COPY OF EXISTING FOOD</div>
       <div class="input-field food-field">
         <label for="foodName">Name</label>
         <input id="foodName" v-model="draft.name" placeholder="New food" />
@@ -218,7 +219,7 @@ async function closeEditor() {
 
       <div v-if="validationMessage" class="food-validation">{{ validationMessage }}</div>
       <div class="food-actions">
-        <button class="btn btn-primary primary-wide" type="button" @click="saveFood">{{ isNew ? 'Create food' : 'Save food' }}</button>
+        <button class="btn btn-primary primary-wide" type="button" @click="saveFood">{{ isDraftCopy ? 'Create copy' : (isNew ? 'Create food' : 'Save food') }}</button>
         <button v-if="!isNew && !isDraftCopy" class="btn btn-secondary duplicate-food-button" type="button" @click="replaceModal(Modals.FOOD_EDITOR, { foodId: props.foodId, duplicate: true })">
           ⧉ Duplicate food
         </button>
@@ -228,6 +229,17 @@ async function closeEditor() {
 </template>
 
 <style scoped>
+.copy-food-badge {
+  align-self: flex-start;
+  padding: 3px 7px;
+  border: 1px solid var(--green-light);
+  border-radius: 999px;
+  color: var(--green-strong);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
 .food-field {
   margin-bottom: 8px;
 }
@@ -622,7 +634,19 @@ async function closeEditor() {
   .ingredient-name-wrap {
     grid-column: 1;
     grid-row: 1;
+    max-width: 100%;
     min-width: 0;
+  }
+
+  .item-name {
+    max-width: 100%;
+  }
+
+  .item-name > span:last-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .quantity-control {

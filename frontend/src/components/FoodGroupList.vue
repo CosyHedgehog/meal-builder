@@ -2,14 +2,14 @@
 import { computed, ref, watch } from 'vue'
 import FoodQuantityStepper from './FoodQuantityStepper.vue'
 import { state as store, addLogFood, bumpLogEntry, logEntries, foodsInGroup, foodKcal, moveFoodToGroupEnd, insertFood, reorderGroups, deleteGroup, toggleGroupVisibility, UNCATEGORIZED_GROUP_ID } from '../js/data.js'
-import { view, clearDragState } from '../js/ui.js'
+import { view, clearDragState, getCollapseState, setCollapseState } from '../js/ui.js'
 import { Modals, openModal } from '../js/modals.js'
 import { confirmAction } from '../js/confirm.js'
 
 const props = defineProps({ group: { type: Object, required: true }, log: { type: Object, required: true }, editMode: { type: Boolean, default: false }, locked: { type: Boolean, default: false } })
 const dragOver = ref(false)
 const showAll = ref(false)
-const collapsed = ref(false)
+const collapsed = ref(getCollapseState(`group:${props.group.id}`))
 const foods = computed(() => foodsInGroup(props.group.id))
 const entries = computed(() => logEntries(props.log).filter((entry) => entry.groupId === props.group.id))
 const visibleFoods = computed(() => showAll.value ? foods.value : foods.value.slice(0, 10))
@@ -67,6 +67,7 @@ function moveGroup(direction) {
 
 function toggleCollapsed() {
   collapsed.value = !collapsed.value
+  setCollapseState(`group:${props.group.id}`, collapsed.value)
 }
 </script>
 

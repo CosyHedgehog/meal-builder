@@ -4,6 +4,32 @@ import { todayStr } from './date.js'
 /* ---- selected log date ---- */
 export const view = reactive({ logDate: todayStr(), dashboardEditMode: false, draggedFoodId: '', draggedOverFoodId: '', draggedGroupId: '', draggedOverGroupId: '', draggedEntryId: '', draggedOverEntryId: '', dragType: '' })
 
+const COLLAPSE_STATE_KEY = 'meal-builder-collapse-state'
+
+function readCollapseState() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(COLLAPSE_STATE_KEY) || '{}')
+    return parsed && typeof parsed === 'object' ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+export function getCollapseState(key, defaultValue = false) {
+  const value = readCollapseState()[key]
+  return typeof value === 'boolean' ? value : defaultValue
+}
+
+export function setCollapseState(key, value) {
+  const state = readCollapseState()
+  state[key] = value
+  try {
+    localStorage.setItem(COLLAPSE_STATE_KEY, JSON.stringify(state))
+  } catch {
+    /* private mode or unavailable storage */
+  }
+}
+
 export function clearDragState() {
   view.draggedFoodId = ''
   view.draggedOverFoodId = ''
