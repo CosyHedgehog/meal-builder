@@ -57,7 +57,8 @@ function endMobileActionSwipe(event) {
   const deltaY = endY - mobileActionStartY.value
   mobileActionStartY.value = null
   if (Math.abs(deltaY) < 40) return
-  mobileActionsOpen.value = deltaY < 0
+  if (deltaY < 0) mobileActionsOpen.value = true
+  else if (mobileActionsOpen.value) closeMobileActions()
 }
 
 function closeMobileActions() {
