@@ -71,12 +71,6 @@ function choose(ingredient) {
   gap: 8px;
 }
 
-@media (max-width: 480px) {
-  .ingredient-picker-content {
-    min-height: calc(100dvh - 166px);
-  }
-}
-
 .ingredient-picker-search {
   width: 100%;
   min-height: 42px;
@@ -116,9 +110,7 @@ function choose(ingredient) {
 
 @media (max-width: 480px) {
   .ingredient-picker-list {
-    flex: 1 1 auto;
-    min-height: 0;
-    max-height: none;
+    max-height: 52dvh;
   }
 }
 

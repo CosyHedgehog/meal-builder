@@ -387,10 +387,18 @@ async function closeEditor() {
   display: flex;
   flex-direction: column;
   gap: 7px;
+  min-height: 0;
+  max-height: 194px;
   padding: 5px;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: color-mix(in srgb, var(--surface) 92%, var(--surface-alt));
+  overflow: hidden;
+}
+
+.food-ingredients-list-container .ingredient-list {
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .food-validation {
@@ -670,6 +678,10 @@ async function closeEditor() {
 }
 
 @media (max-width: 600px) {
+  .food-ingredients-list-container {
+    max-height: 194px;
+  }
+
   .ingredient-row {
     grid-template-columns: minmax(0, 1fr) 56px 22px 48px 18px;
     gap: 4px;
