@@ -12,7 +12,7 @@ defineEmits(['decrement', 'increment', 'edit'])
 </script>
 
 <template>
-  <div class="food-stepper" :class="[`group-${colorIndex}`, { 'one-off': oneOff }]" role="group" :aria-label="`${name} quantity`">
+  <div class="food-stepper" :class="[`group-${colorIndex}`, { 'one-off': oneOff, 'dashboard-locked': !locked }]" role="group" :aria-label="`${name} quantity`">
       <button v-if="!locked" type="button" class="food-stepper-control" :aria-label="`Remove one ${name}`" @click="$emit('decrement')">
       −
     </button>

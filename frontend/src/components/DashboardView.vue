@@ -84,6 +84,27 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
 
 <template>
   <div class="home">
+        <section class="manage-section">
+      <div class="manage-actions desktop-manage-actions">
+        <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.FOOD_MANAGER)">
+          ✎ Foods
+        </button>
+        <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.GROUP_MANAGER)">
+          ✎ Groups
+        </button>
+        <button v-if="!view.dashboardEditMode" class="manage-toggle group-add-button" type="button"
+          @click="view.dashboardEditMode = true">
+          ✎ Dashboard
+        </button>
+        <button v-else-if="view.dashboardEditMode" class="manage-toggle group-add-button" type="button"
+          @click="finishDashboardEdit">
+          Done
+        </button>
+        <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.SETTINGS)">
+          ⚙ Settings
+        </button>
+      </div>
+    </section>
     <DateNav />
 
     <Transition :name="`day-slide-${dateNavDirection}`" mode="out-in">
@@ -92,7 +113,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
           <CalorieSummary :log="log" />
         </section>
 
-        <div v-if="hiddenLoggedGroups.length" class="hidden-food-note">
+        <div v-if="hiddenLoggedGroups.length && !view.dashboardEditMode" class="hidden-food-note">
           <span class="hidden-food-note-icon" aria-hidden="true">ⓘ</span>
           <span>Food logged in hidden group{{ hiddenLoggedGroups.length === 1 ? '' : 's' }}: {{
             hiddenLoggedGroups.map((group) => group.name).join(', ')}}. <button type="button"
@@ -105,7 +126,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
         </div>
 
         <section v-for="group in groups" :key="group.id" class="today-group-card">
-          <FoodGroupList :group="group" :log="log" :edit-mode="view.dashboardEditMode && !dayLocked" :locked="dayLocked" />
+          <FoodGroupList :group="group" :log="log" :edit-mode="view.dashboardEditMode" :locked="dayLocked" />
         </section>
       </div>
     </Transition>
@@ -145,27 +166,6 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
         </section>
       </div>
     </div>
-    <section class="manage-section">
-      <div class="manage-actions desktop-manage-actions">
-        <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.FOOD_MANAGER)">
-          ✎ Foods
-        </button>
-        <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.GROUP_MANAGER)">
-          ✎ Groups
-        </button>
-        <button v-if="!view.dashboardEditMode && !dayLocked" class="manage-toggle group-add-button" type="button"
-          @click="view.dashboardEditMode = true">
-          ✎ Dashboard
-        </button>
-        <button v-else-if="!dayLocked" class="manage-toggle group-add-button" type="button"
-          @click="finishDashboardEdit">
-          Done
-        </button>
-        <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.SETTINGS)">
-          ⚙ Settings
-        </button>
-      </div>
-    </section>
     <div v-if="mobileActionsOpen && !hasOpenModal" class="mobile-actions-backdrop" @click="closeMobileActions" @touchmove.prevent></div>
     <section v-show="!hasOpenModal" class="mobile-action-sheet" :class="{ open: mobileActionsOpen }" aria-label="Dashboard actions"
       @touchstart="startMobileActionSwipe" @touchmove.prevent @touchend="endMobileActionSwipe">
@@ -185,6 +185,10 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
 </template>
 
 <style scoped>
+.manage-section {
+  margin-bottom: 10px
+}
+
 .home {
   display: flex;
   flex-direction: column;
@@ -360,7 +364,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
 
 .history-panel-layout {
   display: grid;
-  gap: 16px;
+  gap: 8px;
   padding: 5px 12px 5px 12px;
 }
 
@@ -411,7 +415,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
 
 .history-panel-content {
   display: grid;
-  gap: 16px;
+  gap: 8px;
 }
 
 .history-panel-heading .muted {

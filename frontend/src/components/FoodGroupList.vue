@@ -29,7 +29,7 @@ function decrement(entry) {
   bumpLogEntry(view.logDate, entry.id, -1)
 }
 function startDrag(foodId, event) {
-  if (props.locked) return
+  // if (props.locked) return
   view.draggedFoodId = foodId
   view.dragType = 'food'
   view.draggedGroupId = ''
@@ -367,8 +367,14 @@ function toggleCollapsed() {
   background: var(--surface);
 }
 
-.dashboard-locked .quick-picks-viewport {
+.dashboard-locked .today-chip,
+.dashboard-locked .food-stepper {
   pointer-events: none;
+}
+
+/* Ensure the drag handle retains pointer events so it stays draggable */
+.dashboard-drag-handle {
+  pointer-events: auto;
 }
 
 .dashboard-food-item {

@@ -104,7 +104,7 @@ textarea {
 .app-shell {
   max-width: 1080px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 0px 24px 0px 24px;
 }
 
 @media (min-width: 700px) {
@@ -170,7 +170,7 @@ textarea {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 18px;
-  padding: 14px;
+  padding: 5px 10px 5px 10px;
 }
 
 .section-head {
