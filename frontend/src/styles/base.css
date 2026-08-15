@@ -103,33 +103,6 @@ textarea {
   padding: 24px;
 }
 
-@media (max-width: 600px) {
-  .date-slide-content.slide-left {
-    animation: date-slide-left 0.22s ease-out;
-  }
-
-  .date-slide-content.slide-right {
-    animation: date-slide-right 0.22s ease-out;
-  }
-}
-
-@keyframes date-slide-left {
-  from { opacity: 0.55; transform: translateX(18px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes date-slide-right {
-  from { opacity: 0.55; transform: translateX(-18px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .date-slide-content.slide-left,
-  .date-slide-content.slide-right {
-    animation: none;
-  }
-}
-
 @media (min-width: 700px) {
   .app-shell {
     max-width: 680px;
