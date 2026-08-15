@@ -93,12 +93,12 @@ function downloadJSON(filename, payload) {
       <section class="settings-section">
         <div class="section-label">Behavior</div>
         <div class="settings-row">
-          <label>Allow locking previous days</label>
+          <label>Lock past days</label>
           <ToggleSwitch v-model="allowPreviousDayLocking" label="Allow locking previous days" />
         </div>
         <div class="settings-info-note">
           <span aria-hidden="true">ⓘ</span>
-          <span>Food items from previous days cannot be selected. Food updates still apply to them.</span>
+          <span>Food items from previous days can't be selected. Helps prevent accidental changes. Updates still apply to logged food.</span>
         </div>
       </section>
 

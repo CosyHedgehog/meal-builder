@@ -93,8 +93,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
 
     <div v-if="dayLocked" class="locked-day-note">
       <span aria-hidden="true">🔒</span>
-      <span>Previous days are locked. <button type="button" @click="openModal(Modals.SETTINGS)">Change in
-          Settings</button></span>
+        <span>Past day foods can't be selected. <button type="button" @click="openModal(Modals.SETTINGS)">Edit in Settings</button></span>
     </div>
 
     <section v-for="group in groups" :key="group.id" class="today-group-card">
@@ -194,12 +193,11 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
   display: flex;
   align-items: flex-start;
   gap: 6px;
-  padding: 9px 11px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--surface);
+  padding: 6px 8px;
+  border-left: 3px solid var(--orange);
+  background: var(--orange-soft);
   color: var(--ink-muted);
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.4;
 }
 
@@ -219,12 +217,11 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
   display: flex;
   align-items: flex-start;
   gap: 6px;
-  padding: 9px 11px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--surface);
+  padding: 6px 8px;
+  border-left: 3px solid var(--green-light);
+  background: var(--green-soft);
   color: var(--ink-muted);
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .hidden-food-note-icon {

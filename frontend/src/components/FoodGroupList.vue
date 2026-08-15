@@ -110,6 +110,7 @@ function toggleCollapsed() {
         </span>
         <span class="group-header-actions">
           <button
+            v-if="!locked"
             type="button"
             class="group-add-food-button"
             :aria-label="`Add food to ${group.name}`"
@@ -165,7 +166,7 @@ function toggleCollapsed() {
             </div>
           </template>
           <span v-if="!foods.length" class="empty-note">No foods in this group</span>
-          <button v-if="!editMode" type="button" class="today-chip chip-add" :disabled="locked" @click="!locked && openModal(Modals.CUSTOM_ENTRY, { groupId: group.id })">
+            <button v-if="!editMode && !locked" type="button" class="today-chip chip-add" @click="openModal(Modals.CUSTOM_ENTRY, { groupId: group.id })">
             + Custom
           </button>
           <button v-if="hasMore" type="button" class="chip-more" @click="showAll = true">More…</button>
