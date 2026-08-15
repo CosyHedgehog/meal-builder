@@ -164,8 +164,6 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
         <button type="button" @click="openModal(Modals.HISTORY); closeMobileActions()">◷ Summary</button>
         <button type="button" @click="openModal(Modals.FOOD_MANAGER); closeMobileActions()">✎ Foods</button>
         <button type="button" @click="openModal(Modals.GROUP_MANAGER); closeMobileActions()">✎ Groups</button>
-        <button v-if="!view.dashboardEditMode && !dayLocked" type="button"
-          @click="view.dashboardEditMode = true; closeMobileActions()">✎ Edit dashboard</button>
         <button type="button" @click="openModal(Modals.SETTINGS); closeMobileActions()">⚙ Settings</button>
       </div>
     </section>
@@ -362,6 +360,19 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
 }
 
 @media (max-width: 600px) {
+  .today-card {
+    width: calc(100% + 48px);
+    margin-left: -24px;
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+  }
+
+  .today-group-card {
+    width: calc(100% + 48px);
+    margin-left: -24px;
+  }
+
   .desktop-manage-actions {
     display: none;
   }
