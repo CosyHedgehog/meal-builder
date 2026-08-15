@@ -1,5 +1,5 @@
 <script setup>
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { state as store, getLog, logEntries } from '../js/data.js'
 import { view, clearDragState } from '../js/ui.js'
 import { Modals, openModal } from '../js/modals.js'
@@ -25,6 +25,8 @@ const projectedWeightDisplay = computed(() => {
 
 const projectedWeightUnit = computed(() => (store.weightUnit === 'lb' ? 'lb' : 'kg'))
 const dayLocked = computed(() => store.allowPreviousDayLocking && view.logDate < new Date().toISOString().slice(0, 10))
+const mobileActionsOpen = ref(false)
+const mobileActionStartY = ref(null)
 
 watch(dayLocked, (locked) => {
   if (locked) finishDashboardEdit()
@@ -33,6 +35,27 @@ watch(dayLocked, (locked) => {
 function finishDashboardEdit() {
   clearDragState()
   view.dashboardEditMode = false
+}
+
+function toggleMobileActions() {
+  mobileActionsOpen.value = !mobileActionsOpen.value
+}
+
+function startMobileActionSwipe(event) {
+  mobileActionStartY.value = event.changedTouches[0]?.clientY ?? null
+}
+
+function endMobileActionSwipe(event) {
+  if (mobileActionStartY.value === null) return
+  const endY = event.changedTouches[0]?.clientY ?? mobileActionStartY.value
+  const deltaY = endY - mobileActionStartY.value
+  mobileActionStartY.value = null
+  if (Math.abs(deltaY) < 40) return
+  mobileActionsOpen.value = deltaY < 0
+}
+
+function closeMobileActions() {
+  mobileActionsOpen.value = false
 }
 </script>
 
@@ -59,18 +82,13 @@ function finishDashboardEdit() {
     </div>
 
     <div class="dashboard-edit-toolbar">
-      <button v-if="!view.dashboardEditMode && !dayLocked" class="manage-toggle group-add-button" type="button" @click="view.dashboardEditMode = true">
+      <button v-if="!view.dashboardEditMode && !dayLocked" class="manage-toggle group-add-button desktop-edit-dashboard" type="button" @click="view.dashboardEditMode = true">
         ✎ Edit dashboard
       </button>
       <button v-else-if="!dayLocked" class="btn btn-primary" type="button" @click="finishDashboardEdit">
         Done
       </button>
       <span v-if="view.dashboardEditMode" class="dashboard-edit-note">Drag food handles into another group.</span>
-      <div v-if="view.dashboardEditMode" class="food-order-mode" role="group" aria-label="Food ordering mode">
-        <span>Food order</span>
-        <button type="button" :class="{ active: view.foodOrderMode === 'swap' }" @click="view.foodOrderMode = 'swap'">Swap</button>
-        <button type="button" :class="{ active: view.foodOrderMode === 'insert' }" @click="view.foodOrderMode = 'insert'">Insert</button>
-      </div>
     </div>
 
     <HistoryChart />
@@ -100,7 +118,7 @@ function finishDashboardEdit() {
     </section>
 
     <section class="manage-section">
-      <div class="manage-actions">
+      <div class="manage-actions desktop-manage-actions">
         <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.FOOD_MANAGER)">
           ✎ Foods
         </button>
@@ -110,6 +128,25 @@ function finishDashboardEdit() {
         <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.SETTINGS)">
           ⚙ Settings
         </button>
+      </div>
+    </section>
+
+    <div v-if="mobileActionsOpen" class="mobile-actions-backdrop" @click="closeMobileActions"></div>
+    <section
+      class="mobile-action-sheet"
+      :class="{ open: mobileActionsOpen }"
+      aria-label="Dashboard actions"
+      @touchstart.passive="startMobileActionSwipe"
+      @touchend.passive="endMobileActionSwipe"
+    >
+      <button class="mobile-action-handle" type="button" aria-label="Show dashboard actions" @click="toggleMobileActions">
+        <span aria-hidden="true">⌃</span> Manage
+      </button>
+      <div v-if="mobileActionsOpen" class="mobile-action-list">
+        <button type="button" @click="openModal(Modals.FOOD_MANAGER); closeMobileActions()">✎ Foods</button>
+        <button type="button" @click="openModal(Modals.GROUP_MANAGER); closeMobileActions()">✎ Groups</button>
+        <button type="button" @click="openModal(Modals.SETTINGS); closeMobileActions()">⚙ Settings</button>
+        <button v-if="!view.dashboardEditMode && !dayLocked" type="button" @click="view.dashboardEditMode = true; closeMobileActions()">✎ Edit dashboard</button>
       </div>
     </section>
 
@@ -165,32 +202,6 @@ function finishDashboardEdit() {
   background: transparent;
   color: var(--green);
   font: inherit;
-  font-weight: 700;
-}
-
-.food-order-mode {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--ink-muted);
-  font-size: 12px;
-}
-
-.food-order-mode button {
-  padding: 4px 8px;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--ink-muted);
-  font: inherit;
-}
-
-.food-order-mode button:first-of-type { border-radius: 6px 0 0 6px; }
-.food-order-mode button:last-of-type { border-radius: 0 6px 6px 0; }
-
-.food-order-mode button.active {
-  border-color: var(--green);
-  background: var(--green-soft);
-  color: var(--green-strong);
   font-weight: 700;
 }
 
@@ -273,6 +284,79 @@ function finishDashboardEdit() {
 
 .manage-toggle:hover {
   color: var(--green-strong);
+}
+
+.mobile-action-sheet,
+.mobile-actions-backdrop {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .desktop-manage-actions {
+    display: none;
+  }
+
+  .desktop-edit-dashboard {
+    display: none;
+  }
+
+  .mobile-actions-backdrop {
+    position: fixed;
+    inset: 0;
+    display: block;
+    background: rgba(var(--backdrop-rgb), 0.28);
+    z-index: 20;
+  }
+
+  .mobile-action-sheet {
+    position: fixed;
+    right: 12px;
+    bottom: 0;
+    left: 12px;
+    display: block;
+    padding-bottom: env(safe-area-inset-bottom);
+    border: 1px solid var(--line);
+    border-bottom: 0;
+    border-radius: 14px 14px 0 0;
+    background: var(--surface);
+    box-shadow: 0 -5px 20px rgba(var(--shadow-rgb), 0.14);
+    transform: translateY(calc(100% - 42px));
+    transition: transform 0.2s ease;
+    z-index: 21;
+  }
+
+  .mobile-action-sheet.open {
+    transform: translateY(0);
+  }
+
+  .mobile-action-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: 100%;
+    min-height: 42px;
+    border: 0;
+    background: transparent;
+    color: var(--green);
+    font-weight: 700;
+  }
+
+  .mobile-action-list {
+    display: grid;
+    gap: 6px;
+    padding: 0 10px 12px;
+  }
+
+  .mobile-action-list button {
+    min-height: 42px;
+    padding: 9px 12px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--surface-alt);
+    color: var(--ink);
+    text-align: left;
+  }
 }
 
 </style>

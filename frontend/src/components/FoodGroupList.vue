@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import FoodQuantityStepper from './FoodQuantityStepper.vue'
-import { state as store, addLogFood, bumpLogEntry, logEntries, foodsInGroup, foodKcal, moveFoodToGroupEnd, reorderFood, insertFood, reorderGroups, updateGroup, deleteGroup, toggleGroupVisibility, UNCATEGORIZED_GROUP_ID } from '../js/data.js'
+import { state as store, addLogFood, bumpLogEntry, logEntries, foodsInGroup, foodKcal, moveFoodToGroupEnd, insertFood, reorderGroups, deleteGroup, toggleGroupVisibility, UNCATEGORIZED_GROUP_ID } from '../js/data.js'
 import { view, clearDragState } from '../js/ui.js'
 import { Modals, openModal } from '../js/modals.js'
 import { confirmAction } from '../js/confirm.js'
@@ -9,8 +9,6 @@ import { confirmAction } from '../js/confirm.js'
 const props = defineProps({ group: { type: Object, required: true }, log: { type: Object, required: true }, editMode: { type: Boolean, default: false }, locked: { type: Boolean, default: false } })
 const dragOver = ref(false)
 const showAll = ref(false)
-const editingGroupName = ref(false)
-const groupNameDraft = ref('')
 const foods = computed(() => foodsInGroup(props.group.id))
 const entries = computed(() => logEntries(props.log).filter((entry) => entry.groupId === props.group.id))
 const visibleFoods = computed(() => showAll.value ? foods.value : foods.value.slice(0, 10))
@@ -19,7 +17,6 @@ const hasMore = computed(() => !showAll.value && visibleFoods.value.length < foo
 watch(() => props.editMode, (isEditing) => {
   if (!isEditing) {
     dragOver.value = false
-    editingGroupName.value = false
   }
 })
 
@@ -40,24 +37,13 @@ function startDrag(foodId, event) {
 function dropFood(targetGroupId = props.group.id) {
   const draggedFood = store.foods.find((food) => food.id === view.draggedFoodId)
   if (view.draggedFoodId && view.draggedOverFoodId && draggedFood?.groupId === targetGroupId) {
-    if (view.foodOrderMode === 'insert') insertFood(view.draggedFoodId, view.draggedOverFoodId)
-    else reorderFood(view.draggedFoodId, view.draggedOverFoodId)
+    insertFood(view.draggedFoodId, view.draggedOverFoodId)
   } else if (view.draggedFoodId) {
     moveFoodToGroupEnd(view.draggedFoodId, targetGroupId)
   }
   view.draggedFoodId = ''
   view.draggedOverFoodId = ''
   dragOver.value = false
-}
-function beginGroupNameEdit() {
-  if (props.group.id === 'group-uncategorized') return
-  groupNameDraft.value = props.group.name
-  editingGroupName.value = true
-}
-function saveGroupName() {
-  if (!editingGroupName.value) return
-  updateGroup(props.group.id, groupNameDraft.value)
-  editingGroupName.value = false
 }
 async function removeGroup() {
   const ok = await confirmAction({
@@ -66,9 +52,6 @@ async function removeGroup() {
     okLabel: 'Delete group',
   })
   if (ok) deleteGroup(props.group.id)
-}
-function handleHeaderClick(event) {
-  if (editingGroupName.value && event.target.tagName !== 'INPUT') saveGroupName()
 }
 function endDrag() {
   view.draggedFoodId = ''
@@ -83,33 +66,13 @@ function moveGroup(direction) {
 </script>
 
 <template>
-  <div class="today-chips" @click="handleHeaderClick">
+  <div class="today-chips">
     <div class="chip-group" :class="{ 'dashboard-drop-target': editMode, 'dashboard-drop-active': dragOver, 'dashboard-locked': locked }"
       @dragover.prevent="editMode && (dragOver = true)" @dragleave="dragOver = false" @drop.prevent="editMode && view.dragType === 'food' && dropFood(group.id)">
       <div class="chip-group-header">
         <span class="chip-group-header">
           <i class="group-header-swatch" :class="`group-${store.groups.findIndex((item) => item.id === group.id) % 5}`"></i>
-          <input
-            v-if="editingGroupName"
-            v-model="groupNameDraft"
-            class="group-name-input"
-            aria-label="Group name"
-            @click.stop
-            @keydown.enter.prevent="saveGroupName"
-            @keydown.esc="editingGroupName = false"
-            @blur="saveGroupName"
-          />
-          <span v-else class="chip-group-header-name" role="button" tabindex="0" @click.stop="openModal(Modals.FOOD_MANAGER, { groupId: group.id })" @keydown.enter.prevent.stop="openModal(Modals.FOOD_MANAGER, { groupId: group.id })" @keydown.space.prevent.stop="openModal(Modals.FOOD_MANAGER, { groupId: group.id })">{{ group.name }}</span>
-          <button
-            v-if="editMode && group.id !== 'group-uncategorized'"
-            type="button"
-            class="group-edit-button"
-            :aria-label="`Edit ${group.name} name`"
-            title="Edit group name"
-            @click.stop="beginGroupNameEdit"
-          >
-            ✎
-          </button>
+          <span class="chip-group-header-name" role="button" tabindex="0" @click.stop="openModal(Modals.FOOD_MANAGER, { groupId: group.id })" @keydown.enter.prevent.stop="openModal(Modals.FOOD_MANAGER, { groupId: group.id })" @keydown.space.prevent.stop="openModal(Modals.FOOD_MANAGER, { groupId: group.id })">{{ group.name }}</span>
           <button
             v-if="editMode"
             type="button"
@@ -125,7 +88,7 @@ function moveGroup(direction) {
             :aria-label="`Delete ${group.name}`"
             title="Delete group"
             @click.stop="removeGroup"
-          >× Delete group</button>
+          >Delete</button>
         </span>
         <span class="group-header-actions">
           <button
@@ -223,22 +186,6 @@ function moveGroup(direction) {
   color: var(--green-strong);
   text-decoration-color: currentColor;
   outline: none;
-}
-
-.group-edit-button {
-  margin-left: 4px;
-  padding: 2px 4px;
-  border: 0;
-  border-radius: 5px;
-  background: transparent;
-  color: var(--ink-muted);
-  font-size: 12px;
-  line-height: 1;
-}
-
-.group-edit-button:hover {
-  background: var(--surface-alt);
-  color: var(--green);
 }
 
 .group-visibility-button {
@@ -342,25 +289,6 @@ function moveGroup(direction) {
 
 .dashboard-group-drag-active {
   background: var(--surface-alt);
-}
-
-.group-name-input {
-  width: min(220px, 60vw);
-  padding: 3px 6px;
-  border: 1px solid var(--green-light);
-  border-radius: 6px;
-  background: var(--surface);
-  color: var(--ink);
-  font: inherit;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.group-name-input:focus {
-  outline: 2px solid var(--green);
-  outline-offset: 1px;
 }
 
 .dashboard-drop-target {

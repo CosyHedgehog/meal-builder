@@ -17,6 +17,11 @@ const filteredFoods = computed(() => {
   const value = query.value.trim().toLowerCase()
   return value ? foods.value.filter((food) => food.name.toLowerCase().includes(value)) : foods.value
 })
+function foodLogCount(foodId) {
+  return Object.values(store.logs).reduce((count, log) => count + (log.entries || [])
+    .filter((entry) => entry.foodId === foodId)
+    .reduce((total, entry) => total + (Number(entry.qty) || 0), 0), 0)
+}
 const dragDisabled = computed(() => !selectedGroupId.value || !!query.value.trim() || filteredFoods.value.length < 2)
 
 function openEditor(food = null) {
@@ -26,7 +31,11 @@ function reorder(fromId, toId) {
   reorderItems('foods', fromId, toId)
 }
 async function removeFood(food) {
-  const ok = await confirmAction({ title: 'Delete food', message: `Delete "${food.name}"?`, okLabel: 'Delete food' })
+  const logCount = foodLogCount(food.id)
+  const message = logCount
+    ? `"${food.name}" is logged ${logCount} time${logCount === 1 ? '' : 's'}. Deleting it will remove those log entries and change your calorie history. Continue?`
+    : `Delete "${food.name}"?`
+  const ok = await confirmAction({ title: 'Delete food', message, okLabel: 'Delete food' })
   if (ok) deleteFood(food.id)
 }
 </script>
@@ -64,6 +73,7 @@ async function removeFood(food) {
                 <strong>{{ item.name }}</strong>
                 <small>
                   {{ foodKcal(item).toLocaleString() }} kcal · {{ item.items.length ? `${item.items.length} ingredient${item.items.length === 1 ? '' : 's'}` : 'simple food' }}
+                  · {{ foodLogCount(item.id) }} log{{ foodLogCount(item.id) === 1 ? '' : 's' }}
                   <template v-if="!selectedGroupId"> · {{ groupNames.get(item.groupId) || 'Uncategorized' }}</template>
                 </small>
               </span>

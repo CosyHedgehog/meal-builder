@@ -143,10 +143,9 @@ async function closeEditor() {
       <section v-if="foodMode === 'ingredients'" class="food-ingredients-section">
         <div v-if="draft.items.length" class="meal-section-heading">
           <div>
-            <div class="meal-section-label">Ingredients <span class="meal-section-note">[{{ draft.items.length }} added]</span></div>
+            <div class="meal-section-label">Ingredients <span class="meal-section-note">({{ draft.items.length }} added)</span></div>
           </div>
           <div class="food-total" aria-label="Calculated food calorie total">
-            <span>Calculated total</span>
             <strong>{{ totalKcal.toLocaleString() }} <small>kcal</small></strong>
           </div>
         </div>
@@ -190,7 +189,7 @@ async function closeEditor() {
               :class="{ 'has-selection': pendingIngredientId }"
               @click="openModal(Modals.INGREDIENT_PICKER, { excludedIds: [...usedIds], selectedId: pendingIngredientId, onSelect: selectIngredient })"
             >
-              {{ getIngredient(pendingIngredientId)?.name || '🔎︎ Choose an ingredient...' }}
+              {{ getIngredient(pendingIngredientId)?.name || 'Select...' }}
             </button>
           </div>
           <input
@@ -417,7 +416,7 @@ async function closeEditor() {
 }
 
 .meal-section-heading .meal-section-note {
-  color: var(--ink-muted);
+  color: var(--ink);
   font-size: 12px;
   font-weight: 400;
   letter-spacing: 0;
