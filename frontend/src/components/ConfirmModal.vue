@@ -29,7 +29,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
         >
           {{ confirmState.cancelLabel }}
         </button>
-        <button class="btn btn-danger-outline" @click="settleConfirm(true)">
+        <button class="btn" :class="confirmState.okClass" @click="settleConfirm(true)">
           {{ confirmState.okLabel }}
         </button>
       </div>

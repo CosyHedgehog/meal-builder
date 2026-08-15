@@ -108,6 +108,12 @@ function choose(ingredient) {
   border-radius: 12px;
 }
 
+@media (max-width: 480px) {
+  .ingredient-picker-list {
+    max-height: 62dvh;
+  }
+}
+
 .ingredient-picker-option {
   display: flex;
   align-items: center;

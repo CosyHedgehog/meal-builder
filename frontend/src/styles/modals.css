@@ -46,6 +46,10 @@
   margin-bottom: 14px;
 }
 
+.modal>.subtitle-preserve-lines {
+  white-space: pre-line;
+}
+
 .modal-close {
   position: absolute;
   top: 18px;

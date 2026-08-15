@@ -132,31 +132,36 @@ function downloadJSON(filename, payload) {
 .settings-sections {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .settings-section {
-  padding-top: 2px;
+  padding: 12px 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 88%, var(--surface-alt));
 }
 
 .settings-section > :not(.section-label) {
-  margin-right: 8px;
-  margin-left: 8px;
+  margin-right: 0;
+  margin-left: 0;
 }
 
 .settings-section .section-label {
-  padding: 0 8px;
+  padding: 0;
 }
 
 .settings-section + .settings-section {
-  padding-top: 4px;
+  padding-top: 12px;
 }
 
 .settings-section .section-label {
-  margin: 0 0 7px;
+  margin: 0 0 10px;
   color: var(--ink);
   font-size: 11px;
   font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .settings-account {
@@ -192,9 +197,11 @@ function downloadJSON(filename, payload) {
 
 .settings-info-note {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
-  margin: 8px 0 2px;
+  margin: 9px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
   color: var(--ink-muted);
   font-size: 11px;
   line-height: 1.4;

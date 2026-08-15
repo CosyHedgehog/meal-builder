@@ -24,11 +24,27 @@ const draft = reactive({
 })
 const { confirmDiscard } = useDiscardChanges(draft)
 
-function submit() {
+async function submit() {
   const value = parseFloat(draft.kcal)
   if (!draft.name.trim() || !Number.isFinite(value) || value < 0) return
   if (isNew) addIngredient({ name: draft.name, unit: draft.unit, kcal: value })
-  else updateIngredient(props.ingredientId, { name: draft.name, unit: draft.unit, kcal: value })
+  else {
+    const usedIn = ingredientUsage(props.ingredientId)
+    const hasChanges = draft.name.trim() !== existing.name
+      || draft.unit !== existing.unit
+      || value !== existing.kcal
+    if (usedIn.length && hasChanges) {
+      const foodNames = usedIn.map((food) => food.name).join(', ')
+      const ok = await confirmAction({
+        title: 'Update used ingredient?',
+        message: `Used in ${usedIn.length} saved food${usedIn.length === 1 ? '' : 's'}:\n${foodNames}\n\nSaving will update these foods and logs where they are selected. Continue?`,
+        okLabel: 'Update ingredient',
+        okClass: 'btn-primary',
+      })
+      if (!ok) return
+    }
+    updateIngredient(props.ingredientId, { name: draft.name, unit: draft.unit, kcal: value })
+  }
   emit('close')
 }
 

@@ -24,6 +24,7 @@ const draft = reactive({
 const foodMode = ref(source?.mode || (source && source.items.length ? 'ingredients' : 'simple'))
 const pendingIngredientId = ref('')
 const pendingQty = ref('')
+const modeSwipeStart = ref(null)
 const { isDirty, confirmDiscard: confirmDraftDiscard } = useDiscardChanges(draft)
 const isDraftCopy = computed(() => props.duplicate && !isNew)
 
@@ -57,6 +58,21 @@ function selectIngredient(ingredientId) {
 function setFoodMode(mode) {
   foodMode.value = mode
   validationMessage.value = ''
+}
+
+function startModeSwipe(event) {
+  const touch = event.changedTouches[0]
+  modeSwipeStart.value = touch ? { x: touch.clientX, y: touch.clientY } : null
+}
+
+function endModeSwipe(event) {
+  if (!modeSwipeStart.value) return
+  const touch = event.changedTouches[0]
+  const deltaX = touch.clientX - modeSwipeStart.value.x
+  const deltaY = touch.clientY - modeSwipeStart.value.y
+  modeSwipeStart.value = null
+  if (Math.abs(deltaX) < 50 || Math.abs(deltaX) <= Math.abs(deltaY)) return
+  setFoodMode(deltaX < 0 ? 'simple' : 'ingredients')
 }
 
 async function removeRow(ingredientId) {
@@ -112,21 +128,27 @@ async function closeEditor() {
 
 <template>
   <BaseModal :title="isNew ? 'New food' : `Edit ${draft.name}`"
-    subtitle="Create or update a food using ingredients or fixed calories." @close="closeEditor">
+    subtitle="Create or update a food using ingredients or fixed calories."
+    panel-class="food-editor-modal"
+    :on-touch-start="startModeSwipe"
+    :on-touch-end="endModeSwipe"
+    @close="closeEditor">
     <div class="food-editor-content">
       <div v-if="isDraftCopy" class="copy-food-badge">COPY OF EXISTING FOOD</div>
-      <div class="input-field food-field">
-        <label for="foodName">Name</label>
-        <input id="foodName" v-model="draft.name" placeholder="New food" />
-      </div>
-      <div class="input-field food-field">
-        <div class="food-group-label-row">
-          <label for="foodGroup">Group</label>
+      <div class="food-details-row">
+        <div class="input-field food-field">
+          <label for="foodName">Name</label>
+          <input id="foodName" v-model="draft.name" placeholder="New food" />
         </div>
-        <select id="foodGroup" v-model="draft.groupId">
-          <option value="" disabled hidden>Select a group...</option>
-          <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
-        </select>
+        <div class="input-field food-field">
+          <div class="food-group-label-row">
+            <label for="foodGroup">Group</label>
+          </div>
+          <select id="foodGroup" v-model="draft.groupId">
+            <option value="" disabled hidden>Select a group...</option>
+            <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
+          </select>
+        </div>
       </div>
 
       <div class="food-mode-control">
@@ -242,6 +264,12 @@ async function closeEditor() {
 
 .food-field {
   margin-bottom: 8px;
+}
+
+.food-details-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
 }
 
 .food-group-label-row {
