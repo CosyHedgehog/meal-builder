@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { state as store, getLog, logEntries } from '../js/data.js'
 import { view, clearDragState } from '../js/ui.js'
 import { Modals, openModal } from '../js/modals.js'
@@ -39,7 +39,12 @@ function finishDashboardEdit() {
 }
 
 function toggleMobileActions() {
-  mobileActionsOpen.value = !mobileActionsOpen.value
+  if (mobileActionsOpen.value) {
+    closeMobileActions()
+    return
+  }
+  mobileActionsOpen.value = true
+  history.pushState({ mealBuilderActions: true }, '')
 }
 
 function startMobileActionSwipe(event) {
@@ -58,6 +63,15 @@ function endMobileActionSwipe(event) {
 function closeMobileActions() {
   mobileActionsOpen.value = false
 }
+
+function onMobileActionsPopState() {
+  if (!mobileActionsOpen.value) return
+  mobileActionsOpen.value = false
+  history.replaceState(null, '', location.href)
+}
+
+onMounted(() => window.addEventListener('popstate', onMobileActionsPopState))
+onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState))
 </script>
 
 <template>
@@ -144,7 +158,7 @@ function closeMobileActions() {
       @touchstart.passive="startMobileActionSwipe" @touchend.passive="endMobileActionSwipe">
       <button class="mobile-action-handle" type="button" aria-label="Show dashboard actions"
         @click="toggleMobileActions">
-        <span aria-hidden="true">↑</span> Manage
+        <span aria-hidden="true">{{ mobileActionsOpen ? '↓' : '↑' }}</span> Manage
       </button>
       <div v-if="mobileActionsOpen" class="mobile-action-list">
         <button type="button" @click="openModal(Modals.HISTORY); closeMobileActions()">◷ Summary</button>
