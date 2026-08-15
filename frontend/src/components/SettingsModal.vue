@@ -132,16 +132,24 @@ function downloadJSON(filename, payload) {
 .settings-sections {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
 }
 
 .settings-section {
   padding-top: 2px;
 }
 
+.settings-section > :not(.section-label) {
+  margin-right: 8px;
+  margin-left: 8px;
+}
+
+.settings-section .section-label {
+  padding: 0 8px;
+}
+
 .settings-section + .settings-section {
-  border-top: 1px solid var(--line);
-  padding-top: 10px;
+  padding-top: 4px;
 }
 
 .settings-section .section-label {
