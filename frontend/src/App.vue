@@ -29,6 +29,7 @@ function shiftDay(amount) {
 
 function onTouchStart(event) {
   if (!auth.user || !store.loaded) return
+  if (event.target.closest('.mobile-action-sheet, .modal, .modal-backdrop, .mobile-actions-backdrop')) return
   const touch = event.changedTouches[0]
   swipeStart.value = { x: touch.clientX, y: touch.clientY }
 }

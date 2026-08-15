@@ -38,13 +38,22 @@ function finishDashboardEdit() {
   view.dashboardEditMode = false
 }
 
+function openMobileActions() {
+  if (mobileActionsOpen.value) return
+  mobileActionsOpen.value = true
+  history.pushState({ mealBuilderActions: true }, '')
+}
+
+function closeMobileActions() {
+  mobileActionsOpen.value = false
+}
+
 function toggleMobileActions() {
   if (mobileActionsOpen.value) {
     closeMobileActions()
-    return
+  } else {
+    openMobileActions()
   }
-  mobileActionsOpen.value = true
-  history.pushState({ mealBuilderActions: true }, '')
 }
 
 function startMobileActionSwipe(event) {
@@ -56,14 +65,9 @@ function endMobileActionSwipe(event) {
   const endY = event.changedTouches[0]?.clientY ?? mobileActionStartY.value
   const deltaY = endY - mobileActionStartY.value
   mobileActionStartY.value = null
-  if (Math.abs(deltaY) >= 40) event.preventDefault()
   if (Math.abs(deltaY) < 40) return
-  if (deltaY < 0) mobileActionsOpen.value = true
+  if (deltaY < 0) openMobileActions()
   else if (mobileActionsOpen.value) closeMobileActions()
-}
-
-function closeMobileActions() {
-  mobileActionsOpen.value = false
 }
 
 function onMobileActionsPopState() {
@@ -156,18 +160,18 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
         </button>
       </div>
     </section>
-    <div v-if="mobileActionsOpen" class="mobile-actions-backdrop" @click="closeMobileActions"></div>
+    <div v-if="mobileActionsOpen" class="mobile-actions-backdrop" @click="closeMobileActions" @touchmove.prevent></div>
     <section class="mobile-action-sheet" :class="{ open: mobileActionsOpen }" aria-label="Dashboard actions"
-      @touchstart="startMobileActionSwipe" @touchend="endMobileActionSwipe">
+      @touchstart="startMobileActionSwipe" @touchmove.prevent @touchend="endMobileActionSwipe">
       <button class="mobile-action-handle" type="button" aria-label="Show dashboard actions"
         @click="toggleMobileActions">
         <span aria-hidden="true">{{ mobileActionsOpen ? '↓' : '↑' }}</span> Manage
       </button>
-      <div v-if="mobileActionsOpen" class="mobile-action-list">
-        <button type="button" @click="openModal(Modals.HISTORY); closeMobileActions()">◷ Summary</button>
-        <button type="button" @click="openModal(Modals.FOOD_MANAGER); closeMobileActions()">✎ Foods</button>
-        <button type="button" @click="openModal(Modals.GROUP_MANAGER); closeMobileActions()">✎ Groups</button>
-        <button type="button" @click="openModal(Modals.SETTINGS); closeMobileActions()">⚙ Settings</button>
+      <div class="mobile-action-list" :aria-hidden="!mobileActionsOpen">
+        <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openModal(Modals.HISTORY); closeMobileActions()">◷ Summary</button>
+        <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openModal(Modals.FOOD_MANAGER); closeMobileActions()">✎ Foods</button>
+        <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openModal(Modals.GROUP_MANAGER); closeMobileActions()">✎ Groups</button>
+        <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openModal(Modals.SETTINGS); closeMobileActions()">⚙ Settings</button>
       </div>
     </section>
 
@@ -397,6 +401,8 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
     inset: 0;
     display: block;
     background: rgba(var(--backdrop-rgb), 0.28);
+    touch-action: none;
+    overscroll-behavior: contain;
     z-index: 20;
   }
 
@@ -415,6 +421,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
     transform: translateY(calc(100% - 36px));
     transition: transform 0.2s ease;
     touch-action: none;
+    overscroll-behavior: contain;
     pointer-events: none;
     z-index: 21;
   }
@@ -426,9 +433,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
 
   .mobile-action-handle {
     pointer-events: auto;
-  }
-
-  .mobile-action-handle {
+    touch-action: none;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -455,6 +460,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
     background: var(--surface-alt);
     color: var(--ink);
     text-align: left;
+    touch-action: manipulation;
   }
 }
 </style>
