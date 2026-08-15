@@ -44,13 +44,18 @@ async function removeFood(food) {
   <BaseModal title="Foods" subtitle="Manage reusable foods made from ingredients or fixed calories." @close="emit('close')" @back="selectedGroupId ? replaceModal(Modals.GROUP_MANAGER) : replaceModal(Modals.INGREDIENT_MANAGER)">
     <div class="manager-group">
       <button class="btn btn-primary btn-full" type="button" @click="openEditor()">＋ New food</button>
-      <div class="food-browse-label">Browse foods</div>
       <div class="food-filters">
-        <select v-model="selectedGroupId" class="manager-filter" aria-label="Filter foods by group">
-          <option value="">All groups</option>
-          <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
-        </select>
-        <input v-model="query" class="manager-search" type="search" placeholder="Search foods..." />
+        <label class="food-filter-field">
+          <span>Filter</span>
+          <select v-model="selectedGroupId" class="manager-filter" aria-label="Filter foods by group">
+            <option value="">All groups</option>
+            <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
+          </select>
+        </label>
+        <label class="food-filter-field">
+          <span>Search</span>
+          <input v-model="query" class="manager-search" type="search" placeholder="Search foods..." />
+        </label>
       </div>
       <div class="food-list-meta">
         <div class="food-count">{{ filteredFoods.length }} food{{ filteredFoods.length === 1 ? '' : 's' }}</div>
@@ -107,7 +112,19 @@ async function removeFood(food) {
   display: grid;
   grid-template-columns: minmax(130px, 0.7fr) minmax(0, 1.3fr);
   gap: 8px;
-  margin-top: 6px;
+  margin-top: 12px;
+}
+
+.food-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  color: var(--ink-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .food-browse-label {
