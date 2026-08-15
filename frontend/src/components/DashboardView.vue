@@ -474,7 +474,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
     position: fixed;
     inset: 0;
     display: block;
-    background: rgba(var(--backdrop-rgb), 0.28);
+    background: rgba(var(--backdrop-rgb), 0.65);
     touch-action: none;
     overscroll-behavior: contain;
     z-index: 20;
