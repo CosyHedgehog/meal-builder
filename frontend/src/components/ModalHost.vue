@@ -38,19 +38,28 @@ function onPopState() {
   if (modalStack.length) closeModal()
 }
 
+function updateWindowLock() {
+  const isLocked = modalStack.length > 0 || confirmState.open
+  document.documentElement.style.overflow = isLocked ? 'hidden' : ''
+  document.body.style.overflow = isLocked ? 'hidden' : ''
+}
+
 watch(
   () => modalStack.length,
   (length, previousLength) => {
-    document.body.style.overflow = length ? 'hidden' : ''
-    if (length > previousLength) history.pushState({ mealBuilderModal: true }, '')
-    else if (!length && previousLength) history.replaceState(null, '', location.href)
+    updateWindowLock()
+    if (length > (previousLength ?? 0)) history.pushState({ mealBuilderModal: true }, '')
+    else if (!length && (previousLength ?? 0)) history.replaceState(null, '', location.href)
   },
 )
+
+watch(() => confirmState.open, updateWindowLock)
 
 onMounted(() => document.addEventListener('keydown', onKeydown))
 onUnmounted(() => {
   document.removeEventListener('keydown', onKeydown)
   window.removeEventListener('popstate', onPopState)
+  document.documentElement.style.overflow = ''
   document.body.style.overflow = ''
 })
 window.addEventListener('popstate', onPopState)
