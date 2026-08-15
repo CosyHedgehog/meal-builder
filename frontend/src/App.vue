@@ -10,6 +10,7 @@ import ModalHost from './components/ModalHost.vue'
 import ConfirmModal from './components/ConfirmModal.vue'
 
 const swipeStart = ref(null)
+const dateSlideDirection = ref('')
 
 function flushOnHide() {
   if (document.visibilityState === 'hidden') flushSave()
@@ -24,7 +25,10 @@ onUnmounted(() => document.removeEventListener('visibilitychange', flushOnHide))
 
 function shiftDay(amount) {
   const next = shiftDateStr(view.logDate, amount)
-  if (next <= todayStr()) setLogDate(next)
+  if (next <= todayStr()) {
+    dateSlideDirection.value = amount > 0 ? 'slide-left' : 'slide-right'
+    setLogDate(next)
+  }
 }
 
 function onTouchStart(event) {
@@ -49,7 +53,10 @@ function onTouchEnd(event) {
     <div class="app-shell">
       <div v-if="!auth.ready" class="loading-state">Loading your pantry…</div>
       <AuthView v-else-if="!auth.user" />
-      <DashboardView v-else-if="store.loaded" />
+      <div v-else-if="store.loaded" class="date-slide-content" :class="dateSlideDirection"
+        @animationend="dateSlideDirection = ''">
+        <DashboardView />
+      </div>
       <div v-else class="loading-state">Loading your pantry…</div>
     </div>
   </div>

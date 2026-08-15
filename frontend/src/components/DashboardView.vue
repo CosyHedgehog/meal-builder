@@ -78,7 +78,8 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
 
 <template>
   <div class="home">
-    <DateNav />
+    <div class="date-slide-content">
+      <DateNav />
 
     <section class="today-card">
       <CalorieSummary :log="log" />
@@ -157,6 +158,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
         </button>
       </div>
     </section>
+    </div>
     <div v-if="mobileActionsOpen" class="mobile-actions-backdrop" @click="closeMobileActions"></div>
     <section class="mobile-action-sheet" :class="{ open: mobileActionsOpen }" aria-label="Dashboard actions"
       @touchstart="startMobileActionSwipe" @touchend="endMobileActionSwipe">
