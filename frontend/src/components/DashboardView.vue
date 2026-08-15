@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { state as store, getLog, logEntries } from '../js/data.js'
-import { view, clearDragState, getCollapseState, setCollapseState } from '../js/ui.js'
+import { view, clearDragState, getCollapseState, setCollapseState, dateNavDirection, boundaryBounce } from '../js/ui.js'
 import { Modals, openModal } from '../js/modals.js'
 import DateNav from './DateNav.vue'
 import CalorieSummary from './CalorieSummary.vue'
@@ -84,25 +84,29 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
   <div class="home">
     <DateNav />
 
-    <section class="today-card">
-      <CalorieSummary :log="log" />
-    </section>
+    <Transition :name="`day-slide-${dateNavDirection}`" mode="out-in">
+      <div :key="view.logDate" class="day-flow" :class="{ 'boundary-bounce': boundaryBounce }">
+        <section class="today-card">
+          <CalorieSummary :log="log" />
+        </section>
 
-    <div v-if="hiddenLoggedGroups.length" class="hidden-food-note">
-      <span class="hidden-food-note-icon" aria-hidden="true">ⓘ</span>
-      <span>Food logged in hidden group{{ hiddenLoggedGroups.length === 1 ? '' : 's' }}: {{
-        hiddenLoggedGroups.map((group) => group.name).join(', ')}}. <button type="button"
-          @click="openModal(Modals.GROUP_MANAGER)">Manage groups</button></span>
-    </div>
+        <div v-if="hiddenLoggedGroups.length" class="hidden-food-note">
+          <span class="hidden-food-note-icon" aria-hidden="true">ⓘ</span>
+          <span>Food logged in hidden group{{ hiddenLoggedGroups.length === 1 ? '' : 's' }}: {{
+            hiddenLoggedGroups.map((group) => group.name).join(', ')}}. <button type="button"
+              @click="openModal(Modals.GROUP_MANAGER)">Manage groups</button></span>
+        </div>
 
-    <div v-if="dayLocked" class="locked-day-note">
-      <span aria-hidden="true">🔒</span>
-        <span>Past day foods can't be selected. <button type="button" @click="openModal(Modals.SETTINGS)">Edit in Settings</button></span>
-    </div>
+        <div v-if="dayLocked" class="locked-day-note">
+          <span aria-hidden="true">🔒</span>
+            <span>Past day foods can't be selected. <button type="button" @click="openModal(Modals.SETTINGS)">Edit in Settings</button></span>
+        </div>
 
-    <section v-for="group in groups" :key="group.id" class="today-group-card">
-      <FoodGroupList :group="group" :log="log" :edit-mode="view.dashboardEditMode && !dayLocked" :locked="dayLocked" />
-    </section>
+        <section v-for="group in groups" :key="group.id" class="today-group-card">
+          <FoodGroupList :group="group" :log="log" :edit-mode="view.dashboardEditMode && !dayLocked" :locked="dayLocked" />
+        </section>
+      </div>
+    </Transition>
     <div class="desktop-history-section history-panel-layout">
       <div class="history-panel-heading">
         <div class="history-panel-title">
@@ -183,6 +187,70 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.day-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  will-change: transform, opacity;
+}
+
+/* Slide Left (Next day / Swipe left / Time forward) */
+.day-slide-next-enter-from {
+  opacity: 0;
+  transform: translateX(28px);
+}
+.day-slide-next-leave-to {
+  opacity: 0;
+  transform: translateX(-28px);
+}
+
+/* Slide Right (Previous day / Swipe right / Time backward) */
+.day-slide-prev-enter-from {
+  opacity: 0;
+  transform: translateX(-28px);
+}
+.day-slide-prev-leave-to {
+  opacity: 0;
+  transform: translateX(28px);
+}
+
+.day-slide-next-enter-active,
+.day-slide-prev-enter-active {
+  transition: transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.16s ease-out;
+}
+
+.day-slide-next-leave-active,
+.day-slide-prev-leave-active {
+  transition: transform 0.12s ease-in, opacity 0.12s ease-in;
+}
+
+/* Boundary bounce when trying to swipe forward past today */
+@keyframes boundaryNudge {
+  0% { transform: translateX(0); }
+  28% { transform: translateX(-10px); }
+  60% { transform: translateX(5px); }
+  82% { transform: translateX(-2px); }
+  100% { transform: translateX(0); }
+}
+
+.boundary-bounce {
+  animation: boundaryNudge 0.32s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .day-slide-next-enter-active,
+  .day-slide-next-leave-active,
+  .day-slide-prev-enter-active,
+  .day-slide-prev-leave-active {
+    transition: none;
+    transform: none;
+  }
+  .boundary-bounce {
+    animation: none;
+  }
 }
 
 .today-card {
@@ -375,6 +443,10 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
 }
 
 @media (max-width: 600px) {
+  .home {
+    padding-bottom: calc(52px + env(safe-area-inset-bottom));
+  }
+
   .today-card {
     width: calc(100% + 48px);
     margin-left: -24px;

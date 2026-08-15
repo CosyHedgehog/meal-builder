@@ -2,7 +2,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { state as store } from '../js/data.js'
 import { prettyDateNoYear, shiftDateStr, todayStr } from '../js/date.js'
-import { setLogDate, view } from '../js/ui.js'
+import { setLogDate, triggerDateBoundaryBounce, view } from '../js/ui.js'
 
 const dateInput = ref(null)
 const today = computed(() => todayStr())
@@ -18,7 +18,11 @@ function openPicker() {
 
 function shiftDay(amount) {
   const next = shiftDateStr(view.logDate, amount)
-  if (next <= today.value) setLogDate(next)
+  if (next <= today.value) {
+    setLogDate(next)
+  } else {
+    triggerDateBoundaryBounce()
+  }
 }
 
 function onKeydown(event) {

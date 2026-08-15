@@ -40,8 +40,24 @@ export function clearDragState() {
   view.dragType = ''
 }
 
+export const dateNavDirection = ref('next')
+export const boundaryBounce = ref(false)
+let bounceTimer = null
+
+export function triggerDateBoundaryBounce() {
+  boundaryBounce.value = true
+  if (bounceTimer) clearTimeout(bounceTimer)
+  bounceTimer = setTimeout(() => {
+    boundaryBounce.value = false
+  }, 320)
+}
+
 export function setLogDate(dateStr) {
-  view.logDate = dateStr
+  if (dateStr && dateStr !== view.logDate) {
+    dateNavDirection.value = dateStr > view.logDate ? 'next' : 'prev'
+    view.logDate = dateStr
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }
 }
 
 /* ---- theme ---- */

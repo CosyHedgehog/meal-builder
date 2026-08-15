@@ -58,6 +58,7 @@
 html {
   background: var(--bg);
   color-scheme: light;
+  overflow-x: hidden;
 }
 
 html[data-theme='dark'] {
@@ -70,6 +71,7 @@ body {
   color: var(--ink);
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
   transition:
     background 0.2s ease,
     color 0.2s ease;
@@ -77,6 +79,7 @@ body {
 
 .app-touch-surface {
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 h1,

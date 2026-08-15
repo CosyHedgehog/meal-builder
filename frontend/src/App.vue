@@ -3,7 +3,7 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import { auth, initAuth } from './js/auth.js'
 import { state as store, flushSave } from './js/data.js'
 import { shiftDateStr, todayStr } from './js/date.js'
-import { setLogDate, view } from './js/ui.js'
+import { setLogDate, triggerDateBoundaryBounce, view } from './js/ui.js'
 import AuthView from './components/AuthView.vue'
 import DashboardView from './components/DashboardView.vue'
 import ModalHost from './components/ModalHost.vue'
@@ -24,7 +24,11 @@ onUnmounted(() => document.removeEventListener('visibilitychange', flushOnHide))
 
 function shiftDay(amount) {
   const next = shiftDateStr(view.logDate, amount)
-  if (next <= todayStr()) setLogDate(next)
+  if (next <= todayStr()) {
+    setLogDate(next)
+  } else {
+    triggerDateBoundaryBounce()
+  }
 }
 
 function onTouchStart(event) {
