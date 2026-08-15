@@ -194,8 +194,10 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
   align-items: flex-start;
   gap: 6px;
   padding: 6px 8px;
+  border: 1px solid var(--line);
   border-left: 3px solid var(--orange);
-  background: var(--orange-soft);
+  border-radius: 10px;
+  background: var(--surface);
   color: var(--ink-muted);
   font-size: 11px;
   line-height: 1.4;
@@ -218,8 +220,10 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
   align-items: flex-start;
   gap: 6px;
   padding: 6px 8px;
+  border: 1px solid var(--line);
   border-left: 3px solid var(--green-light);
-  background: var(--green-soft);
+  border-radius: 10px;
+  background: var(--surface);
   color: var(--ink-muted);
   font-size: 11px;
 }
