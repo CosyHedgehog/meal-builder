@@ -7,13 +7,6 @@ const { days, bars, goalLineBottom } = useHistoryChart()
 
 <template>
   <section class="section-block history-section">
-    <div class="section-head">
-      <div>
-        <h2>History</h2>
-        <div class="muted">Last {{ days }} days</div>
-      </div>
-    </div>
-
     <div class="history-grid" :style="{ gridTemplateColumns: `repeat(${days}, minmax(0, 1fr))` }">
       <div class="history-goal-line" :style="{ bottom: goalLineBottom + 'px' }"></div>
 

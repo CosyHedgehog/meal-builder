@@ -27,6 +27,7 @@ const projectedWeightUnit = computed(() => (store.weightUnit === 'lb' ? 'lb' : '
 const dayLocked = computed(() => store.allowPreviousDayLocking && view.logDate < new Date().toISOString().slice(0, 10))
 const mobileActionsOpen = ref(false)
 const mobileActionStartY = ref(null)
+const historyCollapsed = ref(false)
 
 watch(dayLocked, (locked) => {
   if (locked) finishDashboardEdit()
@@ -69,7 +70,9 @@ function closeMobileActions() {
 
     <div v-if="hiddenLoggedGroups.length" class="hidden-food-note">
       <span class="hidden-food-note-icon" aria-hidden="true">ⓘ</span>
-      <span>Food logged in hidden group{{ hiddenLoggedGroups.length === 1 ? '' : 's' }}: {{ hiddenLoggedGroups.map((group) => group.name).join(', ') }}. <button type="button" @click="openModal(Modals.GROUP_MANAGER)">Manage groups</button></span>
+      <span>Food logged in hidden group{{ hiddenLoggedGroups.length === 1 ? '' : 's' }}: {{
+        hiddenLoggedGroups.map((group) => group.name).join(', ')}}. <button type="button"
+          @click="openModal(Modals.GROUP_MANAGER)">Manage groups</button></span>
     </div>
 
     <section v-for="group in groups" :key="group.id" class="today-group-card">
@@ -78,45 +81,43 @@ function closeMobileActions() {
 
     <div v-if="dayLocked" class="locked-day-note">
       <span aria-hidden="true">🔒</span>
-      <span>Previous days are locked. <button type="button" @click="openModal(Modals.SETTINGS)">Change in Settings</button></span>
+      <span>Previous days are locked. <button type="button" @click="openModal(Modals.SETTINGS)">Change in
+          Settings</button></span>
     </div>
+    <div class="desktop-history-section history-panel-layout">
+      <div class="history-panel-heading">
+        <button type="button" class="history-panel-toggle" :aria-expanded="!historyCollapsed"
+          aria-controls="dashboard-history-content"
+          :aria-label="`${historyCollapsed ? 'Show' : 'Hide'} history chart and summary`"
+          @click="historyCollapsed = !historyCollapsed">
+          <h2>HISTORY</h2>
+          <span class="history-panel-chevron" aria-hidden="true">{{ historyCollapsed ? '▶' : '▼' }}</span>
+        </button>
+        <div class="muted">Averages from the last {{ days }} days</div>
+      </div>
+      <div v-if="!historyCollapsed" id="dashboard-history-content" class="history-panel-content">
+        <HistoryChart />
 
-    <div class="dashboard-edit-toolbar">
-      <button v-if="!view.dashboardEditMode && !dayLocked" class="manage-toggle group-add-button desktop-edit-dashboard" type="button" @click="view.dashboardEditMode = true">
-        ✎ Edit dashboard
-      </button>
-      <button v-else-if="!dayLocked" class="btn btn-primary" type="button" @click="finishDashboardEdit">
-        Done
-      </button>
-      <span v-if="view.dashboardEditMode" class="dashboard-edit-note">Drag food handles into another group.</span>
+        <section class="history-summary section-block history-summary-card">
+          <div class="history-summary-stats">
+            <div>
+              <strong>{{ windowAverageKcal.toLocaleString() }}</strong>
+              <span>kcal / day</span>
+            </div>
+            <div :class="{ surplus: windowAverageDeficit < 0 }">
+              <strong>{{ Math.abs(windowAverageDeficit).toLocaleString() }}</strong>
+                <span>kcal {{ windowAverageDeficit >= 0 ? 'deficit' : 'surplus' }} / day</span>
+            </div>
+            <div :class="{ surplus: windowProjectedKgPerWeek < 0 }">
+              <strong v-if="projectedWeightDisplay >= 0.05">{{ projectedWeightDisplay.toFixed(1) }} {{
+                projectedWeightUnit }}</strong>
+              <strong v-else>Maintenance</strong>
+              <span>{{ windowProjectedKgPerWeek >= 0 ? 'loss' : 'gain' }} per month</span>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
-
-    <HistoryChart />
-
-    <section class="history-summary section-block">
-      <div class="section-head">
-        <div>
-          <h2>Summary</h2>
-          <div class="muted">Averages from the last {{ days }} days</div>
-        </div>
-      </div>
-      <div class="history-summary-stats">
-        <div>
-          <strong>{{ windowAverageKcal.toLocaleString() }}</strong>
-          <span>kcal</span>
-        </div>
-        <div :class="{ surplus: windowAverageDeficit < 0 }">
-          <strong>{{ Math.abs(windowAverageDeficit).toLocaleString() }}</strong>
-          <span>kcal {{ windowAverageDeficit >= 0 ? 'deficit' : 'surplus' }}</span>
-        </div>
-        <div :class="{ surplus: windowProjectedKgPerWeek < 0 }">
-          <strong v-if="projectedWeightDisplay >= 0.05">{{ projectedWeightDisplay.toFixed(1) }} {{ projectedWeightUnit }}</strong>
-          <strong v-else>Maintenance</strong>
-          <span>{{ windowProjectedKgPerWeek >= 0 ? 'loss' : 'gain' }} per month</span>
-        </div>
-      </div>
-    </section>
-
     <section class="manage-section">
       <div class="manage-actions desktop-manage-actions">
         <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.FOOD_MANAGER)">
@@ -125,28 +126,33 @@ function closeMobileActions() {
         <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.GROUP_MANAGER)">
           ✎ Groups
         </button>
+        <button v-if="!view.dashboardEditMode && !dayLocked" class="manage-toggle group-add-button" type="button"
+          @click="view.dashboardEditMode = true">
+          ✎ Dashboard
+        </button>
+        <button v-else-if="!dayLocked" class="manage-toggle group-add-button" type="button"
+          @click="finishDashboardEdit">
+          Done
+        </button>
         <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.SETTINGS)">
           ⚙ Settings
         </button>
       </div>
     </section>
-
     <div v-if="mobileActionsOpen" class="mobile-actions-backdrop" @click="closeMobileActions"></div>
-    <section
-      class="mobile-action-sheet"
-      :class="{ open: mobileActionsOpen }"
-      aria-label="Dashboard actions"
-      @touchstart.passive="startMobileActionSwipe"
-      @touchend.passive="endMobileActionSwipe"
-    >
-      <button class="mobile-action-handle" type="button" aria-label="Show dashboard actions" @click="toggleMobileActions">
-        <span aria-hidden="true">⌃</span> Manage
+    <section class="mobile-action-sheet" :class="{ open: mobileActionsOpen }" aria-label="Dashboard actions"
+      @touchstart.passive="startMobileActionSwipe" @touchend.passive="endMobileActionSwipe">
+      <button class="mobile-action-handle" type="button" aria-label="Show dashboard actions"
+        @click="toggleMobileActions">
+        <span aria-hidden="true">↑</span> Manage
       </button>
       <div v-if="mobileActionsOpen" class="mobile-action-list">
+        <button type="button" @click="openModal(Modals.HISTORY); closeMobileActions()">◷ Summary</button>
         <button type="button" @click="openModal(Modals.FOOD_MANAGER); closeMobileActions()">✎ Foods</button>
         <button type="button" @click="openModal(Modals.GROUP_MANAGER); closeMobileActions()">✎ Groups</button>
+        <button v-if="!view.dashboardEditMode && !dayLocked" type="button"
+          @click="view.dashboardEditMode = true; closeMobileActions()">✎ Edit dashboard</button>
         <button type="button" @click="openModal(Modals.SETTINGS); closeMobileActions()">⚙ Settings</button>
-        <button v-if="!view.dashboardEditMode && !dayLocked" type="button" @click="view.dashboardEditMode = true; closeMobileActions()">✎ Edit dashboard</button>
       </div>
     </section>
 
@@ -168,18 +174,6 @@ function closeMobileActions() {
   box-shadow: 1px 2px 8px rgba(var(--shadow-rgb), 0.06);
 }
 
-.dashboard-edit-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 12px;
-}
-
-.dashboard-edit-note {
-  color: var(--ink-muted);
-  font-size: 12px;
-}
-
 .locked-day-note {
   display: flex;
   align-items: flex-start;
@@ -193,7 +187,7 @@ function closeMobileActions() {
   line-height: 1.4;
 }
 
-.locked-day-note > span:first-child {
+.locked-day-note>span:first-child {
   flex: none;
 }
 
@@ -246,10 +240,9 @@ function closeMobileActions() {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
-  margin-top: 12px;
 }
 
-.history-summary-stats > div {
+.history-summary-stats>div {
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -257,7 +250,7 @@ function closeMobileActions() {
 }
 
 .history-summary-stats strong {
-  font-family: 'IBM Plex Mono', monospace;
+  /* font-family: 'IBM Plex Mono', monospace; */
   font-size: 16px;
 }
 
@@ -270,9 +263,72 @@ function closeMobileActions() {
   color: var(--red);
 }
 
+.history-panel-layout {
+  display: grid;
+  gap: 16px;
+  padding: 5px 12px 5px 12px;
+}
+
+.history-panel-heading h2 {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.14em;
+}
+
+.history-panel-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.history-panel-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.history-panel-toggle:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.history-panel-chevron {
+  color: var(--green);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.history-panel-content {
+  display: grid;
+  gap: 16px;
+}
+
+.history-panel-heading .muted {
+  color: var(--green);
+  /* font-family: 'IBM Plex Mono', monospace; */
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.history-summary-card {
+  margin-top: 0;
+}
+
 .manage-actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 18px;
   padding: 5px 12px 0;
 }
@@ -296,7 +352,7 @@ function closeMobileActions() {
     display: none;
   }
 
-  .desktop-edit-dashboard {
+  .desktop-history-section {
     display: none;
   }
 
@@ -320,7 +376,7 @@ function closeMobileActions() {
     border-radius: 14px 14px 0 0;
     background: var(--surface);
     box-shadow: 0 -5px 20px rgba(var(--shadow-rgb), 0.14);
-    transform: translateY(calc(100% - 42px));
+    transform: translateY(calc(100% - 36px));
     transition: transform 0.2s ease;
     z-index: 21;
   }
@@ -335,7 +391,7 @@ function closeMobileActions() {
     justify-content: center;
     gap: 5px;
     width: 100%;
-    min-height: 42px;
+    min-height: 36px;
     border: 0;
     background: transparent;
     color: var(--green);
@@ -358,5 +414,4 @@ function closeMobileActions() {
     text-align: left;
   }
 }
-
 </style>

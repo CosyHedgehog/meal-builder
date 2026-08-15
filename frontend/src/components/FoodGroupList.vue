@@ -9,6 +9,7 @@ import { confirmAction } from '../js/confirm.js'
 const props = defineProps({ group: { type: Object, required: true }, log: { type: Object, required: true }, editMode: { type: Boolean, default: false }, locked: { type: Boolean, default: false } })
 const dragOver = ref(false)
 const showAll = ref(false)
+const collapsed = ref(false)
 const foods = computed(() => foodsInGroup(props.group.id))
 const entries = computed(() => logEntries(props.log).filter((entry) => entry.groupId === props.group.id))
 const visibleFoods = computed(() => showAll.value ? foods.value : foods.value.slice(0, 10))
@@ -63,16 +64,32 @@ function moveGroup(direction) {
   const target = store.groups[index + direction]
   if (target) reorderGroups(props.group.id, target.id)
 }
+
+function toggleCollapsed() {
+  collapsed.value = !collapsed.value
+}
 </script>
 
 <template>
   <div class="today-chips">
     <div class="chip-group" :class="{ 'dashboard-drop-target': editMode, 'dashboard-drop-active': dragOver, 'dashboard-locked': locked }"
       @dragover.prevent="editMode && (dragOver = true)" @dragleave="dragOver = false" @drop.prevent="editMode && view.dragType === 'food' && dropFood(group.id)">
-      <div class="chip-group-header">
+      <div
+        class="chip-group-header"
+        role="button"
+        tabindex="0"
+        :aria-expanded="!collapsed"
+        :aria-label="`${collapsed ? 'Expand' : 'Collapse'} ${group.name}`"
+        @click="toggleCollapsed"
+        @keydown.enter.prevent="toggleCollapsed"
+        @keydown.space.prevent="toggleCollapsed"
+      >
         <span class="chip-group-header">
           <i class="group-header-swatch" :class="`group-${store.groups.findIndex((item) => item.id === group.id) % 5}`"></i>
-          <span class="chip-group-header-name" role="button" tabindex="0" @click.stop="openModal(Modals.FOOD_MANAGER, { groupId: group.id })" @keydown.enter.prevent.stop="openModal(Modals.FOOD_MANAGER, { groupId: group.id })" @keydown.space.prevent.stop="openModal(Modals.FOOD_MANAGER, { groupId: group.id })">{{ group.name }}</span>
+          <span class="chip-group-header-name">
+            <span>{{ group.name }}</span>
+            <span class="group-header-chevron" aria-hidden="true">{{ collapsed ? '▶' : '▼' }}</span>
+          </span>
           <button
             v-if="editMode"
             type="button"
@@ -118,7 +135,7 @@ function moveGroup(direction) {
           </span>
         </span>
       </div>
-      <div class="quick-picks-viewport">
+      <div v-if="!collapsed" class="quick-picks-viewport">
         <div class="chip-list" :class="{ 'kcal-hidden': !store.showKcal }">
           <div v-if="!editMode" v-for="entry in entries.filter((item) => !item.foodId)" :key="entry.id" class="dashboard-food-item">
             <FoodQuantityStepper
@@ -174,6 +191,10 @@ function moveGroup(direction) {
 .group-header-swatch.group-4 { background: #a8c98f; }
 
 .chip-group-header-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
   cursor: pointer;
   text-decoration: underline;
   text-decoration-color: transparent;
@@ -181,11 +202,30 @@ function moveGroup(direction) {
   transition: color 0.15s ease, text-decoration-color 0.15s ease;
 }
 
+.group-header-chevron {
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1;
+  text-transform: none;
+  transition: color 0.15s ease;
+}
+
 .chip-group-header-name:hover,
 .chip-group-header-name:focus-visible {
   color: var(--green-strong);
   text-decoration-color: currentColor;
   outline: none;
+}
+
+.chip-group-header {
+  cursor: pointer;
+}
+
+.chip-group-header-name:hover .group-header-chevron,
+.chip-group-header-name:focus-visible .group-header-chevron {
+  color: var(--green-strong);
 }
 
 .group-visibility-button {
