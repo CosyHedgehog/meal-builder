@@ -413,6 +413,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
     box-shadow: 0 -5px 20px rgba(var(--shadow-rgb), 0.14);
     transform: translateY(calc(100% - 36px));
     transition: transform 0.2s ease;
+    touch-action: none;
     pointer-events: none;
     z-index: 21;
   }
