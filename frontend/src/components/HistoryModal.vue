@@ -15,15 +15,15 @@ const projectedWeightDisplay = computed(() => Math.abs(windowProjectedKgPerWeek.
     <HistoryChart />
     <section class="history-summary section-block">
       <div class="history-summary-stats">
-        <div>
+        <div class="history-summary-stats-item">
           <strong>{{ windowAverageKcal.toLocaleString() }}</strong>
           <span>kcal / day</span>
         </div>
-        <div :class="{ surplus: windowAverageDeficit < 0 }">
+        <div class="history-summary-stats-item" :class="{ surplus: windowAverageDeficit < 0 }">
           <strong>{{ Math.abs(windowAverageDeficit).toLocaleString() }}</strong>
           <span>kcal {{ windowAverageDeficit >= 0 ? 'deficit' : 'surplus' }} / day</span>
         </div>
-        <div :class="{ surplus: windowProjectedKgPerWeek < 0 }">
+        <div class="history-summary-stats-item" :class="{ surplus: windowProjectedKgPerWeek < 0 }">
           <strong v-if="projectedWeightDisplay >= 0.05">{{ projectedWeightDisplay.toFixed(1) }} {{ store.weightUnit }} </strong>
           <strong v-else>Maintenance</strong>
           <span>{{ windowProjectedKgPerWeek >= 0 ? 'loss' : 'gain' }} per month</span>
@@ -36,6 +36,10 @@ const projectedWeightDisplay = computed(() => Math.abs(windowProjectedKgPerWeek.
 <style scoped>
 .history-summary {
   margin-top: 14px;
+}
+
+.history-summary-stats-item {
+    align-items: center;
 }
 
 .history-summary-stats {
