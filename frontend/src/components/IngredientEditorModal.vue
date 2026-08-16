@@ -48,8 +48,12 @@ async function submit() {
 }
 
 async function closeEditor() {
-  if (await confirmDiscard('Your unsaved ingredient changes will be lost.')) emit('close')
+  const ok = await confirmDiscard('Your unsaved ingredient changes will be lost.')
+  if (ok) emit('close')
+  return ok
 }
+
+defineExpose({ requestClose: closeEditor })
 
 </script>
 

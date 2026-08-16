@@ -138,10 +138,14 @@ async function closeEditor() {
       okLabel: 'Discard copy',
     })
     if (ok) emit('close')
-    return
+    return ok
   }
-  if (await confirmDraftDiscard('Your unsaved food changes will be lost.')) emit('close')
+  const ok = await confirmDraftDiscard('Your unsaved food changes will be lost.')
+  if (ok) emit('close')
+  return ok
 }
+
+defineExpose({ requestClose: closeEditor })
 
 </script>
 

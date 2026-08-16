@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, onUnmounted, watch } from 'vue'
 import { closeModal, modalStack, Modals } from '../js/modals.js'
-import { confirmState } from '../js/confirm.js'
+import { confirmState, settleConfirm } from '../js/confirm.js'
 
 import SettingsModal from './SettingsModal.vue'
 import ImportDataModal from './ImportDataModal.vue'
@@ -13,8 +13,7 @@ import IngredientModal from './IngredientModal.vue'
 import IngredientPickerModal from './IngredientPickerModal.vue'
 import CustomEntryModal from './CustomEntryModal.vue'
 import HistoryModal from './HistoryModal.vue'
-</script>
-<script>
+
 const registry = {
   [Modals.SETTINGS]: SettingsModal,
   [Modals.IMPORT_DATA]: ImportDataModal,
@@ -28,14 +27,47 @@ const registry = {
   [Modals.HISTORY]: HistoryModal,
 }
 
-function onKeydown(e) {
-  if (e.key !== 'Escape') return
-  if (confirmState.open) return // the confirm dialog handles its own Escape
-  if (modalStack.length) closeModal()
+const modalInstances = new Map()
+
+function setModalInstance(key, el) {
+  if (el) {
+    modalInstances.set(key, el)
+  } else {
+    modalInstances.delete(key)
+  }
 }
 
-function onPopState() {
-  if (modalStack.length) closeModal()
+async function handleCloseTopModal() {
+  if (!modalStack.length) return false
+  const topEntry = modalStack[modalStack.length - 1]
+  const instance = modalInstances.get(topEntry.key)
+  if (instance && typeof instance.requestClose === 'function') {
+    const result = await instance.requestClose()
+    return result !== false
+  }
+  closeModal()
+  return true
+}
+
+async function onKeydown(e) {
+  if (e.key !== 'Escape') return
+  if (confirmState.open) return // the confirm dialog handles its own Escape
+  if (modalStack.length) {
+    await handleCloseTopModal()
+  }
+}
+
+async function onPopState() {
+  if (confirmState.open) {
+    settleConfirm(false)
+    history.pushState({ mealBuilderModal: true }, '')
+    return
+  }
+  if (!modalStack.length) return
+  const closed = await handleCloseTopModal()
+  if (!closed) {
+    history.pushState({ mealBuilderModal: true }, '')
+  }
 }
 
 function updateWindowLock() {
@@ -55,14 +87,17 @@ watch(
 
 watch(() => confirmState.open, updateWindowLock)
 
-onMounted(() => document.addEventListener('keydown', onKeydown))
+onMounted(() => {
+  document.addEventListener('keydown', onKeydown)
+  window.addEventListener('popstate', onPopState)
+})
+
 onUnmounted(() => {
   document.removeEventListener('keydown', onKeydown)
   window.removeEventListener('popstate', onPopState)
   document.documentElement.style.overflow = ''
   document.body.style.overflow = ''
 })
-window.addEventListener('popstate', onPopState)
 </script>
 
 <template>
@@ -72,6 +107,11 @@ window.addEventListener('popstate', onPopState)
     :key="entry.key"
     v-show="index === modalStack.length - 1"
   >
-    <component :is="registry[entry.name]" v-bind="entry.props" @close="closeModal" />
+    <component
+      :is="registry[entry.name]"
+      :ref="(el) => setModalInstance(entry.key, el)"
+      v-bind="entry.props"
+      @close="closeModal"
+    />
   </div>
 </template>
