@@ -208,6 +208,11 @@
   border-style: dashed;
 }
 
+.food-stepper.selected {
+  border-color: var(--line);
+  background: var(--surface-alt);
+}
+
 .food-stepper-kcal {
   margin-top: 1px;
   color: var(--ink-muted);
