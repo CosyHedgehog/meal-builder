@@ -13,9 +13,12 @@ const restPct = computed(() => Math.max(0, 100 - loggedPct.value))
 const groupSegments = computed(() => {
   let offset = 0
   return store.groups
-    .filter((group) => group.visible !== false)
     .map((group, index) => {
       const kcal = logGroupKcal(props.log, group.id)
+      return { group, index, kcal }
+    })
+    .filter(({ group, kcal }) => group.visible !== false || kcal > 0)
+    .map(({ group, index, kcal }) => {
       const width = Math.min(100 - offset, (kcal / barTotal.value) * 100)
       const segment = { id: group.id, name: group.name, kcal, width, colorIndex: index }
       offset += width
