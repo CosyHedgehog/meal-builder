@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 const props = defineProps({
   name: { type: String, required: true },
@@ -12,7 +12,6 @@ const props = defineProps({
   locked: { type: Boolean, default: false },
 })
 
-const isOpen = ref(false)
 const stepperWrap = ref(null)
 const popoverPlacement = ref('center')
 
@@ -21,14 +20,12 @@ const emit = defineEmits(['decrement', 'increment', 'reset', 'toggle'])
 function incrementQuantity() {
   if (props.locked) return
   emit('increment')
-  updatePopoverPlacement()
   emit('toggle', true)
 }
 
 function openQuantityPopover(event) {
   event.stopPropagation()
   if (props.locked) return
-  updatePopoverPlacement()
   emit('toggle', true)
 }
 
@@ -53,8 +50,26 @@ function handleDocumentClick(event) {
   if (!event.target.closest('.food-stepper-wrap')) emit('toggle', false)
 }
 
-onMounted(() => document.addEventListener('click', handleDocumentClick))
-onUnmounted(() => document.removeEventListener('click', handleDocumentClick))
+watch(
+  () => props.open,
+  async (isOpen) => {
+    if (isOpen) {
+      await nextTick()
+      updatePopoverPlacement()
+    }
+  },
+  { immediate: true }
+)
+
+onMounted(() => {
+  document.addEventListener('click', handleDocumentClick)
+  window.addEventListener('resize', updatePopoverPlacement)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleDocumentClick)
+  window.removeEventListener('resize', updatePopoverPlacement)
+})
 
 defineExpose({ closePopover })
 </script>

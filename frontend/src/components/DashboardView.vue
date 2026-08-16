@@ -33,7 +33,10 @@ const mobileActionStartY = ref(null)
 const historyCollapsed = ref(getCollapseState('history'))
 
 watch(dayLocked, (locked) => {
-  if (locked) finishDashboardEdit()
+  if (locked) {
+    activeStepperId.value = null
+    finishDashboardEdit()
+  }
 })
 
 function finishDashboardEdit() {

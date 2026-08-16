@@ -158,6 +158,7 @@ function toggleStepper(stepperId, isOpen) {
               :quantity="entry.qty"
               :kcal="entry.kcal || 0"
               :color-index="store.groups.findIndex((item) => item.id === group.id) % 5"
+              :locked="locked"
               :open="props.activeStepperId === `custom-${entry.id}`"
               one-off
               @decrement="decrement(entry)"
@@ -175,18 +176,16 @@ function toggleStepper(stepperId, isOpen) {
             >
               <span v-if="editMode" class="dashboard-drag-handle" draggable="true" title="Drag food to another group" @dragstart="startDrag(food.id, $event)" @dragend="endDrag">⠿</span>
               <FoodQuantityStepper
-                v-if="!entryFor(food.id)"
                 :name="food.name"
-                :quantity="0"
+                :quantity="entryFor(food.id)?.qty || 0"
                 :kcal="foodKcal(food)"
-                :initial-open="false"
                 :locked="locked"
                 :open="props.activeStepperId === `food-${food.id}`"
+                @decrement="entryFor(food.id) && decrement(entryFor(food.id))"
                 @increment="!locked && addLogFood(view.logDate, group.id, food.id)"
-                @reset="resetEntry(entryFor(food.id))"
+                @reset="entryFor(food.id) && resetEntry(entryFor(food.id))"
                 @toggle="(isOpen) => toggleStepper(`food-${food.id}`, isOpen)"
               />
-              <FoodQuantityStepper v-else :name="food.name" :quantity="entryFor(food.id).qty" :kcal="foodKcal(food)" :open="props.activeStepperId === `food-${food.id}`" @decrement="decrement(entryFor(food.id))" @increment="!locked && addLogFood(view.logDate, group.id, food.id)" @reset="resetEntry(entryFor(food.id))" @toggle="(isOpen) => toggleStepper(`food-${food.id}`, isOpen)" />
             </div>
           </template>
           <span v-if="!foods.length" class="empty-note">No foods in this group</span>
