@@ -295,6 +295,13 @@
   transition: background 0.15s ease;
 }
 
+.food-stepper-control:hover,
+.food-stepper-control:focus-visible {
+  background: var(--surface-alt);
+  color: var(--ink);
+  outline: none;
+}
+
 .food-stepper-reset {
   display: flex;
   align-items: center;
@@ -360,14 +367,14 @@
 }
 
 .chip-list.kcal-hidden .today-chip {
-  min-height: 22px;
-  max-height: 22px;
+  min-height: 28px;
+  max-height: 28px;
   padding: 5px 7px;
 }
 
 .chip-list.kcal-hidden .food-stepper {
-  min-height: 22px;
-  max-height: 22px;
+  min-height: 28px;
+  max-height: 28px;
 }
 
 .chip-more {
