@@ -43,6 +43,7 @@ export const state = reactive({
   showKcal: true,
   weightUnit: DEFAULT_WEIGHT_UNIT,
   allowPreviousDayLocking: false,
+  shareActivity: false,
   loaded: false,
   saveState: 'idle', // idle | saving | ok | error
 })
@@ -165,6 +166,7 @@ function migrateLegacyPayload(parsed) {
     showKcal: parsed.showKcal !== false,
     weightUnit: parsed.weightUnit === 'lb' ? 'lb' : DEFAULT_WEIGHT_UNIT,
     allowPreviousDayLocking: false,
+    shareActivity: false,
   }
 }
 
@@ -180,6 +182,7 @@ export function snapshot() {
     showKcal: state.showKcal,
     weightUnit: state.weightUnit,
     allowPreviousDayLocking: state.allowPreviousDayLocking,
+    shareActivity: state.shareActivity,
   }
 }
 
@@ -192,6 +195,7 @@ function applyDefaults() {
   state.showKcal = true
   state.weightUnit = DEFAULT_WEIGHT_UNIT
   state.allowPreviousDayLocking = false
+  state.shareActivity = false
 }
 
 export async function loadData() {
@@ -218,6 +222,7 @@ export async function loadData() {
     state.showKcal = normalized.showKcal !== false
     state.weightUnit = normalized.weightUnit === 'lb' ? 'lb' : DEFAULT_WEIGHT_UNIT
   state.allowPreviousDayLocking = normalized.allowPreviousDayLocking === true
+  state.shareActivity = normalized.shareActivity === true
 
     // Persist normalized logs so stale food group IDs are repaired permanently.
     state.loaded = true
@@ -248,6 +253,7 @@ export async function importData(payload) {
   state.showKcal = normalized.showKcal !== false
   state.weightUnit = normalized.weightUnit === 'lb' ? 'lb' : DEFAULT_WEIGHT_UNIT
   state.allowPreviousDayLocking = normalized.allowPreviousDayLocking === true
+  state.shareActivity = normalized.shareActivity === true
   state.loaded = true
   await flushSave()
 }
@@ -386,6 +392,11 @@ export function setWeightUnit(value) {
 export function setAllowPreviousDayLocking(value) {
   state.allowPreviousDayLocking = !!value
   save()
+}
+
+export async function setShareActivity(value) {
+  state.shareActivity = !!value
+  await flushSave()
 }
 
 

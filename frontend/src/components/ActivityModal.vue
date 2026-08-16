@@ -1,8 +1,8 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import BaseModal from './BaseModal.vue'
 import { activityApi } from '../js/api.js'
-import { openModal, Modals } from '../js/modals.js'
+import { modalStack, openModal, Modals } from '../js/modals.js'
 
 const emit = defineEmits(['close'])
 const activity = ref([])
@@ -29,16 +29,24 @@ async function loadFeed() {
 }
 
 onMounted(loadFeed)
+
+watch(
+  () => modalStack[modalStack.length - 1]?.name,
+  (name, previousName) => {
+    if (name === Modals.ACTIVITY && previousName !== Modals.ACTIVITY) loadFeed()
+  },
+)
 </script>
 
 <template>
-  <BaseModal title="Activity" subtitle="Recent calorie summaries from people you follow." @close="emit('close')">
-    <div class="manager-group">
+  <BaseModal title="Activity" subtitle="Recent calorie summaries from people you follow." panel-class="activity-modal" @close="emit('close')">
+    <div class="manager-group activity-modal-content">
       <div v-if="loading" class="empty-note">Loading activity...</div>
       <div v-else-if="error" class="form-error">{{ error }}</div>
       <div v-else-if="!activity.length" class="activity-empty">
-        <p>No activity yet.</p>
-        <button class="btn btn-primary" type="button" @click="openModal(Modals.FOLLOW)">Find someone to follow</button>
+        <div class="activity-empty-icon" aria-hidden="true"></div>
+        <strong>No activity yet</strong>
+        <p>Follow someone who shares daily calories to see their progress here.</p>
       </div>
       <div v-else class="manager-list activity-list">
         <article v-for="item in activity" :key="`${item.username}-${item.log_date}`" class="activity-item">
@@ -57,6 +65,36 @@ onMounted(loadFeed)
 .activity-item:last-child { border-bottom: 0; }
 .activity-item strong { color: var(--ink); font-size: 14px; }
 .activity-item span { color: var(--ink-muted); font-size: 12px; }
-.activity-empty { padding: 18px 0 4px; text-align: center; }
+.activity-empty { display: flex; flex-direction: column; align-items: center; padding: 26px 16px 20px; text-align: center; }
+.activity-empty-icon { position: relative; width: 42px; height: 42px; margin-bottom: 12px; border: 2px solid var(--green); border-radius: 50%; opacity: .8; }
+.activity-empty-icon::before { position: absolute; left: 19px; top: 8px; width: 2px; height: 13px; border-radius: 2px; background: var(--green); content: ''; transform-origin: bottom center; }
+.activity-empty-icon::after { position: absolute; left: 19px; top: 8px; width: 2px; height: 11px; border-radius: 2px; background: var(--green); content: ''; transform-origin: bottom center; transform: rotate(125deg); }
+.activity-empty strong { color: var(--ink); font-size: 16px; }
+.activity-empty p { max-width: 300px; margin: 6px 0 0; color: var(--ink-muted); font-size: 13px; line-height: 1.45; }
 .follow-activity-button { margin-top: 14px; }
+
+@media (max-width: 480px) {
+  :deep(.modal.activity-modal) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .activity-modal-content {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    flex-direction: column;
+  }
+
+  .activity-list {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+  }
+
+  .follow-activity-button {
+    flex: none;
+    margin-top: 14px;
+  }
+}
 </style>

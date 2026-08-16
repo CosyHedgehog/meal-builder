@@ -89,6 +89,14 @@ def init_db():
         FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
     );
     ''')
+    rows = conn.execute('SELECT user_id, data FROM user_data').fetchall()
+    for row in rows:
+        try:
+            sharing_enabled = json.loads(row['data']).get('shareActivity', False) is True
+        except (TypeError, ValueError):
+            sharing_enabled = False
+        if not sharing_enabled:
+            conn.execute('DELETE FROM daily_activity WHERE user_id=?', (row['user_id'],))
     conn.commit(); conn.close()
 
 def load_sessions():
@@ -261,19 +269,47 @@ class Handler(BaseHTTPRequestHandler):
             query=parse_qs(parsed.query).get('q',[''])[0].strip()
             pattern = f'%{query}%'
             conn=db(); rows=conn.execute("SELECT id,username FROM users WHERE id != ? AND username LIKE ? COLLATE NOCASE ORDER BY username LIMIT 20",(s['user_id'],pattern)).fetchall(); conn.close()
-            return json_response(self,200,{'users':[dict(row) for row in rows]})
+            users=[]
+            for row in rows:
+                item={'id':row['id'],'username':row['username'],'shareActivity':False}
+                data_conn=db(); data_row=data_conn.execute('SELECT data FROM user_data WHERE user_id=?',(row['id'],)).fetchone(); data_conn.close()
+                try: item['shareActivity']=json.loads(data_row['data']).get('shareActivity',False) is True
+                except (TypeError, ValueError): pass
+                users.append(item)
+            return json_response(self,200,{'users':users})
         if path == '/api/following':
             s=current_session(self)
             if not s: return json_response(self,401,{'error':'Not logged in'})
-            conn=db(); rows=conn.execute('SELECT u.id,u.username FROM follows f JOIN users u ON u.id=f.following_id WHERE f.follower_id=? ORDER BY u.username',(s['user_id'],)).fetchall(); conn.close()
-            return json_response(self,200,{'users':[dict(row) for row in rows]})
+            conn=db(); rows=conn.execute('''SELECT u.id,u.username
+                FROM follows f JOIN users u ON u.id=f.following_id
+                WHERE f.follower_id=? ORDER BY u.username''',(s['user_id'],)).fetchall(); conn.close()
+            users=[]
+            for row in rows:
+                item={'id':row['id'],'username':row['username'],'shareActivity':False}
+                data_conn=db(); data_row=data_conn.execute('SELECT data FROM user_data WHERE user_id=?',(row['id'],)).fetchone(); data_conn.close()
+                try: item['shareActivity']=json.loads(data_row['data']).get('shareActivity',False) is True
+                except (TypeError, ValueError): pass
+                users.append(item)
+            return json_response(self,200,{'users':users})
         if path == '/api/activity/feed':
             s=current_session(self)
             if not s: return json_response(self,401,{'error':'Not logged in'})
-            conn=db(); rows=conn.execute('''SELECT u.username,a.log_date,a.calories,a.maintenance_calories,a.updated_at
+            conn=db(); rows=conn.execute('''SELECT u.id AS user_id,u.username,a.log_date,a.calories,a.maintenance_calories,a.updated_at,d.data
                 FROM daily_activity a JOIN follows f ON f.following_id=a.user_id JOIN users u ON u.id=a.user_id
-                WHERE f.follower_id=? ORDER BY a.updated_at DESC,a.log_date DESC LIMIT 50''',(s['user_id'],)).fetchall(); conn.close()
-            return json_response(self,200,{'activity':[dict(row) for row in rows]})
+                JOIN user_data d ON d.user_id=a.user_id
+                WHERE f.follower_id=?
+                ORDER BY a.updated_at DESC,a.log_date DESC LIMIT 50''',(s['user_id'],)).fetchall(); conn.close()
+            activity=[]
+            for row in rows:
+                try:
+                    sharing_enabled=json.loads(row['data']).get('shareActivity', False) is True
+                except (TypeError, ValueError):
+                    sharing_enabled=False
+                if not sharing_enabled:
+                    cleanup=db(); cleanup.execute('DELETE FROM daily_activity WHERE user_id=?', (row['user_id'],)); cleanup.commit(); cleanup.close()
+                    continue
+                item=dict(row); item.pop('data', None); activity.append(item)
+            return json_response(self,200,{'activity':activity})
         return json_response(self,404,{'error':'Not found'})
 
     def do_POST(self):
@@ -331,11 +367,17 @@ class Handler(BaseHTTPRequestHandler):
             'maintenanceCal': data.get('maintenanceCal',2200),
             'showKcal': data.get('showKcal',True),
             'weightUnit': data.get('weightUnit','kg'),
-            'allowPreviousDayLocking': data.get('allowPreviousDayLocking',False)
+            'allowPreviousDayLocking': data.get('allowPreviousDayLocking',False),
+            'shareActivity': data.get('shareActivity',False)
         }
         try: encoded=json.dumps(safe,separators=(',',':'))
         except Exception: return json_response(self,400,{'error':'Data could not be saved'})
-        conn=db(); conn.execute('''INSERT INTO user_data(user_id,data,updated_at) VALUES(?,?,CURRENT_TIMESTAMP) ON CONFLICT(user_id) DO UPDATE SET data=excluded.data, updated_at=CURRENT_TIMESTAMP''',(s['user_id'],encoded)); update_activity(conn,s['user_id'],safe); conn.commit(); conn.close()
+        conn=db(); conn.execute('''INSERT INTO user_data(user_id,data,updated_at) VALUES(?,?,CURRENT_TIMESTAMP) ON CONFLICT(user_id) DO UPDATE SET data=excluded.data, updated_at=CURRENT_TIMESTAMP''',(s['user_id'],encoded))
+        if safe['shareActivity']:
+            update_activity(conn,s['user_id'],safe)
+        else:
+            conn.execute('DELETE FROM daily_activity WHERE user_id=?', (s['user_id'],))
+        conn.commit(); conn.close()
         return json_response(self,200,{'ok':True})
 
     def do_DELETE(self):

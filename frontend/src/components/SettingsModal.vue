@@ -8,6 +8,7 @@ import {
   setShowKcal,
   setWeightUnit,
   setAllowPreviousDayLocking,
+  setShareActivity,
   snapshot,
   flushSave,
 } from '../js/data.js'
@@ -34,6 +35,11 @@ const weightUnit = computed({
 const allowPreviousDayLocking = computed({
   get: () => store.allowPreviousDayLocking,
   set: (value) => setAllowPreviousDayLocking(value),
+})
+
+const shareActivity = computed({
+  get: () => store.shareActivity,
+  set: (value) => setShareActivity(value),
 })
 
 function exportData() {
@@ -104,6 +110,14 @@ function downloadJSON(filename, payload) {
 
       <section class="settings-section">
         <div class="section-label">Data</div>
+        <div class="settings-row">
+          <label>Show daily calories in Activity</label>
+          <ToggleSwitch v-model="shareActivity" label="Allow daily calories in Activity" />
+        </div>
+        <div class="settings-info-note">
+          <span aria-hidden="true">ⓘ</span>
+          <span>Followers can see your daily calories and maintenance calories. Food details are never shared.</span>
+        </div>
         <div class="settings-row data-actions">
           <label>Import data</label>
           <button class="btn btn-secondary" aria-label="Import data" @click="openModal(Modals.IMPORT_DATA)">↑</button>
