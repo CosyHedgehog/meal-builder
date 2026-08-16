@@ -60,7 +60,7 @@ function downloadJSON(filename, payload) {
 </script>
 
 <template>
-  <BaseModal title="Settings" subtitle="Personalize your app, data, and account settings." @close="emit('close')">
+  <BaseModal title="Settings" subtitle="Personalize your app, data, and account settings." panel-class="settings-modal" @close="emit('close')">
     <div class="settings-sections">
       <section class="settings-section">
         <div class="section-label">Values</div>
@@ -130,9 +130,13 @@ function downloadJSON(filename, payload) {
 </template>
 <style scoped>
 .settings-sections {
+  min-height: 0;
+  max-height: min(560px, 85vh);
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding-right: 4px;
 }
 
 .settings-section {

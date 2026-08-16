@@ -250,6 +250,7 @@ async function closeEditor() {
             step="any"
             min="0"
             :placeholder="getIngredient(pendingIngredientId)?.unit === 'g' ? 'g' : 'each'"
+            @keydown.enter.prevent="addIngredientRow"
           />
           <button class="link-btn add-item-button" type="button" @click="addIngredientRow">＋ Add</button>
         </div>
@@ -258,7 +259,7 @@ async function closeEditor() {
       <div v-else class="simple-food-panel">
         <div class="input-field simple-food-field">
           <label for="foodKcal">Calories per serving</label>
-          <input id="foodKcal" v-model="draft.kcal" type="number" min="1" step="1" placeholder="e.g. 95" />
+          <input id="foodKcal" v-model="draft.kcal" type="number" min="1" step="1" placeholder="e.g. 95" @keydown.enter.prevent="saveFood" />
         </div>
       </div>
 

@@ -79,6 +79,12 @@
   border-top: 1px solid var(--line);
 }
 
+.modal.settings-modal {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 /* .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.18s ease;
@@ -139,6 +145,10 @@
   .modal.confirm-modal .modal-footer {
     margin-top: 14px;
     padding-top: 10px;
+  }
+
+  .modal.settings-modal {
+    overflow: hidden;
   }
 }
 

@@ -41,8 +41,13 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   width: 460px;
 }
 
+.confirm-modal h2,
+.confirm-modal > .subtitle {
+  text-align: center;
+}
+
 .confirm-modal .modal-footer {
-  justify-content: flex-end;
+  justify-content: center;
   gap: 10px;
 }
 
