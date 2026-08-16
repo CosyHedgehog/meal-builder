@@ -23,6 +23,11 @@
   --stepper-muted: #657268;
   --stepper-divider: rgba(51, 66, 56, 0.22);
   --green-strong: #2f623f;
+  --group-0: #315f3c;
+  --group-1: #4f8656;
+  --group-2: #6aa56c;
+  --group-3: #8fba78;
+  --group-4: #b4c889;
 }
 
 [data-theme='dark'] {
@@ -49,6 +54,11 @@
   --stepper-muted: #aebaae;
   --stepper-divider: rgba(225, 232, 223, 0.24);
   --green-strong: #4a8f5a;
+  --group-0: #5c9b68;
+  --group-1: #73b97b;
+  --group-2: #8dd18c;
+  --group-3: #a8d99a;
+  --group-4: #c1dfa4;
 }
 
 * {

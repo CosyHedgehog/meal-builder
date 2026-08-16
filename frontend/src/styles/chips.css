@@ -403,8 +403,8 @@
   background: transparent;
 }
 
-.food-stepper.group-0 { --stepper-color: var(--green); }
-.food-stepper.group-1 { --stepper-color: var(--green-light); }
-.food-stepper.group-2 { --stepper-color: #79a96f; }
-.food-stepper.group-3 { --stepper-color: #4f8f58; }
-.food-stepper.group-4 { --stepper-color: #a8c98f; }
+.food-stepper.group-0 { --stepper-color: var(--group-0); }
+.food-stepper.group-1 { --stepper-color: var(--group-1); }
+.food-stepper.group-2 { --stepper-color: var(--group-2); }
+.food-stepper.group-3 { --stepper-color: var(--group-3); }
+.food-stepper.group-4 { --stepper-color: var(--group-4); }

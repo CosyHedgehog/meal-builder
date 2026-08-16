@@ -210,11 +210,11 @@ function toggleStepper(stepperId, isOpen) {
   vertical-align: 1px;
 }
 
-.group-header-swatch.group-0 { background: var(--green); }
-.group-header-swatch.group-1 { background: var(--green-light); }
-.group-header-swatch.group-2 { background: #79a96f; }
-.group-header-swatch.group-3 { background: #4f8f58; }
-.group-header-swatch.group-4 { background: #a8c98f; }
+.group-header-swatch.group-0 { background: var(--group-0); }
+.group-header-swatch.group-1 { background: var(--group-1); }
+.group-header-swatch.group-2 { background: var(--group-2); }
+.group-header-swatch.group-3 { background: var(--group-3); }
+.group-header-swatch.group-4 { background: var(--group-4); }
 
 .group-header-main {
   cursor: pointer;

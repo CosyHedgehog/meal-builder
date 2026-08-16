@@ -103,15 +103,15 @@ const groupSegments = computed(() => {
 }
 
 .status-seg.group-0,
-.legend-swatch.group-0 { background: var(--green); }
+.legend-swatch.group-0 { background: var(--group-0); }
 .status-seg.group-1,
-.legend-swatch.group-1 { background: var(--green-light); }
+.legend-swatch.group-1 { background: var(--group-1); }
 .status-seg.group-2,
-.legend-swatch.group-2 { background: #79a96f; }
+.legend-swatch.group-2 { background: var(--group-2); }
 .status-seg.group-3,
-.legend-swatch.group-3 { background: #4f8f58; }
+.legend-swatch.group-3 { background: var(--group-3); }
 .status-seg.group-4,
-.legend-swatch.group-4 { background: #a8c98f; }
+.legend-swatch.group-4 { background: var(--group-4); }
 
 .status-seg.snack {
   background: var(--green-light);
@@ -153,11 +153,11 @@ const groupSegments = computed(() => {
   vertical-align: 1px;
 }
 
-.group-swatch.group-0 { background: var(--green); }
-.group-swatch.group-1 { background: var(--green-light); }
-.group-swatch.group-2 { background: #79a96f; }
-.group-swatch.group-3 { background: #4f8f58; }
-.group-swatch.group-4 { background: #a8c98f; }
+.group-swatch.group-0 { background: var(--group-0); }
+.group-swatch.group-1 { background: var(--group-1); }
+.group-swatch.group-2 { background: var(--group-2); }
+.group-swatch.group-3 { background: var(--group-3); }
+.group-swatch.group-4 { background: var(--group-4); }
 
 .status-pill strong {
   display: flex;

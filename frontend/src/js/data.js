@@ -677,3 +677,11 @@ export function reorderLogEntry(dateStr, entryId, targetEntryId) {
   log.entries[targetIndex] = moved
   save()
 }
+
+export function updateGroupColor(id, color) {
+  const group = state.groups.find((g) => g.id === id)
+  if (!group) return
+  if (typeof color === 'string' && /^#[0-9a-f]{6}$/i.test(color)) group.color = color
+  else delete group.color
+  save()
+}
