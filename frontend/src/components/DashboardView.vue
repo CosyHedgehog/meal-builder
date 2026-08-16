@@ -189,10 +189,18 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
         <span aria-hidden="true">{{ mobileActionsOpen ? '↓' : '↑' }}</span> Manage
       </button>
       <div class="mobile-action-list" :aria-hidden="!mobileActionsOpen">
-        <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openModal(Modals.HISTORY); closeMobileActions()">◷ Summary</button>
-        <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openModal(Modals.FOOD_MANAGER); closeMobileActions()">✎ Foods</button>
-        <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openModal(Modals.GROUP_MANAGER); closeMobileActions()">✎ Groups</button>
-        <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openModal(Modals.SETTINGS); closeMobileActions()">⚙ Settings</button>
+        <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openModal(Modals.HISTORY); closeMobileActions()">
+          <span class="mobile-action-icon mobile-action-icon-summary" aria-hidden="true"></span> Summary
+        </button>
+        <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openModal(Modals.FOOD_MANAGER); closeMobileActions()">
+          <span class="mobile-action-icon mobile-action-icon-foods" aria-hidden="true"></span> Foods
+        </button>
+        <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openModal(Modals.GROUP_MANAGER); closeMobileActions()">
+          <span class="mobile-action-icon mobile-action-icon-groups" aria-hidden="true"></span> Groups
+        </button>
+        <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openModal(Modals.SETTINGS); closeMobileActions()">
+          <span class="mobile-action-icon mobile-action-icon-settings" aria-hidden="true"></span> Settings
+        </button>
       </div>
     </section>
 
@@ -546,6 +554,9 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
   }
 
   .mobile-action-list button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     min-height: 42px;
     padding: 9px 12px;
     border: 1px solid var(--line);
@@ -554,6 +565,97 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
     color: var(--ink);
     text-align: left;
     touch-action: manipulation;
+  }
+
+  .mobile-action-icon {
+    position: relative;
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    color: var(--green);
+  }
+
+  .mobile-action-icon-summary {
+    border: 2px solid currentColor;
+    border-radius: 50%;
+  }
+
+  .mobile-action-icon-summary::before,
+  .mobile-action-icon-summary::after {
+    position: absolute;
+    left: 7px;
+    bottom: 7px;
+    width: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    content: '';
+    transform-origin: bottom center;
+  }
+
+  .mobile-action-icon-summary::before {
+    height: 5px;
+  }
+
+  .mobile-action-icon-summary::after {
+    height: 4px;
+    transform: rotate(125deg);
+  }
+
+  .mobile-action-icon-foods {
+    border: 2px solid currentColor;
+    border-radius: 3px;
+  }
+
+  .mobile-action-icon-foods::before,
+  .mobile-action-icon-foods::after {
+    position: absolute;
+    left: 3px;
+    width: 8px;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    content: '';
+  }
+
+  .mobile-action-icon-foods::before {
+    top: 4px;
+  }
+
+  .mobile-action-icon-foods::after {
+    bottom: 4px;
+  }
+
+  .mobile-action-icon-groups::before,
+  .mobile-action-icon-groups::after {
+    position: absolute;
+    bottom: 1px;
+    width: 7px;
+    border: 2px solid currentColor;
+    border-radius: 2px;
+    content: '';
+  }
+
+  .mobile-action-icon-groups::before {
+    left: 1px;
+    height: 11px;
+  }
+
+  .mobile-action-icon-groups::after {
+    right: 1px;
+    height: 15px;
+  }
+
+  .mobile-action-icon-settings {
+    border: 2px solid currentColor;
+    border-radius: 50%;
+  }
+
+  .mobile-action-icon-settings::before {
+    position: absolute;
+    inset: 4px;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    content: '';
   }
 }
 </style>

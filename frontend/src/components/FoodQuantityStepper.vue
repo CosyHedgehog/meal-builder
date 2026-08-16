@@ -17,12 +17,6 @@ const popoverPlacement = ref('center')
 
 const emit = defineEmits(['decrement', 'increment', 'reset', 'toggle'])
 
-function incrementQuantity() {
-  if (props.locked) return
-  emit('increment')
-  emit('toggle', true)
-}
-
 function openQuantityPopover(event) {
   event.stopPropagation()
   if (props.locked) return
@@ -81,7 +75,7 @@ defineExpose({ closePopover })
         class="food-stepper"
         :class="[`group-${colorIndex}`, { 'one-off': oneOff, 'dashboard-locked': !locked, active: open, selected: quantity > 0 }]"
         :aria-label="`${name}, quantity ${quantity}`"
-        @click="incrementQuantity"
+        @click="openQuantityPopover"
       >
         <span class="food-stepper-name">{{ name }}<span v-if="oneOff" class="one-off-badge">1-off</span></span>
         <span class="food-stepper-kcal">{{ Math.round(kcal * (quantity || 1)).toLocaleString() }} kcal</span>
@@ -94,8 +88,21 @@ defineExpose({ closePopover })
         @click="openQuantityPopover"
       >{{ quantity }}</button>
       <div v-if="open && !locked" class="food-quantity-popover" :class="`placement-${popoverPlacement}`" role="group" :aria-label="`Adjust ${name} quantity`">
-        <button type="button" class="food-stepper-control" :aria-label="`Remove one ${name}`" @click.stop="quantity === 1 && closePopover(); $emit('decrement')">−</button>
-        <button type="button" class="food-stepper-reset" :aria-label="`Reset ${name} quantity to zero`" title="Reset quantity" @click.stop="$emit('reset')">↺</button>
+        <button
+          type="button"
+          class="food-stepper-control"
+          :disabled="quantity < 1"
+          :aria-label="`Remove one ${name}`"
+          @click.stop="quantity === 1 && closePopover(); $emit('decrement')"
+        >−</button>
+        <button
+          type="button"
+          class="food-stepper-reset"
+          :disabled="quantity < 1"
+          :aria-label="`Reset ${name} quantity to zero`"
+          title="Reset quantity"
+          @click.stop="$emit('reset')"
+        >↺</button>
         <button type="button" class="food-stepper-control" :aria-label="`Add one ${name}`" @click.stop="$emit('increment')">＋</button>
       </div>
     </div>

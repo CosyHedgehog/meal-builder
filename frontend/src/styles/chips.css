@@ -265,7 +265,6 @@
   border: 1px solid var(--line);
   border-radius: 9px;
   background: var(--surface);
-  box-shadow: 0 6px 16px rgba(var(--shadow-rgb), 0.18);
   transform: translateX(-50%);
 }
 
@@ -290,16 +289,24 @@
   border-radius: 6px;
   background: transparent;
   color: inherit;
-  font-size: 15px;
+  font-size: 18px;
+  font-weight: 700;
   line-height: 1;
   transition: background 0.15s ease;
 }
 
-.food-stepper-control:hover,
-.food-stepper-control:focus-visible {
+.food-stepper-control:hover:not(:disabled),
+.food-stepper-control:focus-visible:not(:disabled) {
   background: var(--surface-alt);
   color: var(--ink);
   outline: none;
+}
+
+.food-stepper-control:disabled,
+.food-stepper-reset:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .food-stepper-reset {
@@ -313,12 +320,14 @@
   border-radius: 6px;
   background: transparent;
   color: var(--ink-muted);
-  font-size: 16px;
+  font-size: 18px;
+  font-weight: 700;
   line-height: 1;
+  transition: background 0.15s ease;
 }
 
-.food-stepper-reset:hover,
-.food-stepper-reset:focus-visible {
+.food-stepper-reset:hover:not(:disabled),
+.food-stepper-reset:focus-visible:not(:disabled) {
   background: var(--surface-alt);
   color: var(--ink);
   outline: none;
