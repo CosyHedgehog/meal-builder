@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { computed, nextTick, reactive, ref } from 'vue'
 import BaseModal from './BaseModal.vue'
 import { state as store, createFood, getIngredient, itemKcal, updateFood } from '../js/data.js'
 import { Modals, openModal, replaceModal } from '../js/modals.js'
@@ -25,9 +25,7 @@ const foodMode = ref(source?.mode || (source && source.items.length ? 'ingredien
 const pendingIngredientId = ref('')
 const pendingQty = ref('')
 const ingredientQuery = ref('')
-const ingredientDropdownOpen = ref(false)
-const ingredientDropdownPlacement = ref('down')
-const ingredientPicker = ref(null)
+const ingredientQuantityInput = ref(null)
 const modeSwipeStart = ref(null)
 const { isDirty, confirmDiscard: confirmDraftDiscard } = useDiscardChanges(draft)
 const isDraftCopy = computed(() => props.duplicate && !isNew)
@@ -49,26 +47,19 @@ const totalKcal = computed(() => draft.items.length
 const groups = computed(() => store.groups)
 const validationMessage = ref('')
 
-function selectIngredient(ingredientId) {
+async function selectIngredient(ingredientId) {
   pendingIngredientId.value = ingredientId
   ingredientQuery.value = getIngredient(ingredientId)?.name || ''
-  ingredientDropdownOpen.value = false
+  await nextTick()
+  ingredientQuantityInput.value?.focus()
 }
 
-function openIngredientDropdown() {
-  const picker = ingredientPicker.value
-  const pickerRect = picker?.getBoundingClientRect()
-  const modal = picker?.closest('.modal')
-  const modalRect = modal?.getBoundingClientRect()
-  const visibleBottom = Math.min(window.innerHeight, modalRect?.bottom || window.innerHeight)
-  const spaceBelow = pickerRect ? visibleBottom - pickerRect.bottom : 0
-  const dropdownHeight = Math.min(Math.max(filteredIngredients.value.length, 1) * 37 + 2, 122)
-  ingredientDropdownPlacement.value = spaceBelow >= dropdownHeight + 8 ? 'down' : 'up'
-  ingredientDropdownOpen.value = true
-}
-
-function closeIngredientDropdown(event) {
-  if (!event.target.closest('.ingredient-picker-trigger')) ingredientDropdownOpen.value = false
+function openIngredientPicker() {
+  openModal(Modals.INGREDIENT_PICKER, {
+    excludedIds: [...usedIds.value],
+    initialQuery: ingredientQuery.value,
+    onSelect: selectIngredient,
+  })
 }
 
 function addIngredientRow() {
@@ -82,9 +73,6 @@ function addIngredientRow() {
   pendingQty.value = ''
   ingredientQuery.value = ''
 }
-
-onMounted(() => document.addEventListener('click', closeIngredientDropdown))
-onUnmounted(() => document.removeEventListener('click', closeIngredientDropdown))
 
 function setFoodMode(mode) {
   foodMode.value = mode
@@ -243,39 +231,19 @@ async function closeEditor() {
               Manage ingredients
             </button>
           </div>
-          <div ref="ingredientPicker" class="ingredient-picker-trigger">
+          <div class="ingredient-picker-trigger" role="button" tabindex="0" aria-label="Open ingredient chooser" @keydown.enter="openIngredientPicker" @keydown.space.prevent="openIngredientPicker">
             <input
+              readonly
               v-model="ingredientQuery"
               class="add-item-select ingredient-picker-input"
-              type="search"
-              placeholder="Search ingredients..."
-              role="combobox"
-              aria-label="Search ingredients"
-              :aria-expanded="ingredientDropdownOpen"
-              aria-controls="ingredient-dropdown"
-              @focus="openIngredientDropdown"
-              @click="openIngredientDropdown"
-              @input="pendingIngredientId = ''"
+              type="text"
+              placeholder="Choose an ingredient..."
+              aria-label="Choose an ingredient"
+              @click="openIngredientPicker"
             />
-            <div v-if="ingredientDropdownOpen" id="ingredient-dropdown" class="ingredient-dropdown" :class="`placement-${ingredientDropdownPlacement}`" role="listbox">
-              <button
-                v-for="ingredient in filteredIngredients"
-                :key="ingredient.id"
-                type="button"
-                class="ingredient-dropdown-option"
-                role="option"
-                @mousedown.prevent="selectIngredient(ingredient.id)"
-              >
-                <span>{{ ingredient.name }}</span>
-                <small>{{ ingredient.kcal }} kcal {{ ingredient.unit === 'g' ? '/ 100g' : '/ item' }}</small>
-              </button>
-              <div v-if="!filteredIngredients.length" class="ingredient-dropdown-empty">
-                <strong>No matching ingredients</strong>
-                <span>Add an ingredient below to use it in this food.</span>
-              </div>
-            </div>
           </div>
           <input
+            ref="ingredientQuantityInput"
             v-model="pendingQty"
             class="add-item-qty"
             type="number"
@@ -740,6 +708,21 @@ async function closeEditor() {
 
 .ingredient-picker-input {
   appearance: none;
+  padding-right: 34px;
+  cursor: pointer;
+}
+
+.ingredient-picker-trigger::after {
+  position: absolute;
+  top: 50%;
+  right: 13px;
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid var(--ink-muted);
+  border-bottom: 1.5px solid var(--ink-muted);
+  content: '';
+  pointer-events: none;
+  transform: translateY(-65%) rotate(45deg);
 }
 
 .ingredient-dropdown {
