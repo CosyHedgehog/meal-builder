@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import json, os, secrets, hashlib, hmac, sqlite3
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 from http import cookies
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -69,6 +69,23 @@ def init_db():
         username TEXT NOT NULL,
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         expires_at TEXT NOT NULL,
+        FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    CREATE TABLE IF NOT EXISTS follows (
+        follower_id INTEGER NOT NULL,
+        following_id INTEGER NOT NULL,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY(follower_id, following_id),
+        FOREIGN KEY(follower_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY(following_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    CREATE TABLE IF NOT EXISTS daily_activity (
+        user_id INTEGER NOT NULL,
+        log_date TEXT NOT NULL,
+        calories INTEGER NOT NULL,
+        maintenance_calories INTEGER NOT NULL,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY(user_id, log_date),
         FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
     );
     ''')
@@ -175,6 +192,42 @@ def serve_static_file(handler, full_path, content_type):
     handler.end_headers()
     handler.wfile.write(body)
 
+def daily_calories(data):
+    ingredients = {item.get('id'): item for item in data.get('ingredients', []) if isinstance(item, dict)}
+    foods = {item.get('id'): item for item in data.get('foods', []) if isinstance(item, dict)}
+
+    def food_kcal(food):
+        if not food: return 0
+        if food.get('mode') == 'simple' or not food.get('items'):
+            return round(float(food.get('kcal') or 0))
+        total = 0
+        for item in food.get('items', []):
+            ingredient = ingredients.get(item.get('ingredientId'))
+            if not ingredient: continue
+            amount = float(item.get('amount') or 0)
+            value = float(ingredient.get('kcal') or 0)
+            total += amount / 100 * value if ingredient.get('unit') == 'g' else amount * value
+        return round(total)
+
+    summaries = []
+    for log_date, log in (data.get('logs') or {}).items():
+        if not isinstance(log, dict): continue
+        calories = 0
+        for entry in log.get('entries', []):
+            if not isinstance(entry, dict): continue
+            qty = float(entry.get('qty') or 1)
+            calories += round(food_kcal(foods.get(entry['foodId'])) * qty) if entry.get('foodId') else round(float(entry.get('kcal') or 0) * qty)
+        if log.get('entries'):
+            summaries.append((str(log_date), calories))
+    return summaries
+
+def update_activity(conn, user_id, data):
+    conn.execute('DELETE FROM daily_activity WHERE user_id=?', (user_id,))
+    conn.executemany(
+        'INSERT INTO daily_activity(user_id,log_date,calories,maintenance_calories) VALUES(?,?,?,?)',
+        [(user_id, date, calories, round(float(data.get('maintenanceCal') or 2200))) for date, calories in daily_calories(data)]
+    )
+
 class Handler(BaseHTTPRequestHandler):
     server_version = 'MealBuilderSQLite/1.0'
 
@@ -182,7 +235,8 @@ class Handler(BaseHTTPRequestHandler):
         print('%s - %s' % (self.address_string(), fmt % args))
 
     def do_GET(self):
-        path = urlparse(self.path).path
+        parsed = urlparse(self.path)
+        path = parsed.path
         if path == '/':
             try:
                 with open(HTML_PATH, 'rb') as f: body = f.read()
@@ -201,6 +255,25 @@ class Handler(BaseHTTPRequestHandler):
             conn=db(); row=conn.execute('SELECT data FROM user_data WHERE user_id=?',(s['user_id'],)).fetchone(); conn.close()
             data=json.loads(row['data']) if row else DEFAULT_DATA
             return json_response(self,200,{'data':data})
+        if path == '/api/users':
+            s=current_session(self)
+            if not s: return json_response(self,401,{'error':'Not logged in'})
+            query=parse_qs(parsed.query).get('q',[''])[0].strip()
+            pattern = f'%{query}%'
+            conn=db(); rows=conn.execute("SELECT id,username FROM users WHERE id != ? AND username LIKE ? COLLATE NOCASE ORDER BY username LIMIT 20",(s['user_id'],pattern)).fetchall(); conn.close()
+            return json_response(self,200,{'users':[dict(row) for row in rows]})
+        if path == '/api/following':
+            s=current_session(self)
+            if not s: return json_response(self,401,{'error':'Not logged in'})
+            conn=db(); rows=conn.execute('SELECT u.id,u.username FROM follows f JOIN users u ON u.id=f.following_id WHERE f.follower_id=? ORDER BY u.username',(s['user_id'],)).fetchall(); conn.close()
+            return json_response(self,200,{'users':[dict(row) for row in rows]})
+        if path == '/api/activity/feed':
+            s=current_session(self)
+            if not s: return json_response(self,401,{'error':'Not logged in'})
+            conn=db(); rows=conn.execute('''SELECT u.username,a.log_date,a.calories,a.maintenance_calories,a.updated_at
+                FROM daily_activity a JOIN follows f ON f.following_id=a.user_id JOIN users u ON u.id=a.user_id
+                WHERE f.follower_id=? ORDER BY a.updated_at DESC,a.log_date DESC LIMIT 50''',(s['user_id'],)).fetchall(); conn.close()
+            return json_response(self,200,{'activity':[dict(row) for row in rows]})
         return json_response(self,404,{'error':'Not found'})
 
     def do_POST(self):
@@ -229,6 +302,16 @@ class Handler(BaseHTTPRequestHandler):
             raw=self.headers.get('Cookie',''); jar=cookies.SimpleCookie(); jar.load(raw); token=jar.get('session')
             if token: destroy_session(token.value)
             return json_response(self,200,{'ok':True},{'Set-Cookie':'session=; Max-Age=0; HttpOnly; SameSite=Lax; Path=/'})
+        if path.startswith('/api/follows/'):
+            s=current_session(self)
+            if not s: return json_response(self,401,{'error':'Not logged in'})
+            try: following_id=int(path.rsplit('/',1)[1])
+            except ValueError: return json_response(self,400,{'error':'Invalid user'})
+            if following_id == s['user_id']: return json_response(self,400,{'error':'You cannot follow yourself'})
+            conn=db()
+            if not conn.execute('SELECT id FROM users WHERE id=?',(following_id,)).fetchone(): conn.close(); return json_response(self,404,{'error':'User not found'})
+            conn.execute('INSERT OR IGNORE INTO follows(follower_id,following_id) VALUES(?,?)',(s['user_id'],following_id)); conn.commit(); conn.close()
+            return json_response(self,200,{'ok':True})
         return json_response(self,404,{'error':'Not found'})
 
     def do_PUT(self):
@@ -252,7 +335,18 @@ class Handler(BaseHTTPRequestHandler):
         }
         try: encoded=json.dumps(safe,separators=(',',':'))
         except Exception: return json_response(self,400,{'error':'Data could not be saved'})
-        conn=db(); conn.execute('''INSERT INTO user_data(user_id,data,updated_at) VALUES(?,?,CURRENT_TIMESTAMP) ON CONFLICT(user_id) DO UPDATE SET data=excluded.data, updated_at=CURRENT_TIMESTAMP''',(s['user_id'],encoded)); conn.commit(); conn.close()
+        conn=db(); conn.execute('''INSERT INTO user_data(user_id,data,updated_at) VALUES(?,?,CURRENT_TIMESTAMP) ON CONFLICT(user_id) DO UPDATE SET data=excluded.data, updated_at=CURRENT_TIMESTAMP''',(s['user_id'],encoded)); update_activity(conn,s['user_id'],safe); conn.commit(); conn.close()
+        return json_response(self,200,{'ok':True})
+
+    def do_DELETE(self):
+        path=urlparse(self.path).path
+        if not path.startswith('/api/follows/'):
+            return json_response(self,404,{'error':'Not found'})
+        s=current_session(self)
+        if not s: return json_response(self,401,{'error':'Not logged in'})
+        try: following_id=int(path.rsplit('/',1)[1])
+        except ValueError: return json_response(self,400,{'error':'Invalid user'})
+        conn=db(); conn.execute('DELETE FROM follows WHERE follower_id=? AND following_id=?',(s['user_id'],following_id)); conn.commit(); conn.close()
         return json_response(self,200,{'ok':True})
 
 # Main entry point

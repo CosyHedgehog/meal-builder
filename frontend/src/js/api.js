@@ -24,3 +24,11 @@ export const dataApi = {
   load: () => request('/api/data'),
   save: (data) => request('/api/data', { method: 'PUT', body: JSON.stringify(data) }),
 }
+
+export const activityApi = {
+  searchUsers: (query) => request(`/api/users?q=${encodeURIComponent(query)}`),
+  following: () => request('/api/following'),
+  follow: (userId) => request(`/api/follows/${userId}`, { method: 'POST', body: '{}' }),
+  unfollow: (userId) => request(`/api/follows/${userId}`, { method: 'DELETE' }),
+  feed: () => request('/api/activity/feed'),
+}

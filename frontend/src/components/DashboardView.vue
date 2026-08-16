@@ -92,13 +92,16 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
 
 <template>
   <div class="home">
-        <section class="manage-section">
+    <section class="manage-section">
       <div class="manage-actions desktop-manage-actions">
         <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.FOOD_MANAGER)">
           Foods
         </button>
         <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.GROUP_MANAGER)">
           Groups
+        </button>
+        <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.ACTIVITY)">
+          Activity
         </button>
         <button v-if="!view.dashboardEditMode" class="manage-toggle group-add-button" type="button"
           @click="view.dashboardEditMode = true">
@@ -130,18 +133,13 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
 
         <div v-if="dayLocked" class="locked-day-note">
           <span aria-hidden="true">🔒</span>
-            <span>Past day foods can't be selected. <button type="button" @click="openModal(Modals.SETTINGS)">Edit in Settings</button></span>
+          <span>Past day foods can't be selected. <button type="button" @click="openModal(Modals.SETTINGS)">Edit in
+              Settings</button></span>
         </div>
 
         <section v-for="group in groups" :key="group.id" class="today-group-card">
-          <FoodGroupList
-            :group="group"
-            :log="log"
-            :edit-mode="view.dashboardEditMode"
-            :locked="dayLocked"
-            :active-stepper-id="activeStepperId"
-            @update:active-stepper-id="setActiveStepper"
-          />
+          <FoodGroupList :group="group" :log="log" :edit-mode="view.dashboardEditMode" :locked="dayLocked"
+            :active-stepper-id="activeStepperId" @update:active-stepper-id="setActiveStepper" />
         </section>
       </div>
     </Transition>
@@ -169,7 +167,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
             </div>
             <div class="history-summary-stats-item" :class="{ surplus: windowAverageDeficit < 0 }">
               <strong>{{ Math.abs(windowAverageDeficit).toLocaleString() }}</strong>
-                <span>kcal {{ windowAverageDeficit >= 0 ? 'deficit' : 'surplus' }} / day</span>
+              <span>kcal {{ windowAverageDeficit >= 0 ? 'deficit' : 'surplus' }} / day</span>
             </div>
             <div class="history-summary-stats-item" :class="{ surplus: windowProjectedKgPerWeek < 0 }">
               <strong v-if="projectedWeightDisplay >= 0.05">{{ projectedWeightDisplay.toFixed(1) }} {{
@@ -181,24 +179,34 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
         </section>
       </div>
     </div>
-    <div v-if="mobileActionsOpen && !hasOpenModal" class="mobile-actions-backdrop" @click="closeMobileActions" @touchmove.prevent></div>
-    <section v-show="!hasOpenModal" class="mobile-action-sheet" :class="{ open: mobileActionsOpen }" aria-label="Dashboard actions"
-      @touchstart="startMobileActionSwipe" @touchmove.prevent @touchend="endMobileActionSwipe">
+    <div v-if="mobileActionsOpen && !hasOpenModal" class="mobile-actions-backdrop" @click="closeMobileActions"
+      @touchmove.prevent></div>
+    <section v-show="!hasOpenModal" class="mobile-action-sheet" :class="{ open: mobileActionsOpen }"
+      aria-label="Dashboard actions" @touchstart="startMobileActionSwipe" @touchmove.prevent
+      @touchend="endMobileActionSwipe">
       <button class="mobile-action-handle" type="button" aria-label="Show dashboard actions"
         @click="toggleMobileActions">
         <span aria-hidden="true">{{ mobileActionsOpen ? '↓' : '↑' }}</span> Manage
       </button>
       <div class="mobile-action-list" :aria-hidden="!mobileActionsOpen">
-        <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openModal(Modals.HISTORY); closeMobileActions()">
+        <button type="button" :tabindex="mobileActionsOpen ? 0 : -1"
+          @click="openModal(Modals.HISTORY); closeMobileActions()">
           <span class="mobile-action-icon mobile-action-icon-summary" aria-hidden="true"></span> Summary
         </button>
-        <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openModal(Modals.FOOD_MANAGER); closeMobileActions()">
+        <button type="button" :tabindex="mobileActionsOpen ? 0 : -1"
+          @click="openModal(Modals.FOOD_MANAGER); closeMobileActions()">
           <span class="mobile-action-icon mobile-action-icon-foods" aria-hidden="true"></span> Foods
         </button>
-        <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openModal(Modals.GROUP_MANAGER); closeMobileActions()">
+        <button type="button" :tabindex="mobileActionsOpen ? 0 : -1"
+          @click="openModal(Modals.GROUP_MANAGER); closeMobileActions()">
           <span class="mobile-action-icon mobile-action-icon-groups" aria-hidden="true"></span> Groups
         </button>
-        <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openModal(Modals.SETTINGS); closeMobileActions()">
+                <button type="button" :tabindex="mobileActionsOpen ? 0 : -1"
+          @click="openModal(Modals.ACTIVITY); closeMobileActions()">
+          <span class="mobile-action-icon mobile-action-icon-activity" aria-hidden="true"></span> Activity
+        </button>
+        <button type="button" :tabindex="mobileActionsOpen ? 0 : -1"
+          @click="openModal(Modals.SETTINGS); closeMobileActions()">
           <span class="mobile-action-icon mobile-action-icon-settings" aria-hidden="true"></span> Settings
         </button>
       </div>
@@ -227,6 +235,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
   opacity: 0;
   transform: translateX(28px);
 }
+
 .day-slide-next-leave-to {
   opacity: 0;
   transform: translateX(-28px);
@@ -237,6 +246,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
   opacity: 0;
   transform: translateX(-28px);
 }
+
 .day-slide-prev-leave-to {
   opacity: 0;
   transform: translateX(28px);
@@ -254,11 +264,25 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
 
 /* Boundary bounce when trying to swipe forward past today */
 @keyframes boundaryNudge {
-  0% { transform: translateX(0); }
-  28% { transform: translateX(-10px); }
-  60% { transform: translateX(5px); }
-  82% { transform: translateX(-2px); }
-  100% { transform: translateX(0); }
+  0% {
+    transform: translateX(0);
+  }
+
+  28% {
+    transform: translateX(-10px);
+  }
+
+  60% {
+    transform: translateX(5px);
+  }
+
+  82% {
+    transform: translateX(-2px);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
 }
 
 .boundary-bounce {
@@ -266,6 +290,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .day-slide-next-enter-active,
   .day-slide-next-leave-active,
   .day-slide-prev-enter-active,
@@ -273,6 +298,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
     transition: none;
     transform: none;
   }
+
   .boundary-bounce {
     animation: none;
   }
@@ -350,7 +376,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
   margin-top: 2px;
 }
 
-.history-summary-stats-item{
+.history-summary-stats-item {
   align-items: center;
 }
 
@@ -452,7 +478,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
 
 .manage-actions {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 18px;
   padding: 10px;
 }
@@ -575,29 +601,54 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
   }
 
   .mobile-action-icon-summary {
-    border: 2px solid currentColor;
-    border-radius: 50%;
+    border-bottom: 2px solid currentColor;
+    border-left: 2px solid currentColor;
   }
 
   .mobile-action-icon-summary::before,
   .mobile-action-icon-summary::after {
     position: absolute;
+    bottom: 1px;
+    width: 3px;
+    border-radius: 2px;
+    background: currentColor;
+    content: '';
+  }
+
+  .mobile-action-icon-summary::before {
+    left: 5px;
+    height: 8px;
+  }
+
+  .mobile-action-icon-summary::after {
+    right: 2px;
+    height: 13px;
+  }
+
+  .mobile-action-icon-activity {
+    border: 2px solid currentColor;
+    border-radius: 50%;
+  }
+
+  .mobile-action-icon-activity::before,
+  .mobile-action-icon-activity::after {
+    position: absolute;
     left: 7px;
-    bottom: 7px;
+    top: 3px;
     width: 2px;
+    height: 6px;
     border-radius: 2px;
     background: currentColor;
     content: '';
     transform-origin: bottom center;
   }
 
-  .mobile-action-icon-summary::before {
-    height: 5px;
+  .mobile-action-icon-activity::before {
+    transform: rotate(0deg);
   }
 
-  .mobile-action-icon-summary::after {
-    height: 4px;
-    transform: rotate(125deg);
+  .mobile-action-icon-activity::after {
+    transform: rotate(120deg);
   }
 
   .mobile-action-icon-foods {

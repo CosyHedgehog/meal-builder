@@ -13,6 +13,8 @@ import IngredientModal from './IngredientModal.vue'
 import IngredientPickerModal from './IngredientPickerModal.vue'
 import CustomEntryModal from './CustomEntryModal.vue'
 import HistoryModal from './HistoryModal.vue'
+import ActivityModal from './ActivityModal.vue'
+import FollowModal from './FollowModal.vue'
 
 const registry = {
   [Modals.SETTINGS]: SettingsModal,
@@ -25,6 +27,8 @@ const registry = {
   [Modals.INGREDIENT_PICKER]: IngredientPickerModal,
   [Modals.CUSTOM_ENTRY]: CustomEntryModal,
   [Modals.HISTORY]: HistoryModal,
+  [Modals.ACTIVITY]: ActivityModal,
+  [Modals.FOLLOW]: FollowModal,
 }
 
 const modalInstances = new Map()
