@@ -76,7 +76,7 @@ export function useHistoryChart() {
       : 0,
   )
   const projectedKgPerWeek = computed(() => (avgDeficit.value * 7) / KCAL_PER_KG)
-  const windowLoggedDays = computed(() => history.value.filter((entry) => entry.hasLog))
+  const windowLoggedDays = computed(() => history.value.filter((entry) => entry.date < todayStr() && entry.hasLog))
   const windowAverageKcal = computed(() =>
     windowLoggedDays.value.length
       ? Math.round(windowLoggedDays.value.reduce((sum, entry) => sum + entry.total, 0) / windowLoggedDays.value.length)
