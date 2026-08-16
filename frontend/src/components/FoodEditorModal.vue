@@ -1,5 +1,5 @@
 <script setup>
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import BaseModal from './BaseModal.vue'
 import { state as store, createFood, getIngredient, itemKcal, updateFood } from '../js/data.js'
 import { Modals, openModal, replaceModal } from '../js/modals.js'
@@ -24,11 +24,20 @@ const draft = reactive({
 const foodMode = ref(source?.mode || (source && source.items.length ? 'ingredients' : 'simple'))
 const pendingIngredientId = ref('')
 const pendingQty = ref('')
+const ingredientQuery = ref('')
+const ingredientDropdownOpen = ref(false)
+const ingredientDropdownPlacement = ref('down')
+const ingredientPicker = ref(null)
 const modeSwipeStart = ref(null)
 const { isDirty, confirmDiscard: confirmDraftDiscard } = useDiscardChanges(draft)
 const isDraftCopy = computed(() => props.duplicate && !isNew)
 
 const usedIds = computed(() => new Set(draft.items.map((item) => item.ingredientId)))
+const availableIngredients = computed(() => store.ingredients.filter((ingredient) => !usedIds.value.has(ingredient.id)))
+const filteredIngredients = computed(() => {
+  const normalized = ingredientQuery.value.trim().toLowerCase()
+  return availableIngredients.value.filter((ingredient) => !normalized || ingredient.name.toLowerCase().includes(normalized))
+})
 const ingredientRows = computed(() => draft.items.map((item) => ({
   item,
   ingredient: getIngredient(item.ingredientId),
@@ -40,6 +49,28 @@ const totalKcal = computed(() => draft.items.length
 const groups = computed(() => store.groups)
 const validationMessage = ref('')
 
+function selectIngredient(ingredientId) {
+  pendingIngredientId.value = ingredientId
+  ingredientQuery.value = getIngredient(ingredientId)?.name || ''
+  ingredientDropdownOpen.value = false
+}
+
+function openIngredientDropdown() {
+  const picker = ingredientPicker.value
+  const pickerRect = picker?.getBoundingClientRect()
+  const modal = picker?.closest('.modal')
+  const modalRect = modal?.getBoundingClientRect()
+  const visibleBottom = Math.min(window.innerHeight, modalRect?.bottom || window.innerHeight)
+  const spaceBelow = pickerRect ? visibleBottom - pickerRect.bottom : 0
+  const dropdownHeight = Math.min(Math.max(filteredIngredients.value.length, 1) * 37 + 2, 122)
+  ingredientDropdownPlacement.value = spaceBelow >= dropdownHeight + 8 ? 'down' : 'up'
+  ingredientDropdownOpen.value = true
+}
+
+function closeIngredientDropdown(event) {
+  if (!event.target.closest('.ingredient-picker-trigger')) ingredientDropdownOpen.value = false
+}
+
 function addIngredientRow() {
   if (!pendingIngredientId.value) return
   const amount = parseFloat(pendingQty.value)
@@ -49,11 +80,11 @@ function addIngredientRow() {
   })
   pendingIngredientId.value = ''
   pendingQty.value = ''
+  ingredientQuery.value = ''
 }
 
-function selectIngredient(ingredientId) {
-  pendingIngredientId.value = ingredientId
-}
+onMounted(() => document.addEventListener('click', closeIngredientDropdown))
+onUnmounted(() => document.removeEventListener('click', closeIngredientDropdown))
 
 function setFoodMode(mode) {
   foodMode.value = mode
@@ -172,7 +203,11 @@ async function closeEditor() {
             <strong>{{ totalKcal.toLocaleString() }} <small>kcal</small></strong>
           </div>
         </div>
-        <div v-if="draft.items.length" class="food-ingredients-list-container">
+        <div class="food-ingredients-list-container" :class="{ empty: !draft.items.length }">
+          <div v-if="!draft.items.length" class="food-ingredients-empty" aria-live="polite">
+            <strong>No ingredients selected</strong>
+            <span>Choose an ingredient below to build this food.</span>
+          </div>
           <div class="ingredient-list">
             <div
               v-for="row in ingredientRows"
@@ -204,16 +239,41 @@ async function closeEditor() {
         <div class="add-item-row">
           <div class="add-item-label-row">
             <label class="add-item-label">Add an ingredient</label>
-          </div>
-          <div class="ingredient-picker-trigger">
-            <button
-              type="button"
-              class="add-item-select ingredient-picker-button"
-              :class="{ 'has-selection': pendingIngredientId }"
-              @click="openModal(Modals.INGREDIENT_PICKER, { excludedIds: [...usedIds], selectedId: pendingIngredientId, onSelect: selectIngredient })"
-            >
-              {{ getIngredient(pendingIngredientId)?.name || 'Select...' }}
+            <button class="link-btn manage-ingredients-link" type="button" @click="openModal(Modals.INGREDIENT_MANAGER)">
+              Manage ingredients
             </button>
+          </div>
+          <div ref="ingredientPicker" class="ingredient-picker-trigger">
+            <input
+              v-model="ingredientQuery"
+              class="add-item-select ingredient-picker-input"
+              type="search"
+              placeholder="Search ingredients..."
+              role="combobox"
+              aria-label="Search ingredients"
+              :aria-expanded="ingredientDropdownOpen"
+              aria-controls="ingredient-dropdown"
+              @focus="openIngredientDropdown"
+              @click="openIngredientDropdown"
+              @input="pendingIngredientId = ''"
+            />
+            <div v-if="ingredientDropdownOpen" id="ingredient-dropdown" class="ingredient-dropdown" :class="`placement-${ingredientDropdownPlacement}`" role="listbox">
+              <button
+                v-for="ingredient in filteredIngredients"
+                :key="ingredient.id"
+                type="button"
+                class="ingredient-dropdown-option"
+                role="option"
+                @mousedown.prevent="selectIngredient(ingredient.id)"
+              >
+                <span>{{ ingredient.name }}</span>
+                <small>{{ ingredient.kcal }} kcal {{ ingredient.unit === 'g' ? '/ 100g' : '/ item' }}</small>
+              </button>
+              <div v-if="!filteredIngredients.length" class="ingredient-dropdown-empty">
+                <strong>No matching ingredients</strong>
+                <span>Add an ingredient below to use it in this food.</span>
+              </div>
+            </div>
           </div>
           <input
             v-model="pendingQty"
@@ -223,7 +283,7 @@ async function closeEditor() {
             min="0"
             :placeholder="getIngredient(pendingIngredientId)?.unit === 'g' ? 'g' : 'each'"
           />
-          <button class="btn btn-primary add-item-button" type="button" @click="addIngredientRow">Add</button>
+          <button class="link-btn add-item-button" type="button" @click="addIngredientRow">＋ Add</button>
         </div>
       </section>
 
@@ -303,6 +363,12 @@ async function closeEditor() {
 }
 
 .add-item-label-row .create-ingredient-link {
+  margin: 0;
+  padding: 0;
+  font-size: 11px;
+}
+
+.manage-ingredients-link {
   margin: 0;
   padding: 0;
   font-size: 11px;
@@ -394,6 +460,27 @@ async function closeEditor() {
   border-radius: 12px;
   background: color-mix(in srgb, var(--surface) 92%, var(--surface-alt));
   overflow: hidden;
+}
+
+.food-ingredients-list-container.empty {
+  min-height: 82px;
+  align-items: center;
+  justify-content: center;
+}
+
+.food-ingredients-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--ink-muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+.food-ingredients-empty strong {
+  color: var(--ink);
+  font-size: 12px;
 }
 
 .food-ingredients-list-container .ingredient-list {
@@ -601,7 +688,7 @@ async function closeEditor() {
 
 .add-item-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 72px 52px;
+  grid-template-columns: minmax(0, 1fr) 100px 40px;
   gap: 5px;
   padding: 10px 0 3px;
   align-items: end;
@@ -621,13 +708,19 @@ async function closeEditor() {
 .add-item-qty {
   width: 100%;
   min-width: 0;
-  min-height: 34px;
-  padding: 7px 9px;
+  min-height: 40px;
+  padding: 10px 12px;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background-color: var(--surface);
+  border-radius: 9px;
+  background-color: var(--bg);
   color: var(--ink);
-  font-size: 13px;
+  font-size: 14px;
+}
+
+.add-item-select:focus,
+.add-item-qty:focus {
+  outline: 2px solid var(--green);
+  outline-offset: 1px;
 }
 
 .ingredient-picker-button {
@@ -638,6 +731,90 @@ async function closeEditor() {
   text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.ingredient-picker-trigger {
+  position: relative;
+  min-width: 0;
+}
+
+.ingredient-picker-input {
+  appearance: none;
+}
+
+.ingredient-dropdown {
+  position: absolute;
+  z-index: 5;
+  right: 0;
+  left: 0;
+  max-height: 120px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  box-shadow: 0 8px 18px rgba(var(--backdrop-rgb), 0.18);
+}
+
+.ingredient-dropdown.placement-down {
+  top: calc(100% + 4px);
+}
+
+.ingredient-dropdown.placement-up {
+  bottom: calc(100% + 4px);
+}
+
+.ingredient-dropdown-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 9px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  font-size: 12px;
+  text-align: left;
+}
+
+.ingredient-dropdown-option:last-child {
+  border-bottom: 0;
+}
+
+.ingredient-dropdown-option:hover,
+.ingredient-dropdown-option:focus-visible {
+  background: var(--surface-alt);
+  color: var(--green-strong);
+  outline: none;
+}
+
+.ingredient-dropdown-option small {
+  flex: none;
+  color: var(--ink-muted);
+  font-size: 10px;
+}
+
+.ingredient-dropdown-empty {
+  display: flex;
+  min-height: 72px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px;
+  color: var(--ink-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.ingredient-dropdown-empty strong {
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.ingredient-dropdown-empty span {
+  font-size: 11px;
 }
 
 .ingredient-picker-button::after {
@@ -673,8 +850,10 @@ async function closeEditor() {
 }
 
 .add-item-button {
-  min-height: 34px;
-  padding: 7px 9px;
+  align-self: center;
+  min-height: 40px;
+  padding: 8px 4px;
+  white-space: nowrap;
 }
 
 @media (max-width: 600px) {
@@ -732,13 +911,13 @@ async function closeEditor() {
   }
 
   .add-item-row {
-    grid-template-columns: minmax(0, 1fr) 58px 42px;
+    grid-template-columns: minmax(0, 1fr) 70px 40px;
   }
 
   .add-item-select {
     grid-column: 1;
     min-width: 0;
-    padding-right: 22px;
+    padding-right: 12px;
   }
 
   .add-item-qty {

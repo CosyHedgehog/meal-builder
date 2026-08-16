@@ -6,7 +6,8 @@ import { view, clearDragState, getCollapseState, setCollapseState } from '../js/
 import { Modals, openModal } from '../js/modals.js'
 import { confirmAction } from '../js/confirm.js'
 
-const props = defineProps({ group: { type: Object, required: true }, log: { type: Object, required: true }, editMode: { type: Boolean, default: false }, locked: { type: Boolean, default: false } })
+const props = defineProps({ group: { type: Object, required: true }, log: { type: Object, required: true }, editMode: { type: Boolean, default: false }, locked: { type: Boolean, default: false }, activeStepperId: { type: String, default: null } })
+const emit = defineEmits(['update:activeStepperId'])
 const dragOver = ref(false)
 const showAll = ref(false)
 const collapsed = ref(getCollapseState(`group:${props.group.id}`))
@@ -69,6 +70,10 @@ function toggleCollapsed() {
   collapsed.value = !collapsed.value
   setCollapseState(`group:${props.group.id}`, collapsed.value)
 }
+
+function toggleStepper(stepperId, isOpen) {
+  emit('update:activeStepperId', isOpen ? stepperId : null)
+}
 </script>
 
 <template>
@@ -77,17 +82,19 @@ function toggleCollapsed() {
       @dragover.prevent="editMode && (dragOver = true)" @dragleave="dragOver = false" @drop.prevent="editMode && view.dragType === 'food' && dropFood(group.id)">
       <div
         class="chip-group-header"
-        role="button"
-        tabindex="0"
-        :aria-expanded="!collapsed"
-        :aria-label="`${collapsed ? 'Expand' : 'Collapse'} ${group.name}`"
-        @click="toggleCollapsed"
-        @keydown.enter.prevent="toggleCollapsed"
-        @keydown.space.prevent="toggleCollapsed"
       >
-        <span class="chip-group-header">
+        <span class="group-header-main">
           <i class="group-header-swatch" :class="`group-${store.groups.findIndex((item) => item.id === group.id) % 5}`"></i>
-          <span class="chip-group-header-name">
+          <span
+            class="chip-group-header-name"
+            role="button"
+            tabindex="0"
+            :aria-expanded="!collapsed"
+            :aria-label="`${collapsed ? 'Expand' : 'Collapse'} ${group.name}`"
+            @click="toggleCollapsed"
+            @keydown.enter.prevent="toggleCollapsed"
+            @keydown.space.prevent="toggleCollapsed"
+          >
             <span>{{ group.name }}</span>
             <span class="group-header-chevron" aria-hidden="true">{{ collapsed ? '▶' : '▼' }}</span>
           </span>
@@ -145,10 +152,11 @@ function toggleCollapsed() {
               :quantity="entry.qty"
               :kcal="entry.kcal || 0"
               :color-index="store.groups.findIndex((item) => item.id === group.id) % 5"
+              :open="props.activeStepperId === `custom-${entry.id}`"
               one-off
               @decrement="decrement(entry)"
               @increment="!locked && bumpLogEntry(view.logDate, entry.id, 1)"
-              @edit="!locked && openModal(Modals.CUSTOM_ENTRY, { groupId: group.id, entry })"
+              @toggle="(isOpen) => toggleStepper(`custom-${entry.id}`, isOpen)"
             />
           </div>
           <template v-for="food in visibleFoods" :key="food.id">
@@ -159,10 +167,18 @@ function toggleCollapsed() {
               @drop.prevent="editMode && dropFood(group.id)"
             >
               <span v-if="editMode" class="dashboard-drag-handle" draggable="true" title="Drag food to another group" @dragstart="startDrag(food.id, $event)" @dragend="endDrag">⠿</span>
-              <button v-if="!entryFor(food.id)" type="button" class="today-chip" :aria-label="`Add ${food.name}`" @click="!locked && addLogFood(view.logDate, group.id, food.id)">
-                <span>{{ food.name }}</span><span class="chip-kcal">{{ foodKcal(food).toLocaleString() }} kcal</span>
-              </button>
-              <FoodQuantityStepper v-else :name="food.name" :quantity="entryFor(food.id).qty" :kcal="foodKcal(food)" @decrement="decrement(entryFor(food.id))" @increment="!locked && addLogFood(view.logDate, group.id, food.id)" @edit="!locked && openModal(Modals.FOOD_EDITOR, { foodId: food.id })" />
+              <FoodQuantityStepper
+                v-if="!entryFor(food.id)"
+                :name="food.name"
+                :quantity="0"
+                :kcal="foodKcal(food)"
+                :initial-open="false"
+                :locked="locked"
+                :open="props.activeStepperId === `food-${food.id}`"
+                @increment="!locked && addLogFood(view.logDate, group.id, food.id)"
+                @toggle="(isOpen) => toggleStepper(`food-${food.id}`, isOpen)"
+              />
+              <FoodQuantityStepper v-else :name="food.name" :quantity="entryFor(food.id).qty" :kcal="foodKcal(food)" :open="props.activeStepperId === `food-${food.id}`" @decrement="decrement(entryFor(food.id))" @increment="!locked && addLogFood(view.logDate, group.id, food.id)" @toggle="(isOpen) => toggleStepper(`food-${food.id}`, isOpen)" />
             </div>
           </template>
           <span v-if="!foods.length" class="empty-note">No foods in this group</span>
@@ -192,15 +208,14 @@ function toggleCollapsed() {
 .group-header-swatch.group-3 { background: #4f8f58; }
 .group-header-swatch.group-4 { background: #a8c98f; }
 
+.group-header-main {
+  cursor: pointer;
+}
+
 .chip-group-header-name {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  pointer-events: none;
-  cursor: pointer;
-  text-decoration: underline;
-  text-decoration-color: transparent;
-  text-underline-offset: 3px;
   transition: color 0.15s ease, text-decoration-color 0.15s ease;
 }
 
@@ -217,12 +232,7 @@ function toggleCollapsed() {
 .chip-group-header-name:hover,
 .chip-group-header-name:focus-visible {
   color: var(--green-strong);
-  text-decoration-color: currentColor;
   outline: none;
-}
-
-.chip-group-header {
-  cursor: pointer;
 }
 
 .chip-group-header-name:hover .group-header-chevron,

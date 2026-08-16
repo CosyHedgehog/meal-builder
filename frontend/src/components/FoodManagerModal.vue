@@ -41,9 +41,8 @@ async function removeFood(food) {
 </script>
 
 <template>
-  <BaseModal title="Foods" subtitle="Manage reusable foods made from ingredients or fixed calories." @close="emit('close')" @back="selectedGroupId ? replaceModal(Modals.GROUP_MANAGER) : replaceModal(Modals.INGREDIENT_MANAGER)">
+  <BaseModal title="Foods" subtitle="Manage reusable foods shown in the dashboard." @close="emit('close')" @back="selectedGroupId ? replaceModal(Modals.GROUP_MANAGER) : replaceModal(Modals.INGREDIENT_MANAGER)">
     <div class="manager-group">
-      <button class="btn btn-primary btn-full" type="button" @click="openEditor()">＋ New food</button>
       <div class="food-filters">
         <label class="food-filter-field">
           <span>Filter</span>
@@ -89,6 +88,9 @@ async function removeFood(food) {
         </template>
       </DraggableList>
       <div v-else class="empty-note">No foods match that search.</div>
+      <div class="food-manager-actions">
+        <button class="btn btn-primary btn-full" type="button" @click="openEditor()">＋ New food</button>
+      </div>
     </div>
   </BaseModal>
 </template>
@@ -164,6 +166,10 @@ async function removeFood(food) {
   margin: -2px 0 8px;
   color: var(--ink-muted);
   font-size: 11px;
+}
+
+.food-manager-actions {
+  padding-top: 14px;
 }
 
 .order-note-icon {

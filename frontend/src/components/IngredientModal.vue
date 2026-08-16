@@ -6,7 +6,7 @@ import { Modals } from '../js/modals.js'
 <template>
   <EntityManagerModal
     title="Ingredients"
-    subtitle="Keep your saved foods tidy. Use this panel to edit ingredients."
+    subtitle="Manage your ingredients and their calories."
     collection="ingredients"
     :editor-modal="Modals.INGREDIENT_EDITOR"
     editor-prop="ingredientId"

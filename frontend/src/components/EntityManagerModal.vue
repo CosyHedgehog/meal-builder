@@ -37,21 +37,14 @@ function openEditor(item = null) {
 async function deleteItem(item) {
   if (props.collection === 'ingredients') {
     const usedIn = ingredientUsage(item.id)
-    if (usedIn.length) {
-      await confirmAction({
-        title: 'Unable to delete',
-        message: `This ingredient is used in: ${usedIn
-          .map((meal) => meal.name)
-          .join(', ')}. Remove it from those meals first.`,
-        okLabel: 'Okay',
-        cancelLabel: '',
-      })
-      return
-    }
-
+    const message = usedIn.length
+      ? `"${item.name}" is used in ${usedIn.length} saved food${usedIn.length === 1 ? '' : 's'}: ${usedIn
+        .map((food) => food.name)
+        .join(', ')}. Deleting it will remove it from those foods, reduce their calories, and change any logged history that uses them. Continue?`
+      : `Delete "${item.name}"?`
     const ok = await confirmAction({
       title: 'Delete ingredient',
-      message: `Delete "${item.name}"?`,
+      message,
       okLabel: 'Delete ingredient',
     })
     if (!ok) return
@@ -69,7 +62,6 @@ async function deleteItem(item) {
     @back="secondaryActionModal && replaceModal(secondaryActionModal)"
   >
     <div class="manager-group">
-      <button class="btn btn-primary btn-full" @click="openEditor()">＋ {{ newLabel }}</button>
       <div class="manager-browse-label">Browse {{ countLabel }}</div>
       <input v-model="query" class="manager-search" type="search" :placeholder="searchPlaceholder" />
 
@@ -85,11 +77,20 @@ async function deleteItem(item) {
               <slot name="item" :item="item" />
               <span>›</span>
             </button>
-            <button class="manager-delete" type="button" aria-label="Delete item" @click.stop="deleteItem(item)">×</button>
+            <button
+              class="manager-delete"
+              type="button"
+              :aria-label="`Delete ${item.name}`"
+              :title="props.collection === 'ingredients' && ingredientUsage(item.id).length ? 'Remove this ingredient from its foods before deleting it' : `Delete ${item.name}`"
+              @click.stop="deleteItem(item)"
+            >×</button>
           </div>
         </div>
       </div>
       <div v-else class="empty-note">{{ emptyMessage }}</div>
+      <div class="food-manager-actions">
+        <button class="btn btn-primary btn-full" @click="openEditor()">＋ {{ newLabel }}</button>
+      </div>
     </div>
   </BaseModal>
 </template>
@@ -103,7 +104,7 @@ async function deleteItem(item) {
   background: var(--bg);
   color: var(--ink);
   font-size: 13px;
-  margin: 14px 0 12px;
+  margin: 5px 0 5px;
 }
 
 .manager-browse-label {
@@ -130,5 +131,9 @@ async function deleteItem(item) {
   font-size: 11px;
   color: var(--ink-muted);
   margin: -6px 0 10px;
+}
+
+.food-manager-actions {
+  padding-top: 14px;
 }
 </style>

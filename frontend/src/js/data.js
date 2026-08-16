@@ -503,6 +503,11 @@ export function updateIngredient(id, { name, unit, kcal }) {
 }
 
 export function deleteIngredient(id) {
+  state.foods.forEach((food) => {
+    if (!(food.items || []).some((item) => item.ingredientId === id)) return
+    food.items = food.items.filter((item) => item.ingredientId !== id)
+    if (food.mode !== 'simple') food.kcal = 0
+  })
   state.ingredients = state.ingredients.filter((i) => i.id !== id)
   save()
 }

@@ -4,7 +4,6 @@ import BaseModal from './BaseModal.vue'
 import {
   state as store,
   addIngredient,
-  deleteIngredient,
   ingredientUsage,
   updateIngredient,
 } from '../js/data.js'
@@ -52,28 +51,6 @@ async function closeEditor() {
   if (await confirmDiscard('Your unsaved ingredient changes will be lost.')) emit('close')
 }
 
-async function remove() {
-  const usedIn = ingredientUsage(props.ingredientId)
-  if (usedIn.length) {
-    await confirmAction({
-      title: 'Unable to delete',
-      message: `This ingredient is used in: ${usedIn
-        .map((m) => m.name)
-        .join(', ')}. Remove it from those meals first.`,
-      okLabel: 'Okay',
-      cancelLabel: '',
-    })
-    return
-  }
-  const ok = await confirmAction({
-    title: 'Delete ingredient',
-    message: `Delete "${existing.name}"?`,
-    okLabel: 'Delete ingredient',
-  })
-  if (!ok) return
-  deleteIngredient(props.ingredientId)
-  emit('close')
-}
 </script>
 
 <template>

@@ -10,7 +10,6 @@ import IngredientEditorModal from './IngredientEditorModal.vue'
 import FoodManagerModal from './FoodManagerModal.vue'
 import GroupManagerModal from './GroupManagerModal.vue'
 import IngredientModal from './IngredientModal.vue'
-import IngredientPickerModal from './IngredientPickerModal.vue'
 import CustomEntryModal from './CustomEntryModal.vue'
 import HistoryModal from './HistoryModal.vue'
 </script>
@@ -23,7 +22,6 @@ const registry = {
   [Modals.FOOD_MANAGER]: FoodManagerModal,
   [Modals.GROUP_MANAGER]: GroupManagerModal,
   [Modals.INGREDIENT_MANAGER]: IngredientModal,
-  [Modals.INGREDIENT_PICKER]: IngredientPickerModal,
   [Modals.CUSTOM_ENTRY]: CustomEntryModal,
   [Modals.HISTORY]: HistoryModal,
 }

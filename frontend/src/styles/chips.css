@@ -6,8 +6,8 @@
 .chip-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 5px 12px 5px 12px;
+  gap: 5px;
+  padding: 5px 0px 5px 7px;
 }
 
 .chip-group-header {
@@ -57,7 +57,7 @@
 .quick-picks-viewport {
   min-width: 0;
   max-width: 100%;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .meal-quick-picks {
@@ -167,38 +167,127 @@
 }
 
 /* ---- food steppers ---- */
+.food-stepper-wrap {
+  position: relative;
+  display: inline-flex;
+  z-index: 1;
+}
+
+.food-stepper-wrap.active,
+.food-stepper-wrap:focus-within,
+.food-stepper-wrap:hover {
+  z-index: 6;
+}
+
 .food-stepper {
   display: inline-flex;
-  align-items: stretch;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   min-height: 30px;
   max-height: 30px;
   overflow: hidden;
   border-radius: 999px;
-  color: var(--stepper-ink);
-  box-shadow: 0 2px 7px rgba(var(--shadow-rgb), 0.1);
-    border: 1px solid var(--line);
-  background: var(--surface);
+  padding: 0 9px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 11px;
+  font-family: inherit;
+  line-height: 1;
+  white-space: nowrap;
+  text-align: center;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .food-stepper.one-off {
   border-style: dashed;
-  background: var(--surface);
 }
 
-.food-stepper-control {
+.food-stepper-kcal {
+  margin-top: 1px;
+  color: var(--ink-muted);
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.food-stepper-quantity {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 6px;
-  background: transparent;
-  color: inherit;
-  font-size: 10px;
+  min-width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--green);
+  color: #fff;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
   line-height: 1;
-  transition: background 0.15s ease;
+  vertical-align: -1px;
 }
 
-.food-stepper-control:hover {
-  background: var(--surface-alt);
+.food-stepper-name {
+  padding-right: 4px;
+  padding-left: 4px;
+}
+
+.food-quantity-popover {
+  position: absolute;
+  z-index: 4;
+  top: calc(100% + 5px);
+  left: 50%;
+  max-width: calc(100vw - 16px);
+  display: grid;
+  grid-template-columns: 28px 30px 28px;
+  grid-template-rows: 26px;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 34px;
+  padding: 4px 5px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  box-shadow: 0 6px 16px rgba(var(--shadow-rgb), 0.18);
+  transform: translateX(-50%);
+}
+
+.food-quantity-popover.placement-start {
+  left: 0;
+  transform: none;
+}
+
+.food-quantity-popover.placement-end {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+.food-stepper-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 26px;
+  padding: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font-size: 15px;
+  line-height: 1;
+  transition: background 0.15s ease;
 }
 
 .food-stepper-label {
@@ -217,16 +306,24 @@
   white-space: nowrap;
 }
 
-.food-stepper-label:hover {
-  background: var(--surface-alt);
+.food-quantity-value {
+  min-width: 24px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  color: var(--ink);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  text-align: center;
 }
 
-.food-stepper-kcal {
-  margin-left: 3px;
-  color: var(--stepper-muted);
-  font-size: 9px;
-  font-weight: 500;
-  line-height: 1;
+.food-quantity-value.selected {
+  background: var(--surface-alt);
+  color: var(--green-strong);
+  font-weight: 700;
+}
+
+.food-stepper-label:hover {
+  background: var(--surface-alt);
 }
 
 /* ---- kcal labels hidden ---- */

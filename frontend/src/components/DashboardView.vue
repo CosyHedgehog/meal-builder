@@ -28,6 +28,7 @@ const projectedWeightUnit = computed(() => (store.weightUnit === 'lb' ? 'lb' : '
 const dayLocked = computed(() => store.allowPreviousDayLocking && view.logDate < new Date().toISOString().slice(0, 10))
 const hasOpenModal = computed(() => modalStack.length > 0 || confirmState.open)
 const mobileActionsOpen = ref(false)
+const activeStepperId = ref(null)
 const mobileActionStartY = ref(null)
 const historyCollapsed = ref(getCollapseState('history'))
 
@@ -78,6 +79,10 @@ function onMobileActionsPopState() {
   history.replaceState(null, '', location.href)
 }
 
+function setActiveStepper(stepperId) {
+  activeStepperId.value = activeStepperId.value === stepperId ? null : stepperId
+}
+
 onMounted(() => window.addEventListener('popstate', onMobileActionsPopState))
 onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState))
 </script>
@@ -87,14 +92,14 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
         <section class="manage-section">
       <div class="manage-actions desktop-manage-actions">
         <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.FOOD_MANAGER)">
-          ✎ Foods
+          Foods
         </button>
         <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.GROUP_MANAGER)">
-          ✎ Groups
+          Groups
         </button>
         <button v-if="!view.dashboardEditMode" class="manage-toggle group-add-button" type="button"
           @click="view.dashboardEditMode = true">
-          ✎ Dashboard
+          Edit Dashboard
         </button>
         <button v-else-if="view.dashboardEditMode" class="manage-toggle group-add-button" type="button"
           @click="finishDashboardEdit">
@@ -126,7 +131,14 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
         </div>
 
         <section v-for="group in groups" :key="group.id" class="today-group-card">
-          <FoodGroupList :group="group" :log="log" :edit-mode="view.dashboardEditMode" :locked="dayLocked" />
+          <FoodGroupList
+            :group="group"
+            :log="log"
+            :edit-mode="view.dashboardEditMode"
+            :locked="dayLocked"
+            :active-stepper-id="activeStepperId"
+            @update:active-stepper-id="setActiveStepper"
+          />
         </section>
       </div>
     </Transition>
@@ -185,10 +197,6 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
 </template>
 
 <style scoped>
-.manage-section {
-  margin-bottom: 10px
-}
-
 .home {
   display: flex;
   flex-direction: column;
@@ -263,7 +271,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 20px;
-  padding: 12px 12px 10px;
+  padding: 7px 7px 7px;
   box-shadow: 1px 2px 8px rgba(var(--shadow-rgb), 0.06);
 }
 
@@ -435,7 +443,6 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 18px;
-  padding: 5px 12px 0;
 }
 
 .manage-toggle {
