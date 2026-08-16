@@ -473,7 +473,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
 
 @media (max-width: 600px) {
   .home {
-    padding-bottom: calc(52px + env(safe-area-inset-bottom));
+    padding-bottom: calc(38px + env(safe-area-inset-bottom));
   }
 
   .today-card {
@@ -518,7 +518,6 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
     border-bottom: 0;
     border-radius: 14px 14px 0 0;
     background: var(--surface);
-    box-shadow: 0 -5px 20px rgba(var(--shadow-rgb), 0.14);
     transform: translateY(calc(100% - 36px));
     transition: transform 0.2s ease;
     touch-action: none;
