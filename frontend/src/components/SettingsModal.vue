@@ -131,7 +131,7 @@ function downloadJSON(filename, payload) {
 <style scoped>
 .settings-sections {
   min-height: 0;
-  max-height: min(560px, 85vh);
+  max-height: min(560px, 100vh);
   overflow-y: auto;
   display: flex;
   flex-direction: column;

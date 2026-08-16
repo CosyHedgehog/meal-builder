@@ -20,8 +20,9 @@ const emit = defineEmits(['decrement', 'increment', 'reset', 'toggle'])
 
 function incrementQuantity() {
   if (props.locked) return
-  emit('toggle', false)
   emit('increment')
+  updatePopoverPlacement()
+  emit('toggle', true)
 }
 
 function openQuantityPopover(event) {
