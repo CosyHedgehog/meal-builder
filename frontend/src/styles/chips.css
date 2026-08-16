@@ -250,7 +250,7 @@
   left: 50%;
   max-width: calc(100vw - 16px);
   display: grid;
-  grid-template-columns: 28px 30px 28px;
+  grid-template-columns: 28px 24px 28px;
   grid-template-rows: 26px;
   align-items: center;
   justify-content: center;
@@ -288,6 +288,28 @@
   font-size: 15px;
   line-height: 1;
   transition: background 0.15s ease;
+}
+
+.food-stepper-reset {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.food-stepper-reset:hover,
+.food-stepper-reset:focus-visible {
+  background: var(--surface-alt);
+  color: var(--ink);
+  outline: none;
 }
 
 .food-stepper-label {

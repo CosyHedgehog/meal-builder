@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import FoodQuantityStepper from './FoodQuantityStepper.vue'
-import { state as store, addLogFood, bumpLogEntry, logEntries, foodsInGroup, foodKcal, moveFoodToGroupEnd, insertFood, reorderGroups, deleteGroup, toggleGroupVisibility, UNCATEGORIZED_GROUP_ID } from '../js/data.js'
+import { state as store, addLogFood, bumpLogEntry, logEntries, foodsInGroup, foodKcal, moveFoodToGroupEnd, insertFood, reorderGroups, deleteGroup, toggleGroupVisibility, removeLogEntry, UNCATEGORIZED_GROUP_ID } from '../js/data.js'
 import { view, clearDragState, getCollapseState, setCollapseState } from '../js/ui.js'
 import { Modals, openModal } from '../js/modals.js'
 import { confirmAction } from '../js/confirm.js'
@@ -28,6 +28,12 @@ function entryFor(foodId) {
 function decrement(entry) {
   if (props.locked) return
   bumpLogEntry(view.logDate, entry.id, -1)
+}
+function resetEntry(entry) {
+  if (props.locked) return
+  emit('update:activeStepperId', null)
+  if (!entry) return
+  removeLogEntry(view.logDate, entry.id)
 }
 function startDrag(foodId, event) {
   // if (props.locked) return
@@ -155,6 +161,7 @@ function toggleStepper(stepperId, isOpen) {
               :open="props.activeStepperId === `custom-${entry.id}`"
               one-off
               @decrement="decrement(entry)"
+              @reset="resetEntry(entry)"
               @increment="!locked && bumpLogEntry(view.logDate, entry.id, 1)"
               @toggle="(isOpen) => toggleStepper(`custom-${entry.id}`, isOpen)"
             />
@@ -176,9 +183,10 @@ function toggleStepper(stepperId, isOpen) {
                 :locked="locked"
                 :open="props.activeStepperId === `food-${food.id}`"
                 @increment="!locked && addLogFood(view.logDate, group.id, food.id)"
+                @reset="resetEntry(entryFor(food.id))"
                 @toggle="(isOpen) => toggleStepper(`food-${food.id}`, isOpen)"
               />
-              <FoodQuantityStepper v-else :name="food.name" :quantity="entryFor(food.id).qty" :kcal="foodKcal(food)" :open="props.activeStepperId === `food-${food.id}`" @decrement="decrement(entryFor(food.id))" @increment="!locked && addLogFood(view.logDate, group.id, food.id)" @toggle="(isOpen) => toggleStepper(`food-${food.id}`, isOpen)" />
+              <FoodQuantityStepper v-else :name="food.name" :quantity="entryFor(food.id).qty" :kcal="foodKcal(food)" :open="props.activeStepperId === `food-${food.id}`" @decrement="decrement(entryFor(food.id))" @increment="!locked && addLogFood(view.logDate, group.id, food.id)" @reset="resetEntry(entryFor(food.id))" @toggle="(isOpen) => toggleStepper(`food-${food.id}`, isOpen)" />
             </div>
           </template>
           <span v-if="!foods.length" class="empty-note">No foods in this group</span>

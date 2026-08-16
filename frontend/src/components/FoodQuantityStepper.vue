@@ -16,10 +16,12 @@ const isOpen = ref(false)
 const stepperWrap = ref(null)
 const popoverPlacement = ref('center')
 
-const emit = defineEmits(['decrement', 'increment', 'toggle'])
+const emit = defineEmits(['decrement', 'increment', 'reset', 'toggle'])
 
 function incrementQuantity() {
-  if (!props.locked) emit('increment')
+  if (props.locked) return
+  emit('toggle', false)
+  emit('increment')
 }
 
 function openQuantityPopover(event) {
@@ -62,7 +64,6 @@ defineExpose({ closePopover })
         type="button"
         class="food-stepper"
         :class="[`group-${colorIndex}`, { 'one-off': oneOff, 'dashboard-locked': !locked, active: open, selected: quantity > 0 }]"
-        :aria-expanded="open"
         :aria-label="`${name}, quantity ${quantity}`"
         @click="incrementQuantity"
       >
@@ -77,8 +78,8 @@ defineExpose({ closePopover })
         @click="openQuantityPopover"
       >{{ quantity }}</button>
       <div v-if="open && !locked" class="food-quantity-popover" :class="`placement-${popoverPlacement}`" role="group" :aria-label="`Adjust ${name} quantity`">
-        <button type="button" class="food-stepper-control" :aria-label="`Remove one ${name}`" @click.stop="$emit('decrement')">−</button>
-        <span class="food-quantity-value" :class="{ selected: quantity === 0 }">{{ quantity }}</span>
+        <button type="button" class="food-stepper-control" :aria-label="`Remove one ${name}`" @click.stop="quantity === 1 && closePopover(); $emit('decrement')">−</button>
+        <button type="button" class="food-stepper-reset" :aria-label="`Reset ${name} quantity to zero`" title="Reset quantity" @click.stop="$emit('reset')">↺</button>
         <button type="button" class="food-stepper-control" :aria-label="`Add one ${name}`" @click.stop="$emit('increment')">＋</button>
       </div>
     </div>

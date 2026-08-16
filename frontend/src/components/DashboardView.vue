@@ -80,7 +80,7 @@ function onMobileActionsPopState() {
 }
 
 function setActiveStepper(stepperId) {
-  activeStepperId.value = activeStepperId.value === stepperId ? null : stepperId
+  activeStepperId.value = stepperId
 }
 
 onMounted(() => window.addEventListener('popstate', onMobileActionsPopState))
