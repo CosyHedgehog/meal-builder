@@ -9,6 +9,10 @@ const activity = ref([])
 const loading = ref(true)
 const error = ref('')
 
+function calorieBalance(item) {
+  return item.maintenance_calories - item.calories
+}
+
 function formatDate(value) {
   return new Date(`${value}T12:00:00`).toLocaleDateString(undefined, {
     weekday: 'long', month: 'short', day: 'numeric', year: 'numeric',
@@ -51,7 +55,7 @@ watch(
       <div v-else class="manager-list activity-list">
         <article v-for="item in activity" :key="`${item.username}-${item.log_date}`" class="activity-item">
           <strong>{{ item.username }} logged {{ item.calories.toLocaleString() }} calories</strong>
-          <span>out of {{ item.maintenance_calories.toLocaleString() }} maintenance · {{ formatDate(item.log_date) }}</span>
+          <span>{{ calorieBalance(item) >= 0 ? '-' : '+' }}{{ Math.abs(calorieBalance(item)).toLocaleString() }} kcal · {{ item.maintenance_calories.toLocaleString() }} maintenance · {{ formatDate(item.log_date) }}</span>
         </article>
       </div>
       <button class="btn btn-secondary btn-full follow-activity-button" type="button" @click="openModal(Modals.FOLLOW)">Find people to follow</button>
