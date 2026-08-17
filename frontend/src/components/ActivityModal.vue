@@ -15,7 +15,7 @@ function calorieBalance(item) {
 
 function formatDate(value) {
   return new Date(`${value}T12:00:00`).toLocaleDateString(undefined, {
-    weekday: 'long', month: 'short', day: 'numeric', year: 'numeric',
+    weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
   })
 }
 
