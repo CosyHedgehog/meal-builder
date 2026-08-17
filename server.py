@@ -295,10 +295,11 @@ class Handler(BaseHTTPRequestHandler):
             s=current_session(self)
             if not s: return json_response(self,401,{'error':'Not logged in'})
             conn=db(); rows=conn.execute('''SELECT u.id AS user_id,u.username,a.log_date,a.calories,a.maintenance_calories,a.updated_at,d.data
-                FROM daily_activity a JOIN follows f ON f.following_id=a.user_id JOIN users u ON u.id=a.user_id
+                FROM daily_activity a JOIN users u ON u.id=a.user_id
                 JOIN user_data d ON d.user_id=a.user_id
-                WHERE f.follower_id=?
-                ORDER BY a.updated_at DESC,a.log_date DESC LIMIT 50''',(s['user_id'],)).fetchall(); conn.close()
+                LEFT JOIN follows f ON f.following_id=a.user_id AND f.follower_id=?
+                WHERE f.following_id IS NOT NULL OR a.user_id=?
+                ORDER BY a.log_date DESC,a.updated_at DESC LIMIT 50''',(s['user_id'],s['user_id'])).fetchall(); conn.close()
             activity=[]
             for row in rows:
                 try:

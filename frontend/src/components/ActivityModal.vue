@@ -2,6 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 import BaseModal from './BaseModal.vue'
 import { activityApi } from '../js/api.js'
+import { auth } from '../js/auth.js'
 import { modalStack, openModal, Modals } from '../js/modals.js'
 
 const emit = defineEmits(['close'])
@@ -43,7 +44,7 @@ watch(
 </script>
 
 <template>
-  <BaseModal title="Activity" subtitle="Recent calorie summaries from people you follow." panel-class="activity-modal" @close="emit('close')">
+  <BaseModal title="Activity" subtitle="Recent calorie summaries from you and people you follow." panel-class="activity-modal" @close="emit('close')">
     <div class="manager-group activity-modal-content">
       <div v-if="loading" class="empty-note">Loading activity...</div>
       <div v-else-if="error" class="form-error">{{ error }}</div>
@@ -54,9 +55,21 @@ watch(
       </div>
       <div v-else class="manager-list activity-list">
         <article v-for="item in activity" :key="`${item.username}-${item.log_date}`" class="activity-item">
-          <strong>{{ item.username }} logged {{ item.calories.toLocaleString() }} calories</strong>
-          <span>{{ calorieBalance(item) >= 0 ? '-' : '+' }}{{ Math.abs(calorieBalance(item)).toLocaleString() }} kcal · {{ item.maintenance_calories.toLocaleString() }} maintenance · {{ formatDate(item.log_date) }}</span>
-          
+          <div class="activity-item-header">
+            <strong>{{ item.username === auth.user?.username ? 'You' : item.username }}</strong>
+            <span class="activity-calories">logged {{ item.calories.toLocaleString() }} kcal</span>
+          </div>
+          <div class="activity-item-meta">
+            <span
+              class="activity-pill"
+              :class="calorieBalance(item) >= 0 ? 'deficit' : 'surplus'"
+            >
+              {{ Math.abs(calorieBalance(item)).toLocaleString() }} kcal {{ calorieBalance(item) >= 0 ? 'deficit' : 'surplus' }}
+            </span>
+            <span class="activity-meta-text">
+              of {{ item.maintenance_calories.toLocaleString() }} maintenance · {{ formatDate(item.log_date) }}
+            </span>
+          </div>
         </article>
       </div>
       <button class="btn btn-secondary btn-full follow-activity-button" type="button" @click="openModal(Modals.FOLLOW)">Find people to follow</button>
@@ -66,10 +79,60 @@ watch(
 
 <style scoped>
 .activity-list { gap: 0; }
-.activity-item { display: flex; flex-direction: column; gap: 4px; padding: 13px 14px; border-bottom: 1px solid var(--line); }
+.activity-item {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+}
 .activity-item:last-child { border-bottom: 0; }
-.activity-item strong { color: var(--ink); font-size: 14px; }
-.activity-item span { color: var(--ink-muted); font-size: 12px; }
+
+.activity-item-header {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.activity-item-header strong {
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+.activity-calories {
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.activity-item-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.activity-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.activity-pill.deficit {
+  background: color-mix(in srgb, var(--green) 14%, transparent);
+  color: var(--green-strong);
+}
+.activity-pill.surplus {
+  background: color-mix(in srgb, var(--red) 14%, transparent);
+  color: var(--red);
+}
+
+.activity-meta-text {
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
 .activity-empty { display: flex; flex-direction: column; align-items: center; padding: 26px 16px 20px; text-align: center; }
 .activity-empty-icon { position: relative; width: 42px; height: 42px; margin-bottom: 12px; border: 2px solid var(--green); border-radius: 50%; opacity: .8; }
 .activity-empty-icon::before { position: absolute; left: 19px; top: 8px; width: 2px; height: 13px; border-radius: 2px; background: var(--green); content: ''; transform-origin: bottom center; }
