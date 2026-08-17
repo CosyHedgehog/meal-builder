@@ -43,27 +43,58 @@ function setActiveStepper(stepperId) {
     <section class="manage-section">
       <div class="manage-actions desktop-manage-actions">
         <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.FOOD_MANAGER)">
-          <span class="desktop-manage-icon desktop-manage-icon-foods" aria-hidden="true"></span> Foods
+          <svg class="desktop-manage-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
+            <path d="M7 2v20" />
+            <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
+          </svg>
+          Foods
         </button>
         <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.GROUP_MANAGER)">
-          <span class="desktop-manage-icon desktop-manage-icon-groups" aria-hidden="true"></span> Groups
+          <svg class="desktop-manage-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect width="7" height="7" x="3" y="3" rx="1.5" />
+            <rect width="7" height="7" x="14" y="3" rx="1.5" />
+            <rect width="7" height="7" x="14" y="14" rx="1.5" />
+            <rect width="7" height="7" x="3" y="14" rx="1.5" />
+          </svg>
+          Groups
         </button>
         <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.ACTIVITY)">
-          <span class="desktop-manage-icon desktop-manage-icon-activity" aria-hidden="true"></span> Activity
+          <svg class="desktop-manage-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+          </svg>
+          Activity
         </button>
         <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.TRENDS)">
-          <span class="desktop-manage-icon desktop-manage-icon-trends" aria-hidden="true"></span> Trends
+          <svg class="desktop-manage-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+            <polyline points="16 7 22 7 22 13" />
+          </svg>
+          Trends
         </button>
         <button v-if="!view.dashboardEditMode" class="manage-toggle group-add-button" type="button"
           @click="view.dashboardEditMode = true">
-          <span class="desktop-manage-icon desktop-manage-icon-edit" aria-hidden="true"></span> Dashboard
+          <svg class="desktop-manage-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect width="7" height="9" x="3" y="3" rx="1.5" />
+            <rect width="7" height="5" x="14" y="3" rx="1.5" />
+            <rect width="7" height="9" x="14" y="12" rx="1.5" />
+            <rect width="7" height="5" x="3" y="16" rx="1.5" />
+          </svg>
+          Dashboard
         </button>
         <button v-else-if="view.dashboardEditMode" class="manage-toggle group-add-button" type="button"
           @click="finishDashboardEdit">
-          <span class="desktop-manage-icon desktop-manage-icon-done" aria-hidden="true"></span> Done
+          <svg class="desktop-manage-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          Done
         </button>
         <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.SETTINGS)">
-          <span class="desktop-manage-icon desktop-manage-icon-settings" aria-hidden="true"></span> Settings
+          <svg class="desktop-manage-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+          Settings
         </button>
       </div>
     </section>
@@ -273,123 +304,13 @@ function setActiveStepper(stepperId) {
 }
 
 .desktop-manage-icon {
-  position: relative;
   display: inline-block;
   width: 15px;
   height: 15px;
   margin-right: 5px;
   vertical-align: -2px;
+  flex-shrink: 0;
   color: currentColor;
-}
-
-.desktop-manage-icon-foods {
-  border: 2px solid currentColor;
-  border-radius: 3px;
-}
-
-.desktop-manage-icon-foods::before,
-.desktop-manage-icon-foods::after {
-  position: absolute;
-  left: 3px;
-  width: 6px;
-  height: 2px;
-  background: currentColor;
-  content: '';
-}
-
-.desktop-manage-icon-foods::before { top: 3px; }
-.desktop-manage-icon-foods::after { bottom: 3px; }
-
-.desktop-manage-icon-groups::before,
-.desktop-manage-icon-groups::after {
-  position: absolute;
-  bottom: 0;
-  width: 6px;
-  border: 2px solid currentColor;
-  border-radius: 2px;
-  content: '';
-}
-
-.desktop-manage-icon-groups::before { left: 0; height: 9px; }
-.desktop-manage-icon-groups::after { right: 0; height: 12px; }
-
-.desktop-manage-icon-activity {
-  border: 2px solid currentColor;
-  border-radius: 50%;
-}
-
-.desktop-manage-icon-activity::before,
-.desktop-manage-icon-activity::after {
-  position: absolute;
-  left: 6px;
-  top: 2px;
-  width: 2px;
-  height: 5px;
-  border-radius: 2px;
-  background: currentColor;
-  content: '';
-  transform-origin: bottom center;
-}
-
-.desktop-manage-icon-activity::after { transform: rotate(120deg); }
-
-.desktop-manage-icon-trends {
-  border-bottom: 2px solid currentColor;
-  border-left: 2px solid currentColor;
-}
-
-.desktop-manage-icon-trends::before,
-.desktop-manage-icon-trends::after {
-  position: absolute;
-  bottom: 0;
-  width: 3px;
-  background: currentColor;
-  content: '';
-}
-
-.desktop-manage-icon-trends::before { left: 4px; height: 7px; }
-.desktop-manage-icon-trends::after { right: 1px; height: 11px; }
-
-.desktop-manage-icon-edit::before {
-  position: absolute;
-  left: 6px;
-  top: 0;
-  width: 4px;
-  height: 15px;
-  border-radius: 2px;
-  background: currentColor;
-  content: '';
-  transform: rotate(45deg);
-}
-
-.desktop-manage-icon-done::before {
-  position: absolute;
-  left: 2px;
-  top: 5px;
-  width: 10px;
-  height: 5px;
-  border-bottom: 2px solid currentColor;
-  border-left: 2px solid currentColor;
-  content: '';
-  transform: rotate(-45deg);
-}
-
-.desktop-manage-icon-settings {
-  border: 2px solid currentColor;
-  border-radius: 50%;
-}
-
-.desktop-manage-icon-settings::before {
-  position: absolute;
-  inset: 3px;
-  border: 2px solid currentColor;
-  border-radius: 50%;
-  content: '';
-}
-
-.mobile-action-sheet,
-.mobile-actions-backdrop {
-  display: none;
 }
 
 @media (max-width: 600px) {
@@ -412,191 +333,6 @@ function setActiveStepper(stepperId) {
 
   .desktop-manage-actions {
     display: none;
-  }
-
-  .mobile-actions-backdrop {
-    position: fixed;
-    inset: 0;
-    display: block;
-    background: rgba(var(--backdrop-rgb), 0.65);
-    touch-action: none;
-    overscroll-behavior: contain;
-    z-index: 20;
-  }
-
-  .mobile-action-sheet {
-    position: fixed;
-    right: 12px;
-    bottom: 0;
-    left: 12px;
-    display: block;
-    padding-bottom: env(safe-area-inset-bottom);
-    border: 1px solid var(--line);
-    border-bottom: 0;
-    border-radius: 14px 14px 0 0;
-    background: var(--surface);
-    transform: translateY(calc(100% - 36px));
-    transition: transform 0.2s ease;
-    touch-action: none;
-    overscroll-behavior: contain;
-    pointer-events: none;
-    z-index: 21;
-  }
-
-  .mobile-action-sheet.open {
-    transform: translateY(0);
-    pointer-events: auto;
-  }
-
-  .mobile-action-handle {
-    pointer-events: auto;
-    touch-action: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    width: 100%;
-    min-height: 36px;
-    border: 0;
-    background: transparent;
-    color: var(--green);
-    font-weight: 700;
-  }
-
-  .mobile-action-list {
-    display: grid;
-    gap: 6px;
-    padding: 0 10px 12px;
-  }
-
-  .mobile-action-list button {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 42px;
-    padding: 9px 12px;
-    border: 1px solid var(--line);
-    border-radius: 9px;
-    background: var(--surface-alt);
-    color: var(--ink);
-    text-align: left;
-    touch-action: manipulation;
-  }
-
-  .mobile-action-icon {
-    position: relative;
-    flex: 0 0 18px;
-    width: 18px;
-    height: 18px;
-    color: var(--green);
-  }
-
-  .mobile-action-icon-summary {
-    border-bottom: 2px solid currentColor;
-    border-left: 2px solid currentColor;
-  }
-
-  .mobile-action-icon-summary::before,
-  .mobile-action-icon-summary::after {
-    position: absolute;
-    bottom: 1px;
-    width: 3px;
-    border-radius: 2px;
-    background: currentColor;
-    content: '';
-  }
-
-  .mobile-action-icon-summary::before {
-    left: 5px;
-    height: 8px;
-  }
-
-  .mobile-action-icon-summary::after {
-    right: 2px;
-    height: 13px;
-  }
-
-  .mobile-action-icon-activity {
-    border: 2px solid currentColor;
-    border-radius: 50%;
-  }
-
-  .mobile-action-icon-activity::before,
-  .mobile-action-icon-activity::after {
-    position: absolute;
-    left: 7px;
-    top: 3px;
-    width: 2px;
-    height: 6px;
-    border-radius: 2px;
-    background: currentColor;
-    content: '';
-    transform-origin: bottom center;
-  }
-
-  .mobile-action-icon-activity::before {
-    transform: rotate(0deg);
-  }
-
-  .mobile-action-icon-activity::after {
-    transform: rotate(120deg);
-  }
-
-  .mobile-action-icon-foods {
-    border: 2px solid currentColor;
-    border-radius: 3px;
-  }
-
-  .mobile-action-icon-foods::before,
-  .mobile-action-icon-foods::after {
-    position: absolute;
-    left: 3px;
-    width: 8px;
-    height: 2px;
-    border-radius: 2px;
-    background: currentColor;
-    content: '';
-  }
-
-  .mobile-action-icon-foods::before {
-    top: 4px;
-  }
-
-  .mobile-action-icon-foods::after {
-    bottom: 4px;
-  }
-
-  .mobile-action-icon-groups::before,
-  .mobile-action-icon-groups::after {
-    position: absolute;
-    bottom: 1px;
-    width: 7px;
-    border: 2px solid currentColor;
-    border-radius: 2px;
-    content: '';
-  }
-
-  .mobile-action-icon-groups::before {
-    left: 1px;
-    height: 11px;
-  }
-
-  .mobile-action-icon-groups::after {
-    right: 1px;
-    height: 15px;
-  }
-
-  .mobile-action-icon-settings {
-    border: 2px solid currentColor;
-    border-radius: 50%;
-  }
-
-  .mobile-action-icon-settings::before {
-    position: absolute;
-    inset: 4px;
-    border: 2px solid currentColor;
-    border-radius: 50%;
-    content: '';
   }
 }
 </style>

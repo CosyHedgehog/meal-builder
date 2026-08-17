@@ -62,19 +62,41 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
     </button>
     <div class="mobile-action-list" :aria-hidden="!mobileActionsOpen">
       <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openAction(Modals.TRENDS)">
-        <span class="mobile-action-icon mobile-action-icon-summary" aria-hidden="true"></span> Trends
+        <svg class="mobile-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+          <polyline points="16 7 22 7 22 13" />
+        </svg>
+        Trends
       </button>
       <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openAction(Modals.FOOD_MANAGER)">
-        <span class="mobile-action-icon mobile-action-icon-foods" aria-hidden="true"></span> Foods
+        <svg class="mobile-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
+          <path d="M7 2v20" />
+          <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
+        </svg>
+        Foods
       </button>
       <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openAction(Modals.GROUP_MANAGER)">
-        <span class="mobile-action-icon mobile-action-icon-groups" aria-hidden="true"></span> Groups
+        <svg class="mobile-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect width="7" height="7" x="3" y="3" rx="1.5" />
+          <rect width="7" height="7" x="14" y="3" rx="1.5" />
+          <rect width="7" height="7" x="14" y="14" rx="1.5" />
+          <rect width="7" height="7" x="3" y="14" rx="1.5" />
+        </svg>
+        Groups
       </button>
       <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openAction(Modals.ACTIVITY)">
-        <span class="mobile-action-icon mobile-action-icon-activity" aria-hidden="true"></span> Activity
+        <svg class="mobile-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+        </svg>
+        Activity
       </button>
       <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openAction(Modals.SETTINGS)">
-        <span class="mobile-action-icon mobile-action-icon-settings" aria-hidden="true"></span> Settings
+        <svg class="mobile-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+        Settings
       </button>
     </div>
   </section>
@@ -153,94 +175,10 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
   }
 
   .mobile-action-icon {
-    position: relative;
     flex: 0 0 18px;
     width: 18px;
     height: 18px;
     color: var(--green);
-  }
-
-  .mobile-action-icon-summary {
-    border-bottom: 2px solid currentColor;
-    border-left: 2px solid currentColor;
-  }
-
-  .mobile-action-icon-summary::before,
-  .mobile-action-icon-summary::after {
-    position: absolute;
-    bottom: 1px;
-    width: 3px;
-    border-radius: 2px;
-    background: currentColor;
-    content: '';
-  }
-
-  .mobile-action-icon-summary::before { left: 5px; height: 8px; }
-  .mobile-action-icon-summary::after { right: 2px; height: 13px; }
-
-  .mobile-action-icon-activity {
-    border: 2px solid currentColor;
-    border-radius: 50%;
-  }
-
-  .mobile-action-icon-activity::before,
-  .mobile-action-icon-activity::after {
-    position: absolute;
-    left: 7px;
-    top: 3px;
-    width: 2px;
-    height: 6px;
-    border-radius: 2px;
-    background: currentColor;
-    content: '';
-    transform-origin: bottom center;
-  }
-
-  .mobile-action-icon-activity::after { transform: rotate(120deg); }
-
-  .mobile-action-icon-foods {
-    border: 2px solid currentColor;
-    border-radius: 3px;
-  }
-
-  .mobile-action-icon-foods::before,
-  .mobile-action-icon-foods::after {
-    position: absolute;
-    left: 3px;
-    width: 8px;
-    height: 2px;
-    border-radius: 2px;
-    background: currentColor;
-    content: '';
-  }
-
-  .mobile-action-icon-foods::before { top: 4px; }
-  .mobile-action-icon-foods::after { bottom: 4px; }
-
-  .mobile-action-icon-groups::before,
-  .mobile-action-icon-groups::after {
-    position: absolute;
-    bottom: 1px;
-    width: 7px;
-    border: 2px solid currentColor;
-    border-radius: 2px;
-    content: '';
-  }
-
-  .mobile-action-icon-groups::before { left: 1px; height: 11px; }
-  .mobile-action-icon-groups::after { right: 1px; height: 15px; }
-
-  .mobile-action-icon-settings {
-    border: 2px solid currentColor;
-    border-radius: 50%;
-  }
-
-  .mobile-action-icon-settings::before {
-    position: absolute;
-    inset: 4px;
-    border: 2px solid currentColor;
-    border-radius: 50%;
-    content: '';
   }
 }
 </style>

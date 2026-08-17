@@ -49,7 +49,9 @@ watch(
       <div v-if="loading" class="empty-note">Loading activity...</div>
       <div v-else-if="error" class="form-error">{{ error }}</div>
       <div v-else-if="!activity.length" class="activity-empty">
-        <div class="activity-empty-icon" aria-hidden="true"></div>
+        <svg class="activity-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+        </svg>
         <strong>No activity yet</strong>
         <p>Follow someone who shares daily calories to see their progress here.</p>
       </div>
@@ -168,9 +170,7 @@ watch(
 }
 
 .activity-empty { display: flex; flex-direction: column; align-items: center; padding: 26px 16px 20px; text-align: center; }
-.activity-empty-icon { position: relative; width: 42px; height: 42px; margin-bottom: 12px; border: 2px solid var(--green); border-radius: 50%; opacity: .8; }
-.activity-empty-icon::before { position: absolute; left: 19px; top: 8px; width: 2px; height: 13px; border-radius: 2px; background: var(--green); content: ''; transform-origin: bottom center; }
-.activity-empty-icon::after { position: absolute; left: 19px; top: 8px; width: 2px; height: 11px; border-radius: 2px; background: var(--green); content: ''; transform-origin: bottom center; transform: rotate(125deg); }
+.activity-empty-icon { width: 42px; height: 42px; margin-bottom: 12px; color: var(--green); opacity: .8; }
 .activity-empty strong { color: var(--ink); font-size: 16px; }
 .activity-empty p { max-width: 300px; margin: 6px 0 0; color: var(--ink-muted); font-size: 13px; line-height: 1.45; }
 .follow-activity-button { margin-top: 14px; }
