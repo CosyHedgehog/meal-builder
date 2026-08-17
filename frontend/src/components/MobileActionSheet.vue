@@ -62,7 +62,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
     </button>
     <div class="mobile-action-list" :aria-hidden="!mobileActionsOpen">
       <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openAction(Modals.TRENDS)">
-        <span class="mobile-action-icon mobile-action-icon-summary" aria-hidden="true"></span> Summary
+        <span class="mobile-action-icon mobile-action-icon-summary" aria-hidden="true"></span> Trends
       </button>
       <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openAction(Modals.FOOD_MANAGER)">
         <span class="mobile-action-icon mobile-action-icon-foods" aria-hidden="true"></span> Foods

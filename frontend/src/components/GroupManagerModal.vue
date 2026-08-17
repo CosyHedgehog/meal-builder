@@ -22,14 +22,8 @@ async function removeGroup(group) {
 </script>
 
 <template>
-  <BaseModal title="Groups" subtitle="Organize foods into dashboard sections." @close="emit('close')">
-    <div class="input-field">
-      <label for="newGroupName">New group</label>
-      <div class="inline-form">
-        <input id="newGroupName" v-model="newName" placeholder="e.g. Post-workout" @keyup.enter="addGroup" />
-        <button class="btn btn-primary" type="button" @click="addGroup">Add</button>
-      </div>
-    </div>
+  <BaseModal title="Groups" subtitle="Organize foods into dashboard sections." panel-class="group-manager-modal" @close="emit('close')">
+    <div class="group-manager-content">
     <div class="group-order-note">
       <span class="order-note-icon" aria-hidden="true">ⓘ</span>
       <span>Drag groups to change the order they appear on the dashboard.</span>
@@ -57,12 +51,22 @@ async function removeGroup(group) {
         </div>
       </template>
     </DraggableList>
+    <div class="group-manager-actions input-field">
+      <label for="newGroupName">New group</label>
+      <div class="inline-form">
+        <input id="newGroupName" v-model="newName" placeholder="e.g. Post-workout" @keyup.enter="addGroup" />
+        <button class="btn btn-primary" type="button" @click="addGroup">Add</button>
+      </div>
+    </div>
+    </div>
   </BaseModal>
 </template>
 
 <style scoped>
 .inline-form { display: flex; gap: 8px; }
 .inline-form input { flex: 1; min-width: 0; }
+.group-manager-content { display: flex; flex-direction: column; gap: 8px; }
+.group-manager-actions { margin: 0; padding-top: 6px; }
 .group-order-note {
   display: flex;
   align-items: center;
@@ -106,5 +110,29 @@ async function removeGroup(group) {
   color: var(--ink-muted);
   font-size: 18px;
   cursor: help;
+}
+
+@media (max-width: 480px) {
+  :deep(.modal.group-manager-modal) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .group-manager-content {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .group-manager-content :deep(.manager-list) {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+  }
+
+  .group-manager-actions {
+    flex: none;
+    margin-top: auto;
+  }
 }
 </style>
