@@ -127,7 +127,7 @@ function downloadJSON(filename, payload) {
         </div>
         <div class="settings-info-note">
           <span aria-hidden="true">ⓘ</span>
-          <span>Followers can see your daily calories and maintenance calories in the activity menu. Food details are never shared.</span>
+          <span>People who follow you can see your daily calories, maintenance calories, and the food items logged for each shared day in Activity.</span>
         </div>
         <div class="settings-row data-actions">
           <label>Import data</label>

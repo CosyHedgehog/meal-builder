@@ -55,6 +55,7 @@ watch(
       </div>
       <div v-else class="manager-list activity-list">
         <article v-for="item in activity" :key="`${item.username}-${item.log_date}`" class="activity-item">
+          <button class="activity-item-button" type="button" @click="openModal(Modals.ACTIVITY_DAY, { item })">
           <div class="activity-item-header">
             <strong>{{ item.username === auth.user?.username ? 'You' : item.username }}</strong>
             <span class="activity-calories">logged {{ item.calories.toLocaleString() }} kcal</span>
@@ -70,6 +71,7 @@ watch(
               of {{ item.maintenance_calories.toLocaleString() }} maintenance · {{ formatDate(item.log_date) }}
             </span>
           </div>
+          </button>
         </article>
       </div>
       <button class="btn btn-secondary btn-full follow-activity-button" type="button" @click="openModal(Modals.FOLLOW)">Find people to follow</button>
@@ -80,6 +82,7 @@ watch(
 <style scoped>
 .activity-list { gap: 0; }
 .activity-item {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 7px;
@@ -87,11 +90,42 @@ watch(
   border-bottom: 1px solid var(--line);
 }
 .activity-item:last-child { border-bottom: 0; }
+.activity-item-button {
+  display: flex;
+  width: 100%;
+  min-height: 50px;
+  flex-direction: column;
+  gap: 7px;
+  justify-content: center;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.activity-item-button:hover,
+.activity-item-button:focus-visible {
+  background: var(--surface-alt);
+  color: var(--green-strong);
+}
+.activity-item-button:focus-visible { outline: 2px solid var(--green); outline-offset: 1px; }
+.activity-item-button::after {
+  position: absolute;
+  right: 12px;
+  color: var(--ink-muted);
+  content: '›';
+  font-size: 22px;
+  line-height: 1;
+}
 
 .activity-item-header {
   display: flex;
   align-items: baseline;
   gap: 6px;
+  padding-right: 22px;
 }
 .activity-item-header strong {
   color: var(--ink);

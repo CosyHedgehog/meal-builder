@@ -84,11 +84,15 @@ def init_db():
         log_date TEXT NOT NULL,
         calories INTEGER NOT NULL,
         maintenance_calories INTEGER NOT NULL,
+        items TEXT NOT NULL DEFAULT '[]',
         updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY(user_id, log_date),
         FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
     );
     ''')
+    columns = {row['name'] for row in conn.execute('PRAGMA table_info(daily_activity)').fetchall()}
+    if 'items' not in columns:
+        conn.execute("ALTER TABLE daily_activity ADD COLUMN items TEXT NOT NULL DEFAULT '[]'")
     rows = conn.execute('SELECT user_id, data FROM user_data').fetchall()
     for row in rows:
         try:
@@ -221,19 +225,28 @@ def daily_calories(data):
     for log_date, log in (data.get('logs') or {}).items():
         if not isinstance(log, dict): continue
         calories = 0
+        items = []
         for entry in log.get('entries', []):
             if not isinstance(entry, dict): continue
             qty = float(entry.get('qty') or 1)
-            calories += round(food_kcal(foods.get(entry['foodId'])) * qty) if entry.get('foodId') else round(float(entry.get('kcal') or 0) * qty)
+            if entry.get('foodId'):
+                food = foods.get(entry['foodId'])
+                item_calories = round(food_kcal(food) * qty)
+                item_name = food.get('name', 'Food') if food else 'Food'
+            else:
+                item_calories = round(float(entry.get('kcal') or 0) * qty)
+                item_name = entry.get('name') or 'Custom entry'
+            calories += item_calories
+            items.append({'name': item_name, 'quantity': qty, 'calories': item_calories})
         if log.get('entries'):
-            summaries.append((str(log_date), calories))
+            summaries.append((str(log_date), calories, items))
     return summaries
 
 def update_activity(conn, user_id, data):
     conn.execute('DELETE FROM daily_activity WHERE user_id=?', (user_id,))
     conn.executemany(
-        'INSERT INTO daily_activity(user_id,log_date,calories,maintenance_calories) VALUES(?,?,?,?)',
-        [(user_id, date, calories, round(float(data.get('maintenanceCal') or 2200))) for date, calories in daily_calories(data)]
+        'INSERT INTO daily_activity(user_id,log_date,calories,maintenance_calories,items) VALUES(?,?,?,?,?)',
+        [(user_id, date, calories, round(float(data.get('maintenanceCal') or 2200)), json.dumps(items, separators=(',', ':'))) for date, calories, items in daily_calories(data)]
     )
 
 class Handler(BaseHTTPRequestHandler):
@@ -294,7 +307,7 @@ class Handler(BaseHTTPRequestHandler):
         if path == '/api/activity/feed':
             s=current_session(self)
             if not s: return json_response(self,401,{'error':'Not logged in'})
-            conn=db(); rows=conn.execute('''SELECT u.id AS user_id,u.username,a.log_date,a.calories,a.maintenance_calories,a.updated_at,d.data
+            conn=db(); rows=conn.execute('''SELECT u.id AS user_id,u.username,a.log_date,a.calories,a.maintenance_calories,a.items,a.updated_at,d.data
                 FROM daily_activity a JOIN users u ON u.id=a.user_id
                 JOIN user_data d ON d.user_id=a.user_id
                 LEFT JOIN follows f ON f.following_id=a.user_id AND f.follower_id=?
