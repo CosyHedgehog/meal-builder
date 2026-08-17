@@ -382,6 +382,25 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_DELETE(self):
         path=urlparse(self.path).path
+        if path == '/api/account':
+            s=current_session(self)
+            if not s: return json_response(self,401,{'error':'Not logged in'})
+            try: data=read_json(self)
+            except Exception: return json_response(self,400,{'error':'Invalid JSON'})
+            password=str(data.get('password') or '')
+            conn=db(); row=conn.execute('SELECT password_hash,password_salt FROM users WHERE id=?',(s['user_id'],)).fetchone()
+            if not row or not verify_password(password,row['password_salt'],row['password_hash']):
+                conn.close(); return json_response(self,401,{'error':'Invalid password'})
+            try:
+                conn.execute('BEGIN')
+                conn.execute('DELETE FROM users WHERE id=?',(s['user_id'],))
+                conn.commit()
+            except Exception:
+                conn.rollback(); conn.close(); return json_response(self,500,{'error':'Account could not be deleted'})
+            conn.close()
+            raw=self.headers.get('Cookie',''); jar=cookies.SimpleCookie(); jar.load(raw); token=jar.get('session')
+            if token: destroy_session(token.value)
+            return json_response(self,200,{'ok':True},{'Set-Cookie':'session=; Max-Age=0; HttpOnly; SameSite=Lax; Path=/'})
         if not path.startswith('/api/follows/'):
             return json_response(self,404,{'error':'Not found'})
         s=current_session(self)

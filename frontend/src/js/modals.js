@@ -13,6 +13,7 @@ export const Modals = Object.freeze({
   CUSTOM_ENTRY: 'custom-entry',
   ACTIVITY: 'activity',
   FOLLOW: 'follow',
+  DELETE_ACCOUNT: 'delete-account',
 })
 
 /**

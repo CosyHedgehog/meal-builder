@@ -15,6 +15,7 @@ import CustomEntryModal from './CustomEntryModal.vue'
 import TrendsModal from './TrendsModal.vue'
 import ActivityModal from './ActivityModal.vue'
 import FollowModal from './FollowModal.vue'
+import DeleteAccountModal from './DeleteAccountModal.vue'
 
 const registry = {
   [Modals.SETTINGS]: SettingsModal,
@@ -29,6 +30,7 @@ const registry = {
   [Modals.TRENDS]: TrendsModal,
   [Modals.ACTIVITY]: ActivityModal,
   [Modals.FOLLOW]: FollowModal,
+  [Modals.DELETE_ACCOUNT]: DeleteAccountModal,
 }
 
 const modalInstances = new Map()

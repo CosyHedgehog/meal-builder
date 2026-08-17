@@ -15,6 +15,7 @@ import {
 import { isDark, toggleTheme } from '../js/ui.js'
 import { auth, signOut } from '../js/auth.js'
 import { closeAllModals, Modals, openModal } from '../js/modals.js'
+import { confirmAction } from '../js/confirm.js'
 
 const emit = defineEmits(['close'])
 const darkMode = computed({
@@ -50,6 +51,16 @@ async function logOut() {
   await flushSave()
   closeAllModals()
   await signOut()
+}
+
+async function requestDeleteAccount() {
+  const confirmed = await confirmAction({
+    title: 'Delete account?',
+    message: 'This permanently deletes your account and all associated data. This cannot be undone.',
+    okLabel: 'Continue',
+    okClass: 'btn-danger-outline',
+  })
+  if (confirmed) openModal(Modals.DELETE_ACCOUNT)
 }
 
 function downloadJSON(filename, payload) {
@@ -111,12 +122,12 @@ function downloadJSON(filename, payload) {
       <section class="settings-section">
         <div class="section-label">Data</div>
         <div class="settings-row">
-          <label>Show daily calories in Activity</label>
+          <label>Share activity</label>
           <ToggleSwitch v-model="shareActivity" label="Allow daily calories in Activity" />
         </div>
         <div class="settings-info-note">
           <span aria-hidden="true">ⓘ</span>
-          <span>Followers can see your daily calories and maintenance calories. Food details are never shared.</span>
+          <span>Followers can see your daily calories and maintenance calories in the activity menu. Food details are never shared.</span>
         </div>
         <div class="settings-row data-actions">
           <label>Import data</label>
@@ -134,9 +145,19 @@ function downloadJSON(filename, payload) {
           <div class="settings-account">
             <span>Signed in as <strong>{{ auth.user?.username || 'Unknown user' }}</strong></span>
           </div>
-          <button class="btn btn-danger-outline" @click="logOut">
+          <button class="btn btn-secondary" @click="logOut">
             ↪ Log out
           </button>
+        </div>
+        <div class="settings-row account-row account-delete-row">
+          <label>Delete account</label>
+          <button class="btn btn-danger-outline" type="button" @click="requestDeleteAccount">
+            Delete
+          </button>
+        </div>
+        <div class="settings-info-note account-delete-note">
+          <span aria-hidden="true">ⓘ</span>
+          <span>Permanently removes your account, nutrition data, follows, sessions, and shared activity. This cannot be undone.</span>
         </div>
       </section>
     </div>
@@ -195,6 +216,11 @@ function downloadJSON(filename, payload) {
   color: var(--ink);
   font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
+}
+
+.account-row .btn {
+  width: 120px;
+  text-align: center;
 }
 
 .settings-row {

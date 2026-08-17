@@ -18,6 +18,7 @@ export const authApi = {
   login: (username, password) => request('/api/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
   signup: (username, password) => request('/api/signup', { method: 'POST', body: JSON.stringify({ username, password }) }),
   logout: () => request('/api/logout', { method: 'POST', body: '{}' }),
+  deleteAccount: (password) => request('/api/account', { method: 'DELETE', body: JSON.stringify({ password }) }),
 }
 
 export const dataApi = {
