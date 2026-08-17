@@ -89,6 +89,45 @@ export function useTrendsChart() {
   )
   const windowProjectedKgPerWeek = computed(() => (windowAverageDeficit.value * 7) / KCAL_PER_KG)
 
+  const weeklyBreakdown = computed(() => {
+    const firstLoggedIndex = history.value.findIndex((entry) => entry.hasLog)
+    if (firstLoggedIndex < 0) return []
+    const entries = history.value.slice(firstLoggedIndex)
+    const weeks = []
+    for (let end = entries.length - 1; end >= 0; end -= 7) {
+      const start = Math.max(0, end - 6)
+      const range = entries.slice(start, end + 1)
+      const logged = range.filter((entry) => entry.hasLog)
+      const average = (field) => logged.length
+        ? Math.round(logged.reduce((sum, entry) => sum + entry[field], 0) / logged.length)
+        : 0
+      weeks.push({
+        start: range[0].date,
+        end: range[range.length - 1].date,
+        loggedDays: logged.length,
+        totalDays: range.length,
+        averageKcal: average('total'),
+        averageDeficit: average('deficit'),
+      })
+    }
+    return weeks
+  })
+
+  const trackingSummary = computed(() => {
+    const entries = history.value
+    const firstLoggedIndex = entries.findIndex((entry) => entry.hasLog)
+    if (firstLoggedIndex < 0) return { loggedDays: 0, totalDays: 0, consistency: 0, bestDeficit: null, largestSurplus: null }
+    const tracked = entries.slice(firstLoggedIndex)
+    const logged = tracked.filter((entry) => entry.hasLog)
+    return {
+      loggedDays: logged.length,
+      totalDays: tracked.length,
+      consistency: Math.round((logged.length / tracked.length) * 100),
+      bestDeficit: logged.reduce((best, entry) => entry.deficit > (best?.deficit ?? -Infinity) ? entry : best, null),
+      largestSurplus: logged.reduce((worst, entry) => entry.deficit < (worst?.deficit ?? Infinity) ? entry : worst, null),
+    }
+  })
+
   return {
     days,
     bars,
@@ -99,5 +138,7 @@ export function useTrendsChart() {
     windowAverageKcal,
     windowAverageDeficit,
     windowProjectedKgPerWeek,
+    weeklyBreakdown,
+    trackingSummary,
   }
 }
