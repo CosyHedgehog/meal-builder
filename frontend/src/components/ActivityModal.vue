@@ -56,6 +56,7 @@ watch(
         <article v-for="item in activity" :key="`${item.username}-${item.log_date}`" class="activity-item">
           <strong>{{ item.username }} logged {{ item.calories.toLocaleString() }} calories</strong>
           <span>{{ calorieBalance(item) >= 0 ? '-' : '+' }}{{ Math.abs(calorieBalance(item)).toLocaleString() }} kcal · {{ item.maintenance_calories.toLocaleString() }} maintenance · {{ formatDate(item.log_date) }}</span>
+          
         </article>
       </div>
       <button class="btn btn-secondary btn-full follow-activity-button" type="button" @click="openModal(Modals.FOLLOW)">Find people to follow</button>
