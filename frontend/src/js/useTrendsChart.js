@@ -108,6 +108,7 @@ export function useTrendsChart() {
         totalDays: range.length,
         averageKcal: average('total'),
         averageDeficit: average('deficit'),
+        days: range,
       })
     }
     return weeks

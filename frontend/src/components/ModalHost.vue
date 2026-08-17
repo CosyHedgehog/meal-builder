@@ -15,6 +15,7 @@ import CustomEntryModal from './CustomEntryModal.vue'
 import TrendsModal from './TrendsModal.vue'
 import ActivityModal from './ActivityModal.vue'
 import ActivityDayModal from './ActivityDayModal.vue'
+import TrendsWeekModal from './TrendsWeekModal.vue'
 import FollowModal from './FollowModal.vue'
 import DeleteAccountModal from './DeleteAccountModal.vue'
 
@@ -31,6 +32,7 @@ const registry = {
   [Modals.TRENDS]: TrendsModal,
   [Modals.ACTIVITY]: ActivityModal,
   [Modals.ACTIVITY_DAY]: ActivityDayModal,
+  [Modals.TRENDS_WEEK]: TrendsWeekModal,
   [Modals.FOLLOW]: FollowModal,
   [Modals.DELETE_ACCOUNT]: DeleteAccountModal,
 }

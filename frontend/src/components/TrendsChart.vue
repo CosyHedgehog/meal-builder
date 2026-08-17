@@ -2,7 +2,8 @@
 import { setLogDate, view } from '../js/ui.js'
 import { useTrendsChart } from '../js/useTrendsChart.js'
 
-const { days, bars, goalLineBottom } = useTrendsChart()
+const props = defineProps({ range: { type: [Number, String], default: 30 } })
+const { days, bars, goalLineBottom } = useTrendsChart(props.range)
 </script>
 
 <template>
