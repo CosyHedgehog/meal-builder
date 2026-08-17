@@ -57,11 +57,12 @@ async function deleteItem(item) {
   <BaseModal
     :title="title"
     :subtitle="subtitle"
+    panel-class="entity-manager-modal"
     :back-label="backLabel"
     @close="emit('close')"
     @back="secondaryActionModal && replaceModal(secondaryActionModal)"
   >
-    <div class="manager-group">
+    <div class="manager-group entity-manager-content">
       <div class="manager-browse-label">Browse {{ countLabel }}</div>
       <input v-model="query" class="manager-search" type="search" :placeholder="searchPlaceholder" />
 
@@ -135,5 +136,30 @@ async function deleteItem(item) {
 
 .food-manager-actions {
   padding-top: 14px;
+}
+
+@media (max-width: 480px) {
+  :deep(.modal.entity-manager-modal) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .entity-manager-content {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    flex-direction: column;
+  }
+
+  .entity-manager-content > .manager-list {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+  }
+
+  .food-manager-actions {
+    flex: none;
+  }
 }
 </style>

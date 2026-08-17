@@ -174,7 +174,7 @@ function downloadJSON(filename, payload) {
 }
 
 .settings-section .section-label {
-  margin: 0 0 10px;
+  margin: 0 0 6px;
   color: var(--ink);
   font-size: 11px;
   font-weight: 700;
@@ -205,7 +205,7 @@ function downloadJSON(filename, payload) {
 }
 
 .settings-row + .settings-row {
-  margin-top: 12px;
+  margin-top: 8px;
 }
 
 .settings-row label {
@@ -262,5 +262,18 @@ function downloadJSON(filename, payload) {
   background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50%;
   background-size: 5px 5px, 5px 5px;
   text-align: center;
+}
+
+@media (max-width: 480px) {
+  :deep(.modal.settings-modal) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .settings-sections {
+    flex: 1;
+    max-height: none;
+    overflow-y: auto;
+  }
 }
 </style>

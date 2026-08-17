@@ -1,29 +1,29 @@
 <script setup>
 import { setLogDate, view } from '../js/ui.js'
-import { useHistoryChart } from '../js/useHistoryChart.js'
+import { useTrendsChart } from '../js/useTrendsChart.js'
 
-const { days, bars, goalLineBottom } = useHistoryChart()
+const { days, bars, goalLineBottom } = useTrendsChart()
 </script>
 
 <template>
-  <section class="section-block history-section">
-    <div class="history-grid" :style="{ gridTemplateColumns: `repeat(${days}, minmax(0, 1fr))` }">
-      <div class="history-goal-line" :style="{ bottom: goalLineBottom + 'px' }"></div>
+  <section class="section-block trends-section">
+    <div class="trends-grid" :style="{ gridTemplateColumns: `repeat(${days}, minmax(0, 1fr))` }">
+      <div class="trends-goal-line" :style="{ bottom: goalLineBottom + 'px' }"></div>
 
-      <button v-for="bar in bars" :key="bar.date" type="button" class="history-day"
+      <button v-for="bar in bars" :key="bar.date" type="button" class="trends-day"
         :class="{ active: bar.date === view.logDate, today: bar.isToday }" :title="bar.label"
         :aria-label="`Load ${bar.label}`" @click="setLogDate(bar.date)">
-        <span class="history-bar-area">
-          <span v-if="bar.hasLog" class="history-bar-stack" :class="{ 'over-goal': bar.overGoal }"
+        <span class="trends-bar-area">
+          <span v-if="bar.hasLog" class="trends-bar-stack" :class="{ 'over-goal': bar.overGoal }"
             :style="{ height: bar.barHeight + 'px' }">
           </span>
-          <span v-else class="history-empty-bar"></span>
+          <span v-else class="trends-empty-bar"></span>
         </span>
-        <span class="history-day-label">{{ bar.weekday }}</span>
+        <span class="trends-day-label">{{ bar.weekday }}</span>
       </button>
     </div>
 
-    <div class="history-legend">
+    <div class="trends-legend">
       <span class="legend-item"><span class="legend-swatch under-goal"></span>Under maintenance</span>
       <span class="legend-item"><span class="legend-swatch over-goal"></span>Over maintenance</span>
       <span class="legend-item"><span class="legend-swatch maintenance"></span>Maintenance calories</span>
@@ -33,14 +33,14 @@ const { days, bars, goalLineBottom } = useHistoryChart()
 </template>
 
 <style scoped>
-.history-grid {
+.trends-grid {
   display: grid;
   gap: 8px;
   margin-top: 16px;
   position: relative;
 }
 
-.history-day {
+.trends-day {
   width: 100%;
   height: 132px;
   display: grid;
@@ -56,19 +56,19 @@ const { days, bars, goalLineBottom } = useHistoryChart()
   position: relative;
 }
 
-.history-day:hover {
+.trends-day:hover {
   transform: translateY(-1px);
   z-index: 4;
 }
 
-.history-day:focus-visible {
+.trends-day:focus-visible {
   outline: 2px solid var(--green);
   outline-offset: 2px;
   border-radius: 6px;
   z-index: 4;
 }
 
-.history-bar-area {
+.trends-bar-area {
   width: 100%;
   height: 108px;
   display: flex;
@@ -76,10 +76,10 @@ const { days, bars, goalLineBottom } = useHistoryChart()
   justify-content: center;
 }
 
-.history-bar-stack {
+.trends-bar-stack {
   width: 12px;
   min-height: 5px;
-  background: var(--history-under);
+  background: var(--trends-under);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -89,18 +89,18 @@ const { days, bars, goalLineBottom } = useHistoryChart()
   position: relative;
 }
 
-.history-bar-stack.over-goal {
-  background: var(--history-over);
+.trends-bar-stack.over-goal {
+  background: var(--trends-over);
 }
 
-.history-empty-bar {
+.trends-empty-bar {
   width: 6px;
   height: 32px;
   border-radius: 999px;
-  background: var(--history-empty);
+  background: var(--trends-empty);
 }
 
-.history-goal-line {
+.trends-goal-line {
   position: absolute;
   z-index: 1;
   left: 0;
@@ -110,7 +110,7 @@ const { days, bars, goalLineBottom } = useHistoryChart()
   pointer-events: none;
 }
 
-.history-day-label {
+.trends-day-label {
   position: relative;
   margin-top: 8px;
   font-size: 12px;
@@ -119,16 +119,16 @@ const { days, bars, goalLineBottom } = useHistoryChart()
   color: var(--ink-muted);
 }
 
-.history-day.today .history-day-label {
+.trends-day.today .trends-day-label {
   font-weight: 700;
 }
 
-.history-day.active .history-day-label {
+.trends-day.active .trends-day-label {
   color: var(--ink);
   font-weight: 900;
 }
 
-.history-legend {
+.trends-legend {
   display: flex;
   gap: 16px;
   margin-top: 12px;
@@ -151,11 +151,11 @@ const { days, bars, goalLineBottom } = useHistoryChart()
 }
 
 .legend-swatch.under-goal {
-  background: var(--history-under);
+  background: var(--trends-under);
 }
 
 .legend-swatch.over-goal {
-  background: var(--history-over);
+  background: var(--trends-over);
 }
 
 .legend-swatch.maintenance {

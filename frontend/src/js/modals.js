@@ -2,7 +2,7 @@ import { reactive } from 'vue'
 
 export const Modals = Object.freeze({
   SETTINGS: 'settings',
-  HISTORY: 'history',
+  TRENDS: 'trends',
   IMPORT_DATA: 'import-data',
   INGREDIENT_EDITOR: 'ingredient-editor',
   INGREDIENT_MANAGER: 'ingredient-manager',

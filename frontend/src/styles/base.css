@@ -15,9 +15,9 @@
   --radius: 16px;
   --shadow-rgb: 28, 42, 31;
   --backdrop-rgb: 20, 28, 20;
-  --history-empty: #f0f0f0;
-  --history-under: #3a7dd9;
-  --history-over: #c18445;
+  --trends-empty: #f0f0f0;
+  --trends-under: #3a7dd9;
+  --trends-over: #c18445;
   --stepper-bg: #dfe4dc;
   --stepper-ink: #334238;
   --stepper-muted: #657268;
@@ -46,9 +46,9 @@
   --red-soft: #35201c;
   --shadow-rgb: 150, 150, 150;
   --backdrop-rgb: 0, 0, 0;
-  --history-empty: #262f25;
-  --history-under: #6ea8f0;
-  --history-over: #d6a064;
+  --trends-empty: #262f25;
+  --trends-under: #6ea8f0;
+  --trends-over: #d6a064;
   --stepper-bg: #303830;
   --stepper-ink: #e1e8df;
   --stepper-muted: #aebaae;

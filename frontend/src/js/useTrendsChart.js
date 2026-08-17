@@ -11,7 +11,7 @@ const BAR_HEIGHT = 108
 const DEFAULT_CEILING = 2400
 const KCAL_PER_KG = 7700
 
-export function useHistoryChart() {
+export function useTrendsChart() {
   const days = ref(window.innerWidth <= 480 ? 14 : 30)
 
   function onResize() {

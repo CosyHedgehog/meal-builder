@@ -41,8 +41,8 @@ async function removeFood(food) {
 </script>
 
 <template>
-  <BaseModal title="Foods" subtitle="Manage reusable foods shown in the dashboard." @close="emit('close')" @back="selectedGroupId ? replaceModal(Modals.GROUP_MANAGER) : replaceModal(Modals.INGREDIENT_MANAGER)">
-    <div class="manager-group">
+  <BaseModal title="Foods" subtitle="Manage reusable foods shown in the dashboard." panel-class="food-manager-modal" @close="emit('close')" @back="selectedGroupId ? replaceModal(Modals.GROUP_MANAGER) : replaceModal(Modals.INGREDIENT_MANAGER)">
+    <div class="manager-group food-manager-content">
       <div class="food-filters">
         <label class="food-filter-field">
           <span>Filter</span>
@@ -193,6 +193,31 @@ async function removeFood(food) {
   .manager-filter {
     padding-right: 24px;
     background-position: calc(100% - 12px) 50%, calc(100% - 7px) 50%;
+  }
+}
+
+@media (max-width: 480px) {
+  :deep(.modal.food-manager-modal) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .food-manager-content {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    flex-direction: column;
+  }
+
+  .food-manager-content :deep(.manager-list) {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+  }
+
+  .food-manager-actions {
+    flex: none;
   }
 }
 </style>

@@ -1,17 +1,15 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { state as store, getLog, logEntries } from '../js/data.js'
-import { view, clearDragState, getCollapseState, setCollapseState, dateNavDirection, boundaryBounce } from '../js/ui.js'
+import { view, clearDragState, dateNavDirection, boundaryBounce } from '../js/ui.js'
 import { Modals, modalStack, openModal } from '../js/modals.js'
 import { confirmState } from '../js/confirm.js'
 import DateNav from './DateNav.vue'
 import CalorieSummary from './CalorieSummary.vue'
 import FoodGroupList from './FoodGroupList.vue'
-import HistoryChart from './HistoryChart.vue'
-import { useHistoryChart } from '../js/useHistoryChart.js'
+import MobileActionSheet from './MobileActionSheet.vue'
 
 const log = computed(() => getLog(view.logDate))
-const { days, windowAverageKcal, windowAverageDeficit, windowProjectedKgPerWeek } = useHistoryChart()
 const groups = computed(() => view.dashboardEditMode ? store.groups : store.groups.filter((group) => group.visible !== false))
 const hiddenLoggedGroups = computed(() => {
   const hiddenIds = new Set(store.groups.filter((group) => group.visible === false).map((group) => group.id))
@@ -19,19 +17,9 @@ const hiddenLoggedGroups = computed(() => {
   return store.groups.filter((group) => ids.has(group.id))
 })
 
-const projectedWeightDisplay = computed(() => {
-  const kgValue = Math.abs(windowProjectedKgPerWeek.value) * 4
-  return store.weightUnit === 'lb' ? kgValue * 2.20462 : kgValue
-})
-
-const projectedWeightUnit = computed(() => (store.weightUnit === 'lb' ? 'lb' : 'kg'))
 const dayLocked = computed(() => store.allowPreviousDayLocking && view.logDate < new Date().toISOString().slice(0, 10))
 const hasOpenModal = computed(() => modalStack.length > 0 || confirmState.open)
-const mobileActionsOpen = ref(false)
 const activeStepperId = ref(null)
-const mobileActionStartY = ref(null)
-const historyCollapsed = ref(getCollapseState('history'))
-
 watch(dayLocked, (locked) => {
   if (locked) {
     activeStepperId.value = null
@@ -44,50 +32,10 @@ function finishDashboardEdit() {
   view.dashboardEditMode = false
 }
 
-function openMobileActions() {
-  if (mobileActionsOpen.value) return
-  mobileActionsOpen.value = true
-  history.pushState({ mealBuilderActions: true }, '')
-}
-
-function closeMobileActions() {
-  mobileActionsOpen.value = false
-}
-
-function toggleMobileActions() {
-  if (mobileActionsOpen.value) {
-    closeMobileActions()
-  } else {
-    openMobileActions()
-  }
-}
-
-function startMobileActionSwipe(event) {
-  mobileActionStartY.value = event.changedTouches[0]?.clientY ?? null
-}
-
-function endMobileActionSwipe(event) {
-  if (mobileActionStartY.value === null) return
-  const endY = event.changedTouches[0]?.clientY ?? mobileActionStartY.value
-  const deltaY = endY - mobileActionStartY.value
-  mobileActionStartY.value = null
-  if (Math.abs(deltaY) < 40) return
-  if (deltaY < 0) openMobileActions()
-  else if (mobileActionsOpen.value) closeMobileActions()
-}
-
-function onMobileActionsPopState() {
-  if (!mobileActionsOpen.value) return
-  mobileActionsOpen.value = false
-  history.replaceState(null, '', location.href)
-}
-
 function setActiveStepper(stepperId) {
   activeStepperId.value = stepperId
 }
 
-onMounted(() => window.addEventListener('popstate', onMobileActionsPopState))
-onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState))
 </script>
 
 <template>
@@ -95,24 +43,27 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
     <section class="manage-section">
       <div class="manage-actions desktop-manage-actions">
         <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.FOOD_MANAGER)">
-          Foods
+          <span class="desktop-manage-icon desktop-manage-icon-foods" aria-hidden="true"></span> Foods
         </button>
         <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.GROUP_MANAGER)">
-          Groups
+          <span class="desktop-manage-icon desktop-manage-icon-groups" aria-hidden="true"></span> Groups
         </button>
         <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.ACTIVITY)">
-          Activity
+          <span class="desktop-manage-icon desktop-manage-icon-activity" aria-hidden="true"></span> Activity
+        </button>
+        <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.TRENDS)">
+          <span class="desktop-manage-icon desktop-manage-icon-trends" aria-hidden="true"></span> Trends
         </button>
         <button v-if="!view.dashboardEditMode" class="manage-toggle group-add-button" type="button"
           @click="view.dashboardEditMode = true">
-          Edit Dashboard
+          <span class="desktop-manage-icon desktop-manage-icon-edit" aria-hidden="true"></span> Dashboard
         </button>
         <button v-else-if="view.dashboardEditMode" class="manage-toggle group-add-button" type="button"
           @click="finishDashboardEdit">
-          Done
+          <span class="desktop-manage-icon desktop-manage-icon-done" aria-hidden="true"></span> Done
         </button>
         <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.SETTINGS)">
-          ⚙ Settings
+          <span class="desktop-manage-icon desktop-manage-icon-settings" aria-hidden="true"></span> Settings
         </button>
       </div>
     </section>
@@ -143,74 +94,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
         </section>
       </div>
     </Transition>
-    <div class="desktop-history-section history-panel-layout">
-      <div class="history-panel-heading">
-        <div class="history-panel-title">
-          <button type="button" class="history-panel-toggle" :aria-expanded="!historyCollapsed"
-            aria-controls="dashboard-history-content"
-            :aria-label="`${historyCollapsed ? 'Show' : 'Hide'} history chart and summary`"
-            @click="historyCollapsed = !historyCollapsed; setCollapseState('history', historyCollapsed)">
-            <h2>HISTORY</h2>
-            <span class="history-panel-chevron" aria-hidden="true">{{ historyCollapsed ? '▶' : '▼' }}</span>
-          </button>
-          <div v-if="!historyCollapsed" class="muted">Averages from the last {{ days }} days</div>
-        </div>
-      </div>
-      <div v-if="!historyCollapsed" id="dashboard-history-content" class="history-panel-content">
-        <HistoryChart />
-
-        <section class="history-summary section-block history-summary-card">
-          <div class="history-summary-stats">
-            <div class="history-summary-stats-item">
-              <strong>{{ windowAverageKcal.toLocaleString() }}</strong>
-              <span>kcal / day</span>
-            </div>
-            <div class="history-summary-stats-item" :class="{ surplus: windowAverageDeficit < 0 }">
-              <strong>{{ Math.abs(windowAverageDeficit).toLocaleString() }}</strong>
-              <span>kcal {{ windowAverageDeficit >= 0 ? 'deficit' : 'surplus' }} / day</span>
-            </div>
-            <div class="history-summary-stats-item" :class="{ surplus: windowProjectedKgPerWeek < 0 }">
-              <strong v-if="projectedWeightDisplay >= 0.05">{{ projectedWeightDisplay.toFixed(1) }} {{
-                projectedWeightUnit }}</strong>
-              <strong v-else>Maintenance</strong>
-              <span>{{ windowProjectedKgPerWeek >= 0 ? 'loss' : 'gain' }} per month</span>
-            </div>
-          </div>
-        </section>
-      </div>
-    </div>
-    <div v-if="mobileActionsOpen && !hasOpenModal" class="mobile-actions-backdrop" @click="closeMobileActions"
-      @touchmove.prevent></div>
-    <section v-show="!hasOpenModal" class="mobile-action-sheet" :class="{ open: mobileActionsOpen }"
-      aria-label="Dashboard actions" @touchstart="startMobileActionSwipe" @touchmove.prevent
-      @touchend="endMobileActionSwipe">
-      <button class="mobile-action-handle" type="button" aria-label="Show dashboard actions"
-        @click="toggleMobileActions">
-        <span aria-hidden="true">{{ mobileActionsOpen ? '↓' : '↑' }}</span> Manage
-      </button>
-      <div class="mobile-action-list" :aria-hidden="!mobileActionsOpen">
-        <button type="button" :tabindex="mobileActionsOpen ? 0 : -1"
-          @click="openModal(Modals.HISTORY); closeMobileActions()">
-          <span class="mobile-action-icon mobile-action-icon-summary" aria-hidden="true"></span> Summary
-        </button>
-        <button type="button" :tabindex="mobileActionsOpen ? 0 : -1"
-          @click="openModal(Modals.FOOD_MANAGER); closeMobileActions()">
-          <span class="mobile-action-icon mobile-action-icon-foods" aria-hidden="true"></span> Foods
-        </button>
-        <button type="button" :tabindex="mobileActionsOpen ? 0 : -1"
-          @click="openModal(Modals.GROUP_MANAGER); closeMobileActions()">
-          <span class="mobile-action-icon mobile-action-icon-groups" aria-hidden="true"></span> Groups
-        </button>
-                <button type="button" :tabindex="mobileActionsOpen ? 0 : -1"
-          @click="openModal(Modals.ACTIVITY); closeMobileActions()">
-          <span class="mobile-action-icon mobile-action-icon-activity" aria-hidden="true"></span> Activity
-        </button>
-        <button type="button" :tabindex="mobileActionsOpen ? 0 : -1"
-          @click="openModal(Modals.SETTINGS); closeMobileActions()">
-          <span class="mobile-action-icon mobile-action-icon-settings" aria-hidden="true"></span> Settings
-        </button>
-      </div>
-    </section>
+    <MobileActionSheet :has-open-modal="hasOpenModal" />
 
   </div>
 </template>
@@ -372,115 +256,11 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
   padding: 5px 12px;
 }
 
-.history-summary {
-  margin-top: 2px;
-}
-
-.history-summary-stats-item {
-  align-items: center;
-}
-
-.history-summary-stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.history-summary-stats>div {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-}
-
-.history-summary-stats strong {
-  /* font-family: 'IBM Plex Mono', monospace; */
-  font-size: 16px;
-}
-
-.history-summary-stats span {
-  color: var(--ink-muted);
-  font-size: 11px;
-}
-
-.history-summary-stats .surplus strong {
-  color: var(--red);
-}
-
-.history-panel-layout {
-  display: grid;
-  gap: 8px;
-  padding: 5px 12px 5px 12px;
-}
-
-.history-panel-heading h2 {
-  margin: 0;
-  color: var(--ink-muted);
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: 0.14em;
-}
-
-.history-panel-heading {
-  display: flex;
-  align-items: baseline;
-  gap: 16px;
-}
-
-.history-panel-title {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-}
-
-.history-panel-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  text-align: left;
-}
-
-.history-panel-toggle:focus-visible {
-  outline: 2px solid var(--green);
-  outline-offset: 4px;
-  border-radius: 4px;
-}
-
-.history-panel-chevron {
-  color: var(--green);
-  font-size: 12px;
-  line-height: 1;
-}
-
-.history-panel-content {
-  display: grid;
-  gap: 8px;
-}
-
-.history-panel-heading .muted {
-  color: var(--green);
-  /* font-family: 'IBM Plex Mono', monospace; */
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.history-summary-card {
-  margin-top: 0;
-}
-
 .manage-actions {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 18px;
-  padding: 10px;
+  padding: 18px;
 }
 
 .manage-toggle {
@@ -490,6 +270,121 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
 
 .manage-toggle:hover {
   color: var(--green-strong);
+}
+
+.desktop-manage-icon {
+  position: relative;
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  margin-right: 5px;
+  vertical-align: -2px;
+  color: currentColor;
+}
+
+.desktop-manage-icon-foods {
+  border: 2px solid currentColor;
+  border-radius: 3px;
+}
+
+.desktop-manage-icon-foods::before,
+.desktop-manage-icon-foods::after {
+  position: absolute;
+  left: 3px;
+  width: 6px;
+  height: 2px;
+  background: currentColor;
+  content: '';
+}
+
+.desktop-manage-icon-foods::before { top: 3px; }
+.desktop-manage-icon-foods::after { bottom: 3px; }
+
+.desktop-manage-icon-groups::before,
+.desktop-manage-icon-groups::after {
+  position: absolute;
+  bottom: 0;
+  width: 6px;
+  border: 2px solid currentColor;
+  border-radius: 2px;
+  content: '';
+}
+
+.desktop-manage-icon-groups::before { left: 0; height: 9px; }
+.desktop-manage-icon-groups::after { right: 0; height: 12px; }
+
+.desktop-manage-icon-activity {
+  border: 2px solid currentColor;
+  border-radius: 50%;
+}
+
+.desktop-manage-icon-activity::before,
+.desktop-manage-icon-activity::after {
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 2px;
+  height: 5px;
+  border-radius: 2px;
+  background: currentColor;
+  content: '';
+  transform-origin: bottom center;
+}
+
+.desktop-manage-icon-activity::after { transform: rotate(120deg); }
+
+.desktop-manage-icon-trends {
+  border-bottom: 2px solid currentColor;
+  border-left: 2px solid currentColor;
+}
+
+.desktop-manage-icon-trends::before,
+.desktop-manage-icon-trends::after {
+  position: absolute;
+  bottom: 0;
+  width: 3px;
+  background: currentColor;
+  content: '';
+}
+
+.desktop-manage-icon-trends::before { left: 4px; height: 7px; }
+.desktop-manage-icon-trends::after { right: 1px; height: 11px; }
+
+.desktop-manage-icon-edit::before {
+  position: absolute;
+  left: 6px;
+  top: 0;
+  width: 4px;
+  height: 15px;
+  border-radius: 2px;
+  background: currentColor;
+  content: '';
+  transform: rotate(45deg);
+}
+
+.desktop-manage-icon-done::before {
+  position: absolute;
+  left: 2px;
+  top: 5px;
+  width: 10px;
+  height: 5px;
+  border-bottom: 2px solid currentColor;
+  border-left: 2px solid currentColor;
+  content: '';
+  transform: rotate(-45deg);
+}
+
+.desktop-manage-icon-settings {
+  border: 2px solid currentColor;
+  border-radius: 50%;
+}
+
+.desktop-manage-icon-settings::before {
+  position: absolute;
+  inset: 3px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  content: '';
 }
 
 .mobile-action-sheet,
@@ -516,10 +411,6 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
   }
 
   .desktop-manage-actions {
-    display: none;
-  }
-
-  .desktop-history-section {
     display: none;
   }
 
