@@ -167,16 +167,17 @@ watch(
   font-size: 22px;
   line-height: 1;
   transform: translateY(-50%);
-  transition: color 0.12s ease, transform 0.12s ease;
+  transform-origin: center;
+  transition: color 0.15s ease, transform 0.15s ease;
 }
 
 .activity-item-button:hover .activity-chevron,
 .activity-item-button:focus-visible .activity-chevron {
-  transform: translate(2px, -50%);
+  color: var(--ink);
 }
 
 .activity-item-button[aria-expanded="true"] .activity-chevron {
-  transform: translate(0, -50%) rotate(90deg);
+  transform: translateY(-50%) rotate(90deg);
 }
 
 .activity-item-header {
@@ -232,7 +233,7 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 0 12px 0px 12px;
+  padding: 0 35px 0px 35px;
   border-top: 0;
   border-radius: 0 0 8px 8px;
   background: var(--surface-alt);
@@ -241,6 +242,7 @@ watch(
 .activity-day-list {
   max-height: 360px;
   overflow-y: auto;
+  padding-bottom: 5px;
 }
 
 .activity-day-item {
@@ -248,11 +250,10 @@ watch(
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 8px 0;
+  padding: 6px 0;
 }
 
 .activity-day-item {
-  border-bottom: 1px solid var(--line);
   color: var(--ink);
   font-size: 12px;
 }
