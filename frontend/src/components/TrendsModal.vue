@@ -87,7 +87,7 @@ function toggleWeek(week) {
         <div class="trends-week-header-row" aria-hidden="true">
           <span>Week</span>
           <span>Avg kcal</span>
-          <span>Avg balance</span>
+          <span>Avg kcal deficit / surplus</span>
           <span>Days logged</span>
           <span></span>
         </div>
@@ -107,14 +107,16 @@ function toggleWeek(week) {
           <div v-if="expandedWeek === week.start" class="trends-week-detail-list" :id="`week-details-${week.start}`">
             <div v-for="day in week.days" :key="day.date" class="trends-week-detail-row">
               <div class="trends-week-date">
-                <strong>{{ formatDate(day.date) }}</strong>
+                {{ formatDate(day.date) }}
               </div>
-              <span v-if="day.hasLog" class="trends-week-calories">{{ day.total.toLocaleString() }} kcal</span>
+              <span v-if="day.hasLog" class="trends-week-calories">{{ day.total.toLocaleString() }}</span>
               <span v-else class="trends-week-calories">—</span>
               <span v-if="day.hasLog" class="trends-week-detail-balance" :class="{ surplus: day.deficit < 0 }">
-                {{ Math.abs(day.deficit).toLocaleString() }} kcal {{  balanceLabel(day) }}
+                {{ Math.abs(day.deficit).toLocaleString() }}
               </span>
               <span v-else class="trends-week-detail-balance no-log">—</span>
+              <span class="trends-week-days-placeholder"></span>
+              <span aria-hidden="true"></span>
             </div>
           </div>
         </template>
@@ -367,10 +369,10 @@ function toggleWeek(week) {
 
 .trends-week-detail-row {
   display: grid;
-  grid-template-columns: 80px 1fr auto;
+  grid-template-columns: minmax(110px, 1.3fr) repeat(2, minmax(68px, .8fr)) minmax(52px, .6fr) 18px;
   align-items: center;
-  gap: 12px;
-  padding: 7px 30px;
+  gap: 8px;
+  padding: 7px 12px;
 }
 
 .trends-week-detail-row>div {
@@ -379,6 +381,8 @@ function toggleWeek(week) {
   align-items: baseline;
   gap: 8px;
   grid-column: 1;
+  padding-left:10px;
+  font-size: 11px;
 }
 
 .trends-week-detail-row strong {
@@ -389,6 +393,7 @@ function toggleWeek(week) {
 .trends-week-detail-row span {
   color: var(--ink-muted);
   font-size: 11px;
+  justify-self: center;
 }
 
 .trends-week-calories {
@@ -432,6 +437,14 @@ function toggleWeek(week) {
     grid-template-columns: minmax(82px, 1.25fr) repeat(2, minmax(58px, .8fr)) minmax(48px, .6fr) 14px;
     gap: 5px;
     padding: 11px 8px;
+  }
+
+  .trends-week-detail-row {
+    display: grid;
+    grid-template-columns: minmax(82px, 1.25fr) repeat(2, minmax(58px, .8fr)) minmax(48px, .6fr) 14px;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 12px;
   }
 
   .trends-week-date,
