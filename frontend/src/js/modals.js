@@ -12,8 +12,6 @@ export const Modals = Object.freeze({
   GROUP_MANAGER: 'group-manager',
   CUSTOM_ENTRY: 'custom-entry',
   ACTIVITY: 'activity',
-  ACTIVITY_DAY: 'activity-day',
-  TRENDS_WEEK: 'trends-week',
   FOLLOW: 'follow',
   DELETE_ACCOUNT: 'delete-account',
 })

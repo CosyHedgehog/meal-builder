@@ -3,13 +3,13 @@ import { computed, ref } from 'vue'
 import BaseModal from './BaseModal.vue'
 import TrendsChart from './TrendsChart.vue'
 import { state as store } from '../js/data.js'
-import { openModal, Modals } from '../js/modals.js'
 import { useTrendsChart } from '../js/useTrendsChart.js'
 
 const emit = defineEmits(['close'])
 const { days, windowAverageKcal, windowAverageDeficit, windowProjectedKgPerWeek, weeklyBreakdown, trackingSummary } = useTrendsChart()
 const projectedWeightDisplay = computed(() => Math.abs(windowProjectedKgPerWeek.value) * 4)
 const activeTab = ref('daily')
+const expandedWeek = ref(null)
 const swipeStart = ref(null)
 
 function startSwipe(event) {
@@ -32,8 +32,16 @@ function formatWeek(date) {
   return new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
-function formatHighlight(entry) {
-   return entry ? `${Math.abs(entry).toLocaleString()} kcal · ${formatWeek(entry.date)}` : '—'
+function formatDate(value) {
+  return new Date(`${value}T12:00:00`).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
+}
+
+function balanceLabel(day) {
+  return day.deficit >= 0 ? 'deficit' : 'surplus'
+}
+
+function toggleWeek(week) {
+  expandedWeek.value = expandedWeek.value === week.start ? null : week.start
 }
 </script>
 
@@ -72,19 +80,38 @@ function formatHighlight(entry) {
         <span>Weekly breakdown</span>
       </div>
       <div class="trends-weeks-list">
-          <button v-for="week in weeklyBreakdown" :key="week.start" class="trends-week-row" type="button" @click="openModal(Modals.TRENDS_WEEK, { week })">
+        <div class="trends-week-header-row" aria-hidden="true">
+          <span>Week</span>
+          <span>Avg kcal</span>
+          <span>Avg balance</span>
+          <span>Days logged</span>
+          <span></span>
+        </div>
+          <template v-for="week in weeklyBreakdown" :key="week.start">
+          <button class="trends-week-row" type="button" :aria-expanded="expandedWeek === week.start" @click="toggleWeek(week)">
           <div class="trends-week-date">{{ formatWeek(week.start) }} – {{ formatWeek(week.end) }}</div>
           <div class="trends-week-stat">
             <strong>{{ week.averageKcal.toLocaleString() }}</strong>
-            <span>avg kcal</span>
           </div>
           <div class="trends-week-stat" :class="{ surplus: week.averageDeficit < 0 }">
             <strong>{{ Math.abs(week.averageDeficit).toLocaleString() }}</strong>
-            <span>avg {{ week.averageDeficit >= 0 ? 'deficit' : 'surplus' }}</span>
           </div>
-          <div class="trends-week-days">{{ week.loggedDays }}/{{ week.totalDays }} days</div>
+          <div class="trends-week-days">{{ week.loggedDays }}/{{ week.totalDays }}</div>
           <span class="trends-week-chevron" aria-hidden="true">›</span>
         </button>
+          <div v-if="expandedWeek === week.start" class="trends-week-detail-list" :id="`week-details-${week.start}`">
+            <div v-for="day in week.days" :key="day.date" class="trends-week-detail-row">
+              <div>
+                <strong>{{ formatDate(day.date) }}</strong>
+                <span v-if="day.hasLog">{{ day.total.toLocaleString() }} kcal logged</span>
+                <span v-else>No logged entries</span>
+              </div>
+              <span v-if="day.hasLog" class="trends-week-detail-balance" :class="{ surplus: day.deficit < 0 }">
+                {{ Math.abs(day.deficit).toLocaleString() }} kcal {{ balanceLabel(day) }}
+              </span>
+            </div>
+          </div>
+          </template>
       </div>
     </section>
   </BaseModal>
@@ -108,23 +135,34 @@ function formatHighlight(entry) {
 .trends-summary-stats span { color: var(--ink-muted); font-size: 10px; line-height: 1.2; }
 .trends-summary-stats .surplus strong { color: var(--red); }
 .trends-weeks-list { min-height: 0; flex: 1; overflow-y: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.trends-week-header-row { display: grid; grid-template-columns: minmax(110px, 1.3fr) repeat(2, minmax(68px, .8fr)) minmax(52px, .6fr) 18px; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--surface-alt); color: var(--ink-muted); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.trends-week-header-row > span:nth-child(n+2):nth-child(-n+4) { justify-self: center; text-align: center; }
+.trends-week-header-row > span:nth-child(5) { justify-self: end; }
 .trends-week-row { display: grid; width: 100%; grid-template-columns: minmax(110px, 1.3fr) repeat(2, minmax(68px, .8fr)) minmax(52px, .6fr) 18px; align-items: center; gap: 8px; padding: 11px 12px; border-top: 0; border-right: 0; border-left: 0; border-bottom: 1px solid var(--line); background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .trends-week-row:hover, .trends-week-row:focus-visible { background: var(--surface-alt); }
 .trends-week-row:focus-visible { outline: 2px solid var(--green); outline-offset: -2px; }
-.trends-week-chevron { color: var(--ink-muted); font-size: 22px; line-height: 1; text-align: right; }
+.trends-week-chevron { color: var(--ink-muted); font-size: 22px; line-height: 1; text-align: right; transition: transform 0.15s ease, color 0.15s ease; }
+.trends-week-row[aria-expanded="true"] .trends-week-chevron { color: var(--green-strong); transform: rotate(90deg); }
 .trends-week-row:last-child { border-bottom: 0; }
 .trends-week-date, .trends-week-days { color: var(--ink-muted); font-size: 11px; }
-.trends-week-stat { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.trends-week-days { justify-self: center; text-align: center; }
+.trends-week-stat { min-width: 0; justify-self: center; text-align: center; }
 .trends-week-stat strong { color: var(--ink); font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
-.trends-week-stat span { color: var(--ink-muted); font-size: 10px; }
 .trends-week-stat.surplus strong { color: var(--red); }
+.trends-week-detail-list { border-bottom: 1px solid var(--line); background: var(--surface-alt); }
+.trends-week-detail-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; padding: 9px 12px 9px 24px; border-top: 1px solid var(--line); }
+.trends-week-detail-row > div { display: flex; min-width: 0; align-items: baseline; gap: 8px; grid-column: 1; }
+.trends-week-detail-row strong { color: var(--ink); font-size: 12px; }
+.trends-week-detail-row span { color: var(--ink-muted); font-size: 11px; }
+.trends-week-detail-balance { grid-column: 3; justify-self: center; color: var(--green) !important; text-align: center; white-space: nowrap; }
+.trends-week-detail-balance.surplus { color: var(--red) !important; }
 
 @media (max-width: 480px) {
   :deep(.modal.trends-modal) { display: flex; flex-direction: column; }
   .trends-weeks-list { overflow-y: auto; }
+  .trends-week-header-row { grid-template-columns: minmax(82px, 1.25fr) repeat(2, minmax(58px, .8fr)) minmax(48px, .6fr) 14px; gap: 5px; padding: 8px; font-size: 9px; }
   .trends-week-row { grid-template-columns: minmax(82px, 1.25fr) repeat(2, minmax(58px, .8fr)) minmax(48px, .6fr) 14px; gap: 5px; padding: 11px 8px; }
   .trends-week-date, .trends-week-days { font-size: 10px; }
   .trends-week-stat strong { font-size: 12px; }
-  .trends-week-stat span { font-size: 9px; }
 }
 </style>
