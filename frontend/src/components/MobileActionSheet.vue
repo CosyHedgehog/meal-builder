@@ -54,22 +54,18 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
 </script>
 
 <template>
-  <div v-if="mobileActionsOpen && !props.hasOpenModal" class="mobile-actions-backdrop" @click="closeMobileActions" @touchmove.prevent></div>
-  <section v-show="!props.hasOpenModal" class="mobile-action-sheet" :class="{ open: mobileActionsOpen }" aria-label="Dashboard actions"
-    @touchstart="startMobileActionSwipe" @touchmove.prevent @touchend="endMobileActionSwipe">
+  <div v-if="mobileActionsOpen && !props.hasOpenModal" class="mobile-actions-backdrop" @click="closeMobileActions"
+    @touchmove.prevent></div>
+  <section v-show="!props.hasOpenModal" class="mobile-action-sheet" :class="{ open: mobileActionsOpen }"
+    aria-label="Dashboard actions" @touchstart="startMobileActionSwipe" @touchmove.prevent
+    @touchend="endMobileActionSwipe">
     <button class="mobile-action-handle" type="button" aria-label="Show dashboard actions" @click="toggleMobileActions">
       <span aria-hidden="true">{{ mobileActionsOpen ? '↓' : '↑' }}</span> Manage
     </button>
     <div class="mobile-action-list" :aria-hidden="!mobileActionsOpen">
-      <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openAction(Modals.TRENDS)">
-        <svg class="mobile-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-          <polyline points="16 7 22 7 22 13" />
-        </svg>
-        Trends
-      </button>
       <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openAction(Modals.FOOD_MANAGER)">
-        <svg class="mobile-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg class="mobile-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
           <path d="M7 2v20" />
           <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
@@ -77,7 +73,8 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
         Foods
       </button>
       <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openAction(Modals.GROUP_MANAGER)">
-        <svg class="mobile-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg class="mobile-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect width="7" height="7" x="3" y="3" rx="1.5" />
           <rect width="7" height="7" x="14" y="3" rx="1.5" />
           <rect width="7" height="7" x="14" y="14" rx="1.5" />
@@ -85,15 +82,26 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
         </svg>
         Groups
       </button>
+      <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openAction(Modals.TRENDS)">
+        <svg class="mobile-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+          <polyline points="16 7 22 7 22 13" />
+        </svg>
+        Trends
+      </button>
       <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openAction(Modals.ACTIVITY)">
-        <svg class="mobile-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg class="mobile-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
         </svg>
         Activity
       </button>
       <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openAction(Modals.SETTINGS)">
-        <svg class="mobile-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+        <svg class="mobile-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path
+            d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
           <circle cx="12" cy="12" r="3" />
         </svg>
         Settings
