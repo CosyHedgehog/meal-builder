@@ -8,6 +8,7 @@ import {
   setShowKcal,
   setWeightUnit,
   setAllowPreviousDayLocking,
+  setOneClickMode,
   setShareActivity,
   snapshot,
   flushSave,
@@ -36,6 +37,11 @@ const weightUnit = computed({
 const allowPreviousDayLocking = computed({
   get: () => store.allowPreviousDayLocking,
   set: (value) => setAllowPreviousDayLocking(value),
+})
+
+const oneClickMode = computed({
+  get: () => store.oneClickMode,
+  set: (value) => setOneClickMode(value),
 })
 
 const shareActivity = computed({
@@ -116,6 +122,14 @@ function downloadJSON(filename, payload) {
         <div class="settings-info-note">
           <span aria-hidden="true">ⓘ</span>
           <span>Food items from previous days can't be selected. Helps prevent accidental changes. Updates still apply to logged food.</span>
+        </div>
+        <div class="settings-row behavior-option">
+          <label>One click mode</label>
+          <ToggleSwitch v-model="oneClickMode" label="Toggle one click mode" />
+        </div>
+        <div class="settings-info-note">
+          <span aria-hidden="true">ⓘ</span>
+          <span>Clicking a food on the dashboard adds one serving and opens its quantity controls.</span>
         </div>
       </section>
 

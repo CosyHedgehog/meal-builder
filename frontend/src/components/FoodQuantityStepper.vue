@@ -9,6 +9,7 @@ const props = defineProps({
   open: { type: Boolean, default: false },
   colorIndex: { type: Number, default: 0 },
   oneOff: { type: Boolean, default: false },
+  oneClickMode: { type: Boolean, default: false },
   locked: { type: Boolean, default: false },
 })
 
@@ -17,9 +18,10 @@ const popoverPlacement = ref('center')
 
 const emit = defineEmits(['decrement', 'increment', 'reset', 'toggle'])
 
-function openQuantityPopover(event) {
+function openQuantityPopover(event, addOne = false) {
   event.stopPropagation()
   if (props.locked) return
+  if (props.oneClickMode && addOne) emit('increment')
   emit('toggle', true)
 }
 
@@ -75,7 +77,7 @@ defineExpose({ closePopover })
         class="food-stepper"
         :class="[`group-${colorIndex}`, { 'one-off': oneOff, 'dashboard-locked': !locked, active: open, selected: quantity > 0 }]"
         :aria-label="`${name}, quantity ${quantity}`"
-        @click="openQuantityPopover"
+        @click="openQuantityPopover($event, true)"
       >
         <span class="food-stepper-name">{{ name }}<span v-if="oneOff" class="one-off-badge">1-off</span></span>
         <span class="food-stepper-kcal">{{ Math.round(kcal * (quantity || 1)).toLocaleString() }} kcal</span>

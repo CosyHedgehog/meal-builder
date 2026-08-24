@@ -180,6 +180,7 @@ function toggleStepper(stepperId, isOpen) {
                 :quantity="entryFor(food.id)?.qty || 0"
                 :kcal="foodKcal(food)"
                 :locked="locked"
+                :one-click-mode="store.oneClickMode"
                 :open="props.activeStepperId === `food-${food.id}`"
                 @decrement="entryFor(food.id) && decrement(entryFor(food.id))"
                 @increment="!locked && addLogFood(view.logDate, group.id, food.id)"
