@@ -8,10 +8,11 @@ import { useTrendsChart } from '../js/useTrendsChart.js'
 const emit = defineEmits(['close'])
 const selectedDailyRange = ref(window.innerWidth <= 480 ? 14 : 30)
 const dailyRangeOptions = [7, 14, 30, 90, 'all']
-const { days, windowAverageKcal, windowAverageDeficit, windowTotalDeficit, windowProjectedKgPerWeek, weeklyBreakdown, trackingSummary } = useTrendsChart(selectedDailyRange)
+const { days, windowLoggedDays, windowAverageKcal, windowAverageDeficit, windowTotalDeficit, windowProjectedKgPerWeek, weeklyBreakdown, trackingSummary } = useTrendsChart(selectedDailyRange)
 const dailyRangeLabel = computed(() => selectedDailyRange.value === 'all' ? 'All time' : `last ${days.value} days`)
+const loggedDays = computed(() => windowLoggedDays.value.length)
 const totalWeightChangeDisplay = computed(() => Math.abs(windowTotalDeficit.value) / 7700 * (store.weightUnit === 'lb' ? 2.20462 : 1))
-const projectedWeightDisplay = computed(() => Math.abs(windowProjectedKgPerWeek.value) * 4)
+const projectedWeightDisplay = computed(() => (totalWeightChangeDisplay.value / Math.max(loggedDays.value, 1)) * 30)
 const activeTab = ref('daily')
 const expandedWeek = ref(null)
 const swipeStart = ref(null)
@@ -85,7 +86,7 @@ function toggleWeek(week) {
             <span>kcal {{ windowAverageDeficit >= 0 ? 'deficit' : 'surplus' }} / day</span>
           </div>
           <div class="trends-summary-stats-item" :class="{ surplus: windowProjectedKgPerWeek < 0 }">
-            <strong v-if="totalWeightChangeDisplay / Math.max(days, 1) >= 0.005">{{ (totalWeightChangeDisplay / Math.max(days, 1)).toFixed(2) }} {{ store.weightUnit }}
+            <strong v-if="totalWeightChangeDisplay / Math.max(loggedDays, 1) >= 0.005">{{ (totalWeightChangeDisplay / Math.max(loggedDays, 1)).toFixed(2) }} {{ store.weightUnit }}
             </strong>
             <strong v-else>Maintenance</strong>
             <span>estimated {{ windowTotalDeficit >= 0 ? 'loss' : 'gain' }} / day</span>
