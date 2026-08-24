@@ -72,7 +72,7 @@ function saveNote() {
   border-radius: 9px;
   background: var(--bg);
   font-size: 14px;
-  resize: vertical;
+  resize: none;
 }
 
 .food-notes-content textarea:focus {

@@ -172,6 +172,20 @@ function openDay(date) {
   flex-direction: column;
 }
 
+:deep(.modal.trends-modal) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+@media (min-width: 481px) {
+  :deep(.modal.trends-modal) {
+    box-sizing: border-box;
+    height: min(500px, 92vh);
+    min-height: 560px;
+  }
+}
+
 .trends-tabs {
   display: flex;
   gap: 4px;
@@ -517,11 +531,6 @@ function openDay(date) {
 }
 
 @media (max-width: 480px) {
-  :deep(.modal.trends-modal) {
-    display: flex;
-    flex-direction: column;
-  }
-
   .trends-weeks-list {
     overflow-y: auto;
   }
@@ -553,7 +562,7 @@ function openDay(date) {
 
   .trends-week-date,
   .trends-week-days {
-    font-size: 13px;
+    font-size: 12px;
   }
 
   .trends-week-stat strong {

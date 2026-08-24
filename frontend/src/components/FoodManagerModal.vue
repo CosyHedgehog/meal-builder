@@ -116,7 +116,25 @@ async function removeFood(food) {
           <div class="manager-item-wrap">
             <button class="manager-item" type="button" @click="openEditor(item)">
               <span>
-                <strong>{{ item.name }}<span v-if="item.note" class="food-note-indicator" title="Food has notes" aria-label="Food has notes">▤</span></strong>
+                <strong>
+                  {{ item.name }}
+                  <span
+                    v-if="item.note"
+                    class="food-note-indicator"
+                    role="button"
+                    tabindex="0"
+                    :aria-label="`Open notes for ${item.name}`"
+                    title="Open notes"
+                    @click.stop="openFoodNotes(item)"
+                    @keydown.enter.prevent.stop="openFoodNotes(item)"
+                    @keydown.space.prevent.stop="openFoodNotes(item)"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M5 5h14v11H8l-3 3V5Z" />
+                      <path d="M8 9h8M8 12h5" />
+                    </svg>
+                  </span>
+                </strong>
                 <small>
                   {{ foodKcal(item).toLocaleString() }} kcal · {{ item.items.length ? `${item.items.length} ingredient${item.items.length === 1 ? '' : 's'}` : 'simple food' }}
                   · {{ foodLogCount(item.id) }} log{{ foodLogCount(item.id) === 1 ? '' : 's' }}
@@ -274,13 +292,30 @@ async function removeFood(food) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 0;
+  background: transparent;
+  color: var(--green);
+  cursor: pointer;
+}
+
+.food-note-indicator:hover,
+.food-note-indicator:focus-visible {
+  background: var(--surface-alt);
+  border-color: var(--line);
+}
+
+.food-note-indicator:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 1px;
+}
+
+.food-note-indicator svg {
   width: 16px;
   height: 16px;
-  margin-left: 5px;
-  border-radius: 4px;
-  color: var(--green);
-  font-size: 14px;
-  vertical-align: 1px;
 }
 
 .manager-options {
