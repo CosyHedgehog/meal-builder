@@ -299,7 +299,7 @@ defineExpose({ requestClose: closeEditor })
 
   .food-actions {
     flex: none;
-    margin-top: auto;
+    margin-top: 7px;
   }
 }
 

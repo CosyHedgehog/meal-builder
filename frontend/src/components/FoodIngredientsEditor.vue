@@ -537,6 +537,8 @@ async function removeRow(ingredientId) {
     }
 
     .add-item-row {
+        flex: none;
+        margin-top: 0;
         grid-template-columns: minmax(0, 1fr) 70px 40px;
     }
 

@@ -50,11 +50,6 @@ function balanceLabel(day) {
 function toggleWeek(week) {
   expandedWeek.value = expandedWeek.value === week.start ? null : week.start
 }
-
-function openDay(date) {
-  setLogDate(date)
-  closeAllModals()
-}
 </script>
 
 <template>
@@ -132,10 +127,6 @@ function openDay(date) {
           <div v-if="expandedWeek === week.start" class="trends-week-detail-list" :id="`week-details-${week.start}`">
             <div v-for="day in week.days" :key="day.date" class="trends-week-detail-row">
               <div class="trends-week-date">
-                 <button class="trends-week-open-day" type="button"
-                  @click="openDay(day.date)">
-                  <span aria-hidden="true"> 🡥</span>
-                </button>
                 {{ formatDate(day.date) }}
               </div>
               <span v-if="day.hasLog" class="trends-week-calories">{{ day.total.toLocaleString() }}</span>
