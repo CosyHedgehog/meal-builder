@@ -3,7 +3,9 @@ import { computed, ref } from 'vue'
 import BaseModal from './BaseModal.vue'
 import TrendsChart from './TrendsChart.vue'
 import { state as store } from '../js/data.js'
+import { closeAllModals } from '../js/modals.js'
 import { useTrendsChart } from '../js/useTrendsChart.js'
+import { setLogDate } from '../js/ui.js'
 
 const emit = defineEmits(['close'])
 const selectedDailyRange = ref(window.innerWidth <= 480 ? 14 : 30)
@@ -48,6 +50,11 @@ function balanceLabel(day) {
 function toggleWeek(week) {
   expandedWeek.value = expandedWeek.value === week.start ? null : week.start
 }
+
+function openDay(date) {
+  setLogDate(date)
+  closeAllModals()
+}
 </script>
 
 <template>
@@ -62,15 +69,9 @@ function toggleWeek(week) {
 
     <template v-if="activeTab === 'daily'">
       <div class="trends-range-selector" role="tablist" aria-label="Daily trends range">
-        <button
-          v-for="range in dailyRangeOptions"
-          :key="range"
-          type="button"
-          role="tab"
-          :aria-selected="selectedDailyRange === range"
-          :class="{ active: selectedDailyRange === range }"
-          @click="selectedDailyRange = range"
-        >{{ range === 'all' ? 'All time' : `${range} days` }}</button>
+        <button v-for="range in dailyRangeOptions" :key="range" type="button" role="tab"
+          :aria-selected="selectedDailyRange === range" :class="{ active: selectedDailyRange === range }"
+          @click="selectedDailyRange = range">{{ range === 'all' ? 'All time' : `${range} days` }}</button>
       </div>
       <div class="trends-section-heading">Daily intake · {{ dailyRangeLabel }}</div>
       <TrendsChart :range="selectedDailyRange" />
@@ -78,7 +79,7 @@ function toggleWeek(week) {
         <div class="trends-section-heading">Averages · {{ dailyRangeLabel }}</div>
         <div class="trends-summary-stats">
           <div class="trends-summary-stats-item">
-            <strong>{{ windowAverageKcal.toLocaleString() }}</strong>
+            <strong>{{ windowAverageKcal.toLocaleString() }}<span> </span></strong>
             <span>kcal / day</span>
           </div>
           <div class="trends-summary-stats-item" :class="{ surplus: windowAverageDeficit < 0 }">
@@ -86,15 +87,16 @@ function toggleWeek(week) {
             <span>kcal {{ windowAverageDeficit >= 0 ? 'deficit' : 'surplus' }} / day</span>
           </div>
           <div class="trends-summary-stats-item" :class="{ surplus: windowProjectedKgPerWeek < 0 }">
-            <strong v-if="totalWeightChangeDisplay / Math.max(loggedDays, 1) >= 0.005">{{ (totalWeightChangeDisplay / Math.max(loggedDays, 1)).toFixed(2) }} {{ store.weightUnit }}
+            <strong v-if="totalWeightChangeDisplay / Math.max(loggedDays, 1) >= 0.005">{{ (totalWeightChangeDisplay /
+              Math.max(loggedDays, 1)).toFixed(2) }}
             </strong>
             <strong v-else>Maintenance</strong>
-            <span>estimated {{ windowTotalDeficit >= 0 ? 'loss' : 'gain' }} / day</span>
+            <span>{{ store.weightUnit }} {{ windowTotalDeficit >= 0 ? 'loss' : 'lain' }} / day</span>
           </div>
           <div class="trends-summary-stats-item" :class="{ surplus: windowProjectedKgPerWeek < 0 }">
-            <strong v-if="projectedWeightDisplay >= 0.05">{{ projectedWeightDisplay.toFixed(1) }} {{ store.weightUnit }}</strong>
+            <strong v-if="projectedWeightDisplay >= 0.05">{{ projectedWeightDisplay.toFixed(1) }}</strong>
             <strong v-else>Maintenance</strong>
-            <span>{{ windowProjectedKgPerWeek >= 0 ? 'loss' : 'gain' }} per month</span>
+            <span>{{ store.weightUnit }} {{ windowProjectedKgPerWeek >= 0 ? 'loss' : 'gain' }} / month</span>
           </div>
         </div>
       </section>
@@ -113,7 +115,8 @@ function toggleWeek(week) {
           <span></span>
         </div>
         <template v-for="(week, index) in weeklyBreakdown" :key="week.start">
-          <div v-if="index === 0 || weeklyBreakdown[index - 1].year !== week.year" class="trends-year-heading">{{ week.year }}</div>
+          <div v-if="index === 0 || weeklyBreakdown[index - 1].year !== week.year" class="trends-year-heading">{{
+            week.year }}</div>
           <button class="trends-week-row" type="button" :aria-expanded="expandedWeek === week.start"
             @click="toggleWeek(week)">
             <div class="trends-week-date">{{ formatWeek(week.start) }} – {{ formatWeek(week.end) }}</div>
@@ -129,6 +132,10 @@ function toggleWeek(week) {
           <div v-if="expandedWeek === week.start" class="trends-week-detail-list" :id="`week-details-${week.start}`">
             <div v-for="day in week.days" :key="day.date" class="trends-week-detail-row">
               <div class="trends-week-date">
+                 <button class="trends-week-open-day" type="button"
+                  @click="openDay(day.date)">
+                  <span aria-hidden="true"> 🡥</span>
+                </button>
                 {{ formatDate(day.date) }}
               </div>
               <span v-if="day.hasLog" class="trends-week-calories">{{ day.total.toLocaleString() }}</span>
@@ -137,7 +144,6 @@ function toggleWeek(week) {
                 {{ Math.abs(day.deficit).toLocaleString() }}
               </span>
               <span v-else class="trends-week-detail-balance no-log">—</span>
-              <span class="trends-week-days-placeholder"></span>
               <span aria-hidden="true"></span>
             </div>
           </div>
@@ -447,7 +453,7 @@ function toggleWeek(week) {
   align-items: baseline;
   gap: 8px;
   grid-column: 1;
-  padding-left:10px;
+  padding-left: 10px;
   font-size: 11px;
 }
 
@@ -480,6 +486,34 @@ function toggleWeek(week) {
 
 .trends-week-detail-balance.no-log {
   color: var(--ink-muted) !important;
+}
+
+.trends-week-open-day {
+  display: inline-flex;
+  align-items: center;
+  justify-self: center;
+  gap: 3px;
+  padding: 3px 0;
+  border: 0;
+  background: transparent;
+  color: var(--green);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.trends-week-open-day:hover,
+.trends-week-open-day:focus-visible {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+.trends-week-open-day:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+  border-radius: 3px;
 }
 
 @media (max-width: 480px) {

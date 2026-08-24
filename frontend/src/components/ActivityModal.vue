@@ -133,7 +133,6 @@ watch(
   flex-direction: column;
   gap: 5px;
   justify-content: center;
-  padding: 10px 34px 10px 12px;
   border: 1px solid transparent;
   border-radius: 8px;
   background: var(--surface);
