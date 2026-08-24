@@ -8,6 +8,8 @@ export const Modals = Object.freeze({
   INGREDIENT_MANAGER: 'ingredient-manager',
   INGREDIENT_PICKER: 'ingredient-picker',
   FOOD_EDITOR: 'food-editor',
+  FOOD_NOTES: 'food-notes',
+  FOOD_STATS: 'food-stats',
   FOOD_MANAGER: 'food-manager',
   GROUP_MANAGER: 'group-manager',
   CUSTOM_ENTRY: 'custom-entry',

@@ -6,7 +6,11 @@ import { state as store } from '../js/data.js'
 import { useTrendsChart } from '../js/useTrendsChart.js'
 
 const emit = defineEmits(['close'])
-const { days, windowAverageKcal, windowAverageDeficit, windowProjectedKgPerWeek, weeklyBreakdown, trackingSummary } = useTrendsChart()
+const selectedDailyRange = ref(window.innerWidth <= 480 ? 14 : 30)
+const dailyRangeOptions = [7, 14, 30, 90, 'all']
+const { days, windowAverageKcal, windowAverageDeficit, windowTotalDeficit, windowProjectedKgPerWeek, weeklyBreakdown, trackingSummary } = useTrendsChart(selectedDailyRange)
+const dailyRangeLabel = computed(() => selectedDailyRange.value === 'all' ? 'All time' : `last ${days.value} days`)
+const totalWeightChangeDisplay = computed(() => Math.abs(windowTotalDeficit.value) / 7700 * (store.weightUnit === 'lb' ? 2.20462 : 1))
 const projectedWeightDisplay = computed(() => Math.abs(windowProjectedKgPerWeek.value) * 4)
 const activeTab = ref('daily')
 const expandedWeek = ref(null)
@@ -56,10 +60,21 @@ function toggleWeek(week) {
     </div>
 
     <template v-if="activeTab === 'daily'">
-      <div class="trends-section-heading">Daily intake · last {{ days }} days</div>
-      <TrendsChart />
+      <div class="trends-range-selector" role="tablist" aria-label="Daily trends range">
+        <button
+          v-for="range in dailyRangeOptions"
+          :key="range"
+          type="button"
+          role="tab"
+          :aria-selected="selectedDailyRange === range"
+          :class="{ active: selectedDailyRange === range }"
+          @click="selectedDailyRange = range"
+        >{{ range === 'all' ? 'All time' : `${range} days` }}</button>
+      </div>
+      <div class="trends-section-heading">Daily intake · {{ dailyRangeLabel }}</div>
+      <TrendsChart :range="selectedDailyRange" />
       <section class="trends-summary">
-        <div class="trends-section-heading">Averages · last {{ days }} days</div>
+        <div class="trends-section-heading">Averages · {{ dailyRangeLabel }}</div>
         <div class="trends-summary-stats">
           <div class="trends-summary-stats-item">
             <strong>{{ windowAverageKcal.toLocaleString() }}</strong>
@@ -70,8 +85,13 @@ function toggleWeek(week) {
             <span>kcal {{ windowAverageDeficit >= 0 ? 'deficit' : 'surplus' }} / day</span>
           </div>
           <div class="trends-summary-stats-item" :class="{ surplus: windowProjectedKgPerWeek < 0 }">
-            <strong v-if="projectedWeightDisplay >= 0.05">{{ projectedWeightDisplay.toFixed(1) }} {{ store.weightUnit }}
+            <strong v-if="totalWeightChangeDisplay / Math.max(days, 1) >= 0.005">{{ (totalWeightChangeDisplay / Math.max(days, 1)).toFixed(2) }} {{ store.weightUnit }}
             </strong>
+            <strong v-else>Maintenance</strong>
+            <span>estimated {{ windowTotalDeficit >= 0 ? 'loss' : 'gain' }} / day</span>
+          </div>
+          <div class="trends-summary-stats-item" :class="{ surplus: windowProjectedKgPerWeek < 0 }">
+            <strong v-if="projectedWeightDisplay >= 0.05">{{ projectedWeightDisplay.toFixed(1) }} {{ store.weightUnit }}</strong>
             <strong v-else>Maintenance</strong>
             <span>{{ windowProjectedKgPerWeek >= 0 ? 'loss' : 'gain' }} per month</span>
           </div>
@@ -91,7 +111,8 @@ function toggleWeek(week) {
           <span>Days logged</span>
           <span></span>
         </div>
-        <template v-for="week in weeklyBreakdown" :key="week.start">
+        <template v-for="(week, index) in weeklyBreakdown" :key="week.start">
+          <div v-if="index === 0 || weeklyBreakdown[index - 1].year !== week.year" class="trends-year-heading">{{ week.year }}</div>
           <button class="trends-week-row" type="button" :aria-expanded="expandedWeek === week.start"
             @click="toggleWeek(week)">
             <div class="trends-week-date">{{ formatWeek(week.start) }} – {{ formatWeek(week.end) }}</div>
@@ -210,7 +231,7 @@ function toggleWeek(week) {
 
 .trends-summary-stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1px;
   overflow: hidden;
   border: 1px solid var(--line);
@@ -252,6 +273,50 @@ function toggleWeek(week) {
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--surface);
+}
+
+.trends-range-selector {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  margin: 2px 0 18px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-alt);
+}
+
+.trends-range-selector button {
+  padding: 7px 4px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.trends-range-selector button.active {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(var(--shadow-rgb), .12);
+}
+
+.trends-range-selector button:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+.trends-year-heading {
+  padding: 10px 12px 6px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
 }
 
 .trends-week-header-row {
@@ -424,6 +489,10 @@ function toggleWeek(week) {
 
   .trends-weeks-list {
     overflow-y: auto;
+  }
+
+  .trends-range-selector button {
+    font-size: 11px;
   }
 
   .trends-week-header-row {

@@ -1,27 +1,56 @@
 <script setup>
+import { nextTick, onMounted, ref, watch, toRef } from 'vue'
 import { setLogDate, view } from '../js/ui.js'
 import { useTrendsChart } from '../js/useTrendsChart.js'
 
 const props = defineProps({ range: { type: [Number, String], default: 30 } })
-const { days, bars, goalLineBottom } = useTrendsChart(props.range)
+const { days, bars, goalLineBottom } = useTrendsChart(toRef(props, 'range'))
+const chartViewport = ref(null)
+
+function showNewestData() {
+  nextTick(() => {
+    if (!chartViewport.value) return
+    chartViewport.value.scrollLeft = chartViewport.value.scrollWidth
+  })
+}
+
+watch(days, showNewestData)
+onMounted(showNewestData)
 </script>
 
 <template>
   <section class="section-block trends-section">
-    <div class="trends-grid" :style="{ gridTemplateColumns: `repeat(${days}, minmax(0, 1fr))` }">
-      <div class="trends-goal-line" :style="{ bottom: goalLineBottom + 'px' }"></div>
+    <div
+      ref="chartViewport"
+      class="trends-chart-viewport"
+      @touchstart.stop
+      @touchmove.stop
+      @touchend.stop
+      @touchcancel.stop
+    >
+      <div
+        class="trends-grid"
+        :style="{
+          gridTemplateColumns: `repeat(${bars.length}, minmax(0, 1fr))`,
+          columnGap: days >= 30 ? '4px' : '8px',
+          // Reserve room for the widest weekday label plus the column gap.
+          minWidth: days >= 30 ? `${days * 18}px` : '100%',
+        }"
+      >
+        <div class="trends-goal-line" :style="{ bottom: goalLineBottom + 'px' }"></div>
 
-      <button v-for="bar in bars" :key="bar.date" type="button" class="trends-day"
-        :class="{ active: bar.date === view.logDate, today: bar.isToday }" :title="bar.label"
-        :aria-label="`Load ${bar.label}`" @click="setLogDate(bar.date)">
-        <span class="trends-bar-area">
-          <span v-if="bar.hasLog" class="trends-bar-stack" :class="{ 'over-goal': bar.overGoal }"
-            :style="{ height: bar.barHeight + 'px' }">
+        <button v-for="bar in bars" :key="bar.date" type="button" class="trends-day"
+          :class="{ active: bar.date === view.logDate, today: bar.isToday }" :title="bar.label"
+          :aria-label="`Load ${bar.label}`" @click="setLogDate(bar.date)">
+          <span class="trends-bar-area">
+            <span v-if="bar.hasLog" class="trends-bar-stack" :class="{ 'over-goal': bar.overGoal }"
+              :style="{ height: bar.barHeight + 'px' }">
+            </span>
+            <span v-else class="trends-empty-bar"></span>
           </span>
-          <span v-else class="trends-empty-bar"></span>
-        </span>
-        <span class="trends-day-label">{{ bar.weekday }}</span>
-      </button>
+          <span v-if="bar.showLabel" class="trends-day-label">{{ bar.weekday }}</span>
+        </button>
+      </div>
     </div>
 
     <div class="trends-legend">
@@ -39,6 +68,18 @@ const { days, bars, goalLineBottom } = useTrendsChart(props.range)
   gap: 8px;
   margin-top: 16px;
   position: relative;
+}
+
+.trends-chart-viewport {
+  overflow-x: auto;
+  height: 160px;
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+}
+
+.trends-grid-wide {
+  min-width: 1080px;
 }
 
 .trends-day {
@@ -77,8 +118,14 @@ const { days, bars, goalLineBottom } = useTrendsChart(props.range)
   justify-content: center;
 }
 
+.trends-bar-stack,
+.trends-empty-bar {
+  width: 100%;
+  max-width: 12px;
+  min-width: 3px;
+}
+
 .trends-bar-stack {
-  width: 12px;
   min-height: 5px;
   background: var(--trends-under);
   display: flex;
@@ -95,7 +142,6 @@ const { days, bars, goalLineBottom } = useTrendsChart(props.range)
 }
 
 .trends-empty-bar {
-  width: 6px;
   height: 32px;
   border-radius: 999px;
   background: var(--trends-empty);

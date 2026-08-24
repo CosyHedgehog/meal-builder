@@ -6,6 +6,8 @@ import { confirmState, settleConfirm } from '../js/confirm.js'
 import SettingsModal from './SettingsModal.vue'
 import ImportDataModal from './ImportDataModal.vue'
 import FoodEditorModal from './FoodEditorModal.vue'
+import FoodNotesModal from './FoodNotesModal.vue'
+import FoodStatsModal from './FoodStatsModal.vue'
 import IngredientEditorModal from './IngredientEditorModal.vue'
 import FoodManagerModal from './FoodManagerModal.vue'
 import GroupManagerModal from './GroupManagerModal.vue'
@@ -21,6 +23,8 @@ const registry = {
   [Modals.SETTINGS]: SettingsModal,
   [Modals.IMPORT_DATA]: ImportDataModal,
   [Modals.FOOD_EDITOR]: FoodEditorModal,
+  [Modals.FOOD_NOTES]: FoodNotesModal,
+  [Modals.FOOD_STATS]: FoodStatsModal,
   [Modals.INGREDIENT_EDITOR]: IngredientEditorModal,
   [Modals.FOOD_MANAGER]: FoodManagerModal,
   [Modals.GROUP_MANAGER]: GroupManagerModal,

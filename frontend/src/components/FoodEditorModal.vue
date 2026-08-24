@@ -3,7 +3,7 @@ import { computed, reactive, ref } from 'vue'
 import BaseModal from './BaseModal.vue'
 import FoodModeSelector from './FoodModeSelector.vue'
 import { state as store, createFood, updateFood } from '../js/data.js'
-import { Modals, replaceModal } from '../js/modals.js'
+import { Modals } from '../js/modals.js'
 import { confirmAction } from '../js/confirm.js'
 import { useDiscardChanges } from '../js/useDiscardChanges.js'
 import FoodIngredientsEditor from './FoodIngredientsEditor.vue'
@@ -22,6 +22,7 @@ const draft = reactive({
   groupId: source ? source.groupId : props.groupId,
   items: source ? source.items.map((item) => ({ ...item })) : [],
   kcal: source ? String(source.kcal || '') : '',
+  note: source?.note || '',
 })
 const foodMode = ref(source?.mode || (source && source.items.length ? 'ingredients' : 'simple'))
 const modeSwipeStart = ref(null)
@@ -137,9 +138,6 @@ defineExpose({ requestClose: closeEditor })
         <button class="btn btn-primary primary-wide" type="button" @click="saveFood">{{ isDraftCopy ? 'Create copy' : (isNew ? 'Create food' : 'Save food') }}</button>
         <button v-if="isNew" class="btn btn-secondary duplicate-food-button" type="button" @click="closeEditor">
           Cancel
-        </button>
-        <button v-else-if="!isDraftCopy" class="btn btn-secondary duplicate-food-button" type="button" @click="replaceModal(Modals.FOOD_EDITOR, { foodId: props.foodId, duplicate: true })">
-          ⧉ Duplicate food
         </button>
       </div>
     </div>

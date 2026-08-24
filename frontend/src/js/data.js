@@ -454,6 +454,7 @@ export function createFood(draft) {
     items: (draft.items || []).map((it) => ({ ...it })),
     mode: draft.mode === 'simple' ? 'simple' : 'ingredients',
     kcal: Number.isFinite(draft.kcal) ? Math.round(draft.kcal) : 0,
+    note: String(draft.note || '').trim(),
     groupId: draft.groupId || UNCATEGORIZED_GROUP_ID,
   }
   state.foods.push(food)
@@ -469,6 +470,7 @@ export function updateFood(id, draft) {
   food.items = (draft.items || []).map((it) => ({ ...it }))
   food.mode = draft.mode === 'simple' ? 'simple' : 'ingredients'
   food.kcal = Number.isFinite(draft.kcal) ? Math.round(draft.kcal) : 0
+  food.note = String(draft.note || '').trim()
   if (draft.groupId) food.groupId = draft.groupId
   if (food.groupId !== previousGroupId) {
     Object.values(state.logs).forEach((log) => {
@@ -477,6 +479,13 @@ export function updateFood(id, draft) {
       })
     })
   }
+  save()
+}
+
+export function updateFoodNote(id, note) {
+  const food = state.foods.find((f) => f.id === id)
+  if (!food) return
+  food.note = String(note || '').trim()
   save()
 }
 

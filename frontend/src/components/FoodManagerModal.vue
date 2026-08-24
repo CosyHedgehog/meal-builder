@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import BaseModal from './BaseModal.vue'
 import DraggableList from './DraggableList.vue'
 import { state as store, reorderItems, deleteFood, foodKcal, foodsInGroup, UNCATEGORIZED_GROUP_ID } from '../js/data.js'
@@ -17,6 +17,9 @@ const filteredFoods = computed(() => {
   const value = query.value.trim().toLowerCase()
   return value ? foods.value.filter((food) => food.name.toLowerCase().includes(value)) : foods.value
 })
+const openOptionsFoodId = ref(null)
+const foodMenuPlacement = ref('down')
+const foodMenuRefs = new Map()
 function foodLogCount(foodId) {
   return Object.values(store.logs).reduce((count, log) => count + (log.entries || [])
     .filter((entry) => entry.foodId === foodId)
@@ -27,6 +30,45 @@ const dragDisabled = computed(() => !selectedGroupId.value || !!query.value.trim
 function openEditor(food = null) {
   openModal(Modals.FOOD_EDITOR, food ? { foodId: food.id } : { groupId: selectedGroupId.value })
 }
+function setFoodMenuRef(foodId, element) {
+  if (element) foodMenuRefs.set(foodId, element)
+  else foodMenuRefs.delete(foodId)
+}
+async function updateFoodMenuPlacement(foodId) {
+  await nextTick()
+  const menu = foodMenuRefs.get(foodId)
+  const scrollPane = menu?.closest('.manager-list')
+  if (!menu || !scrollPane) return
+  const menuRect = menu.getBoundingClientRect()
+  const paneRect = scrollPane.getBoundingClientRect()
+  foodMenuPlacement.value = menuRect.bottom > paneRect.bottom - 6 ? 'up' : 'down'
+}
+function toggleFoodOptions(foodId) {
+  openOptionsFoodId.value = openOptionsFoodId.value === foodId ? null : foodId
+  foodMenuPlacement.value = 'down'
+  if (openOptionsFoodId.value === foodId) updateFoodMenuPlacement(foodId)
+}
+function closeFoodOptions(event) {
+  if (event.target.closest('.food-options')) return
+  openOptionsFoodId.value = null
+  foodMenuPlacement.value = 'down'
+}
+function duplicateFood(food) {
+  openOptionsFoodId.value = null
+  foodMenuPlacement.value = 'down'
+  openModal(Modals.FOOD_EDITOR, { foodId: food.id, duplicate: true })
+}
+function openFoodNotes(food) {
+  openOptionsFoodId.value = null
+  foodMenuPlacement.value = 'down'
+  openModal(Modals.FOOD_NOTES, { foodId: food.id })
+}
+function openFoodStats(food) {
+  openOptionsFoodId.value = null
+  openModal(Modals.FOOD_STATS, { foodId: food.id })
+}
+onMounted(() => document.addEventListener('click', closeFoodOptions))
+onBeforeUnmount(() => document.removeEventListener('click', closeFoodOptions))
 function reorder(fromId, toId) {
   reorderItems('foods', fromId, toId)
 }
@@ -74,7 +116,7 @@ async function removeFood(food) {
           <div class="manager-item-wrap">
             <button class="manager-item" type="button" @click="openEditor(item)">
               <span>
-                <strong>{{ item.name }}</strong>
+                <strong>{{ item.name }}<span v-if="item.note" class="food-note-indicator" title="Food has notes" aria-label="Food has notes">▤</span></strong>
                 <small>
                   {{ foodKcal(item).toLocaleString() }} kcal · {{ item.items.length ? `${item.items.length} ingredient${item.items.length === 1 ? '' : 's'}` : 'simple food' }}
                   · {{ foodLogCount(item.id) }} log{{ foodLogCount(item.id) === 1 ? '' : 's' }}
@@ -83,7 +125,52 @@ async function removeFood(food) {
               </span>
               <span>›</span>
             </button>
-            <button class="manager-delete" type="button" aria-label="Delete food" @click.stop="removeFood(item)">×</button>
+            <div class="food-options">
+                <button
+                class="manager-options"
+                type="button"
+                :aria-label="`More options for ${item.name}`"
+                :aria-expanded="openOptionsFoodId === item.id"
+                @click.stop="toggleFoodOptions(item.id)"
+              >
+                <span aria-hidden="true">⋮</span>
+              </button>
+              <div
+                v-if="openOptionsFoodId === item.id"
+                :ref="(element) => setFoodMenuRef(item.id, element)"
+                class="food-options-menu"
+                :class="{ 'food-options-menu-up': foodMenuPlacement === 'up' }"
+                role="menu"
+              >
+                <button type="button" role="menuitem" @click.stop="openFoodStats(item)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M4 19V5M4 19h17" />
+                    <path d="m7 15 4-4 3 2 5-6" />
+                  </svg>
+                  Stats
+                </button>
+                <button type="button" role="menuitem" @click.stop="openFoodNotes(item)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M5 5h14v11H8l-3 3V5Z" />
+                    <path d="M8 9h8M8 12h5" />
+                  </svg>
+                  {{ item.note ? 'Edit notes' : 'Add notes' }}
+                </button>
+                <button type="button" role="menuitem" @click.stop="duplicateFood(item)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <rect x="8" y="8" width="11" height="11" rx="2" />
+                    <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+                  </svg>
+                  Duplicate
+                </button>
+                <button class="delete-option" type="button" role="menuitem" @click.stop="openOptionsFoodId = null; removeFood(item)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+                  </svg>
+                  Delete
+                </button>
+              </div>
+            </div>
           </div>
         </template>
       </DraggableList>
@@ -176,6 +263,96 @@ async function removeFood(food) {
   color: var(--green);
   font-size: 13px;
   line-height: 1;
+}
+
+.food-options {
+  position: relative;
+  flex: none;
+}
+
+.food-note-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 5px;
+  border-radius: 4px;
+  color: var(--green);
+  font-size: 14px;
+  vertical-align: 1px;
+}
+
+.manager-options {
+  width: 32px;
+  height: 32px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 0;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 21px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.manager-options:hover,
+.manager-options:focus-visible {
+  background: var(--surface-alt);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.manager-options:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 1px;
+}
+
+.food-options-menu {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 132px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.food-options-menu-up {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+
+.food-options-menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  border: 0;
+  border-radius: 7px;
+  padding: 8px 9px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.food-options-menu button:hover,
+.food-options-menu button:focus-visible {
+  background: var(--surface-alt);
+}
+
+.food-options-menu svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+.food-options-menu .delete-option {
+  color: var(--red);
 }
 
 @media (max-width: 480px) {

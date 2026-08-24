@@ -1,31 +1,31 @@
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, ref, unref } from 'vue'
 import {
   state as store,
   logDeficit,
   logHasEntries,
   logTotalKcal,
 } from './data.js'
-import { prettyDate, shiftDateStr, todayStr, weekdayNarrow } from './date.js'
+import { formatDateISO, parseISODate, prettyDate, shiftDateStr, todayStr, weekdayNarrow } from './date.js'
 
 const BAR_HEIGHT = 108
 const DEFAULT_CEILING = 2400
 const KCAL_PER_KG = 7700
 
-export function useTrendsChart() {
-  const days = ref(window.innerWidth <= 480 ? 14 : 30)
-
-  function onResize() {
-    days.value = window.innerWidth <= 480 ? 14 : 30
-  }
-
-  onMounted(() => window.addEventListener('resize', onResize))
-  onUnmounted(() => window.removeEventListener('resize', onResize))
+export function useTrendsChart(selectedRange = ref(30)) {
+  const allTime = computed(() => unref(selectedRange) === 'all')
+  const days = computed(() => {
+    if (allTime.value) return history.value.length
+    return Number(unref(selectedRange)) || 30
+  })
 
   const history = computed(() => {
     const output = []
     const today = todayStr()
-    for (let index = days.value - 1; index >= 0; index -= 1) {
-      const date = shiftDateStr(today, -index)
+    const logDates = Object.keys(store.logs).sort()
+    const rangeDays = Number(unref(selectedRange)) || 30
+    const startDate = allTime.value && logDates.length ? logDates[0] : shiftDateStr(today, -(rangeDays - 1))
+    let date = startDate
+    while (date <= today) {
       const log = store.logs[date]
       output.push({
         date,
@@ -33,6 +33,7 @@ export function useTrendsChart() {
         deficit: log ? logDeficit(log) : 0,
         hasLog: logHasEntries(log),
       })
+      date = shiftDateStr(date, 1)
     }
     return output
   })
@@ -47,7 +48,7 @@ export function useTrendsChart() {
   )
 
   const bars = computed(() =>
-    history.value.map((entry) => {
+    history.value.map((entry, index) => {
       const total = Math.max(0, entry.total || 0)
       const barHeight = entry.hasLog
         ? Math.max(5, Math.round((total / scale.value) * BAR_HEIGHT))
@@ -57,8 +58,9 @@ export function useTrendsChart() {
         ...entry,
         barHeight,
         overGoal: entry.total > store.maintenanceCal,
-        weekday: weekdayNarrow(entry.date),
         isToday: entry.date === todayStr(),
+        showLabel: true,
+        weekday: weekdayNarrow(entry.date),
         label: entry.hasLog
           ? `${prettyDate(entry.date)}: ${entry.total.toLocaleString()} kcal logged, ${entry.deficit.toLocaleString()} kcal deficit`
           : `${prettyDate(entry.date)}: Not logged`,
@@ -87,31 +89,38 @@ export function useTrendsChart() {
       ? Math.round(windowLoggedDays.value.reduce((sum, entry) => sum + entry.deficit, 0) / windowLoggedDays.value.length)
       : 0,
   )
+  const windowTotalDeficit = computed(() =>
+    windowLoggedDays.value.reduce((sum, entry) => sum + entry.deficit, 0),
+  )
   const windowProjectedKgPerWeek = computed(() => (windowAverageDeficit.value * 7) / KCAL_PER_KG)
 
   const weeklyBreakdown = computed(() => {
-    const firstLoggedIndex = history.value.findIndex((entry) => entry.hasLog)
-    if (firstLoggedIndex < 0) return []
-    const entries = history.value.slice(firstLoggedIndex)
+    const dates = Object.keys(store.logs).filter((date) => logHasEntries(store.logs[date]))
+    if (!dates.length) return []
+    const today = todayStr()
+    const firstMonday = parseISODate(dates.sort()[0])
+    const firstDay = firstMonday.getDay() || 7
+    firstMonday.setDate(firstMonday.getDate() - firstDay + 1)
+    const lastMonday = parseISODate(today)
+    const lastDay = lastMonday.getDay() || 7
+    lastMonday.setDate(lastMonday.getDate() - lastDay + 1)
     const weeks = []
-    for (let end = entries.length - 1; end >= 0; end -= 7) {
-      const start = Math.max(0, end - 6)
-      const range = entries.slice(start, end + 1)
+    for (const monday = new Date(firstMonday); monday <= lastMonday; monday.setDate(monday.getDate() + 7)) {
+      const range = []
+      for (let offset = 0; offset < 7; offset += 1) {
+        const date = new Date(monday)
+        date.setDate(date.getDate() + offset)
+        const dateStr = formatDateISO(date)
+        if (dateStr > today) break
+        const log = store.logs[dateStr]
+        range.push({ date: dateStr, total: log ? logTotalKcal(log) : 0, deficit: log ? logDeficit(log) : 0, hasLog: logHasEntries(log) })
+      }
       const logged = range.filter((entry) => entry.hasLog)
-      const average = (field) => logged.length
-        ? Math.round(logged.reduce((sum, entry) => sum + entry[field], 0) / logged.length)
-        : 0
-      weeks.push({
-        start: range[0].date,
-        end: range[range.length - 1].date,
-        loggedDays: logged.length,
-        totalDays: range.length,
-        averageKcal: average('total'),
-        averageDeficit: average('deficit'),
-        days: range,
-      })
+      if (!logged.length) continue
+      const average = (field) => Math.round(logged.reduce((sum, entry) => sum + entry[field], 0) / logged.length)
+      weeks.push({ start: range[0].date, end: range[range.length - 1].date, year: Number(range[0].date.slice(0, 4)), loggedDays: logged.length, totalDays: range.length, averageKcal: average('total'), averageDeficit: average('deficit'), days: range })
     }
-    return weeks
+    return weeks.reverse()
   })
 
   const trackingSummary = computed(() => {
@@ -138,6 +147,7 @@ export function useTrendsChart() {
     windowLoggedDays,
     windowAverageKcal,
     windowAverageDeficit,
+    windowTotalDeficit,
     windowProjectedKgPerWeek,
     weeklyBreakdown,
     trackingSummary,

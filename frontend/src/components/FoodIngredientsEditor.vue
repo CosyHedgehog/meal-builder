@@ -110,7 +110,7 @@ async function removeRow(ingredientId) {
                 <label class="add-item-label">Add an ingredient</label>
                 <button class="link-btn manage-ingredients-link" type="button"
                     @click="openModal(Modals.INGREDIENT_MANAGER)">
-                    Manage ingredients
+                    Manage ingredients <span class="manage-ingredients-chevron" aria-hidden="true">›</span>
                 </button>
             </div>
             <div class="ingredient-picker-trigger" role="button" tabindex="0" aria-label="Open ingredient chooser"
@@ -386,6 +386,14 @@ async function removeRow(ingredientId) {
     margin: 0;
     padding: 0;
     font-size: 11px;
+}
+
+.manage-ingredients-chevron {
+    display: inline-block;
+    margin-left: 3px;
+    font-size: 15px;
+    line-height: 0;
+    vertical-align: -1px;
 }
 
 .add-item-select,
