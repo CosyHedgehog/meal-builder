@@ -25,6 +25,12 @@ watch(() => props.editMode, (isEditing) => {
 function entryFor(foodId) {
   return entries.value.find((entry) => entry.foodId === foodId)
 }
+function setFoodQuantity(food, quantity) {
+  if (props.locked || !Number.isFinite(quantity) || quantity <= 0) return
+  const entry = entryFor(food.id)
+  if (entry) setLogEntryQty(view.logDate, entry.id, quantity)
+  else addLogFood(view.logDate, props.group.id, food.id, quantity)
+}
 function decrement(entry) {
   if (props.locked) return
   bumpLogEntry(view.logDate, entry.id, -1)
@@ -180,7 +186,7 @@ function toggleStepper(stepperId, isOpen) {
                 :open="props.activeStepperId === `food-${food.id}`"
                 @decrement="entryFor(food.id) && decrement(entryFor(food.id))"
                 @increment="!locked && addLogFood(view.logDate, group.id, food.id)"
-                @set-quantity="entryFor(food.id) && setLogEntryQty(view.logDate, entryFor(food.id).id, $event)"
+                @set-quantity="setFoodQuantity(food, $event)"
                 @adjust="openModal(Modals.ADJUST_FOOD, { entryId: entryFor(food.id).id })"
                 @toggle="(isOpen) => toggleStepper(`food-${food.id}`, isOpen)"
               />

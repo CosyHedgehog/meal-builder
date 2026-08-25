@@ -20,6 +20,10 @@ const popoverPlacement = ref('center')
 
 const emit = defineEmits(['decrement', 'increment', 'set-quantity', 'toggle', 'adjust'])
 
+function setQuantity(event) {
+  emit('set-quantity', Number(event.target.value))
+}
+
 function openQuantityPopover(event, addOne = false) {
   event.stopPropagation()
   if (props.locked) return
@@ -100,7 +104,7 @@ defineExpose({ closePopover })
         <button type="button" class="food-stepper-control" :disabled="quantity <= 0" :aria-label="`Remove one ${name}`"
           @click.stop="quantity === 1 && closePopover(); $emit('decrement')">−</button>
         <input class="food-stepper-quantity-input" type="number" min="1" step="any" :value="quantity"
-          :aria-label="`${name} quantity`" @click.stop @change="$emit('set-quantity', Number($event.target.value))" />
+          :aria-label="`${name} quantity`" @click.stop @change="setQuantity" @keydown.enter.prevent="setQuantity" />
         <button type="button" class="food-stepper-control" :aria-label="`Add one ${name}`"
           @click.stop="$emit('increment')">＋</button>
       </div>
