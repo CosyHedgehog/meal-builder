@@ -308,6 +308,30 @@ export function foodKcal(food) {
   return Math.round((food.items || []).reduce((sum, it) => sum + itemKcal(it), 0))
 }
 
+export function foodItemsForEntry(entry) {
+  const food = entry?.foodId ? getFood(entry.foodId) : null
+  if (!food || food.mode === 'simple') return []
+  const overrides = entry.overrides && typeof entry.overrides === 'object' ? entry.overrides : {}
+  const baseIds = new Set((food.items || []).map((item) => item.ingredientId))
+  const items = (food.items || []).map((item) => ({
+    ...item,
+    amount: Object.prototype.hasOwnProperty.call(overrides, item.ingredientId)
+      ? Number(overrides[item.ingredientId]) || 0
+      : item.amount,
+  }))
+  Object.entries(overrides).forEach(([ingredientId, amount]) => {
+    if (!baseIds.has(ingredientId) && Number(amount) > 0) items.push({ ingredientId, amount: Number(amount) })
+  })
+  return items
+}
+
+export function entryFoodKcal(entry) {
+  const food = entry?.foodId ? getFood(entry.foodId) : null
+  if (!food) return 0
+  if (!entry.overrides || food.mode === 'simple') return foodKcal(food)
+  return Math.round(foodItemsForEntry(entry).reduce((sum, item) => sum + itemKcal(item), 0))
+}
+
 export function visibleGroups() {
   return state.groups.filter((g) => g.id !== UNCATEGORIZED_GROUP_ID)
 }
@@ -345,7 +369,7 @@ function normalizeLogEntry(entry) {
 export function entryKcal(entry) {
   if (!entry || !isValidLogEntry(entry)) return 0
   const qty = Number.isFinite(entry.qty) && entry.qty > 0 ? entry.qty : 1
-  if (entry.foodId) return Math.round(foodKcal(getFood(entry.foodId)) * qty)
+  if (entry.foodId) return Math.round(entryFoodKcal(entry) * qty)
   return Math.round((entry.kcal || 0) * qty)
 }
 
@@ -591,6 +615,18 @@ export function updateCustomLogEntry(dateStr, entryId, name, kcal) {
   if (!entry) return
   entry.name = (name || 'Custom').trim() || 'Custom'
   entry.kcal = !Number.isFinite(kcal) || kcal < 0 ? 0 : kcal
+  save()
+}
+
+export function updateLogEntryVariant(dateStr, entryId, overrides) {
+  const log = ensureLog(dateStr)
+  const entry = log.entries.find((item) => item.id === entryId && item.foodId)
+  if (!entry) return
+  const cleaned = Object.fromEntries(Object.entries(overrides || {})
+    .filter(([id, amount]) => getIngredient(id) && Number.isFinite(Number(amount)) && Number(amount) >= 0)
+    .map(([id, amount]) => [id, Number(amount)]))
+  if (Object.keys(cleaned).length) entry.overrides = cleaned
+  else delete entry.overrides
   save()
 }
 

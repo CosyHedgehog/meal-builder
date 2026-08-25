@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import FoodQuantityStepper from './FoodQuantityStepper.vue'
-import { state as store, addLogFood, bumpLogEntry, logEntries, foodsInGroup, foodKcal, moveFoodToGroupEnd, insertFood, reorderGroups, deleteGroup, toggleGroupVisibility, removeLogEntry, UNCATEGORIZED_GROUP_ID } from '../js/data.js'
+import { state as store, addLogFood, bumpLogEntry, setLogEntryQty, logEntries, foodsInGroup, foodKcal, entryFoodKcal, moveFoodToGroupEnd, insertFood, reorderGroups, deleteGroup, toggleGroupVisibility, UNCATEGORIZED_GROUP_ID } from '../js/data.js'
 import { view, clearDragState, getCollapseState, setCollapseState } from '../js/ui.js'
 import { Modals, openModal } from '../js/modals.js'
 import { confirmAction } from '../js/confirm.js'
@@ -28,12 +28,6 @@ function entryFor(foodId) {
 function decrement(entry) {
   if (props.locked) return
   bumpLogEntry(view.logDate, entry.id, -1)
-}
-function resetEntry(entry) {
-  if (props.locked) return
-  emit('update:activeStepperId', null)
-  if (!entry) return
-  removeLogEntry(view.logDate, entry.id)
 }
 function startDrag(foodId, event) {
   // if (props.locked) return
@@ -162,8 +156,8 @@ function toggleStepper(stepperId, isOpen) {
               :open="props.activeStepperId === `custom-${entry.id}`"
               one-off
               @decrement="decrement(entry)"
-              @reset="resetEntry(entry)"
               @increment="!locked && bumpLogEntry(view.logDate, entry.id, 1)"
+              @set-quantity="!locked && setLogEntryQty(view.logDate, entry.id, $event)"
               @toggle="(isOpen) => toggleStepper(`custom-${entry.id}`, isOpen)"
             />
           </div>
@@ -178,12 +172,15 @@ function toggleStepper(stepperId, isOpen) {
               <FoodQuantityStepper
                 :name="food.name"
                 :quantity="entryFor(food.id)?.qty || 0"
-                :kcal="foodKcal(food)"
+                :kcal="entryFor(food.id)?.overrides ? entryFoodKcal(entryFor(food.id)) : foodKcal(food)"
+                :adjusted="!!entryFor(food.id)?.overrides"
+                :adjustable="food.mode !== 'simple' && !!entryFor(food.id)"
                 :locked="locked"
                 :open="props.activeStepperId === `food-${food.id}`"
                 @decrement="entryFor(food.id) && decrement(entryFor(food.id))"
                 @increment="!locked && addLogFood(view.logDate, group.id, food.id)"
-                @reset="entryFor(food.id) && resetEntry(entryFor(food.id))"
+                @set-quantity="entryFor(food.id) && setLogEntryQty(view.logDate, entryFor(food.id).id, $event)"
+                @adjust="openModal(Modals.ADJUST_FOOD, { entryId: entryFor(food.id).id })"
                 @toggle="(isOpen) => toggleStepper(`food-${food.id}`, isOpen)"
               />
             </div>

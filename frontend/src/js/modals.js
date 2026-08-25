@@ -13,6 +13,7 @@ export const Modals = Object.freeze({
   FOOD_MANAGER: 'food-manager',
   GROUP_MANAGER: 'group-manager',
   CUSTOM_ENTRY: 'custom-entry',
+  ADJUST_FOOD: 'adjust-food',
   ACTIVITY: 'activity',
   FOLLOW: 'follow',
   DELETE_ACCOUNT: 'delete-account',

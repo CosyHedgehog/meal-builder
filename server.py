@@ -208,15 +208,26 @@ def daily_calories(data):
     ingredients = {item.get('id'): item for item in data.get('ingredients', []) if isinstance(item, dict)}
     foods = {item.get('id'): item for item in data.get('foods', []) if isinstance(item, dict)}
 
-    def food_kcal(food):
+    def food_kcal(food, overrides=None):
         if not food: return 0
         if food.get('mode') == 'simple' or not food.get('items'):
             return round(float(food.get('kcal') or 0))
+        overrides = overrides if isinstance(overrides, dict) else {}
+        base_ids = set()
         total = 0
         for item in food.get('items', []):
-            ingredient = ingredients.get(item.get('ingredientId'))
+            ingredient_id = item.get('ingredientId')
+            base_ids.add(ingredient_id)
+            ingredient = ingredients.get(ingredient_id)
             if not ingredient: continue
-            amount = float(item.get('amount') or 0)
+            amount = float(overrides[ingredient_id]) if ingredient_id in overrides else float(item.get('amount') or 0)
+            value = float(ingredient.get('kcal') or 0)
+            total += amount / 100 * value if ingredient.get('unit') == 'g' else amount * value
+        for ingredient_id, raw_amount in overrides.items():
+            if ingredient_id in base_ids or float(raw_amount or 0) <= 0: continue
+            ingredient = ingredients.get(ingredient_id)
+            if not ingredient: continue
+            amount = float(raw_amount)
             value = float(ingredient.get('kcal') or 0)
             total += amount / 100 * value if ingredient.get('unit') == 'g' else amount * value
         return round(total)
@@ -231,7 +242,7 @@ def daily_calories(data):
             qty = float(entry.get('qty') or 1)
             if entry.get('foodId'):
                 food = foods.get(entry['foodId'])
-                item_calories = round(food_kcal(food) * qty)
+                item_calories = round(food_kcal(food, entry.get('overrides')) * qty)
                 item_name = food.get('name', 'Food') if food else 'Food'
             else:
                 item_calories = round(float(entry.get('kcal') or 0) * qty)

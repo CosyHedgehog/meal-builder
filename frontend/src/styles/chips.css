@@ -248,18 +248,80 @@
   top: calc(100% + 5px);
   left: 50%;
   max-width: calc(100vw - 16px);
-  display: grid;
-  grid-template-columns: 28px 24px 28px;
-  grid-template-rows: 26px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 2px;
+  width: 108px;
   min-height: 34px;
-  padding: 4px 5px;
+  padding: 2px 3px;
   border: 1px solid var(--line);
   border-radius: 9px;
   background: var(--surface);
   transform: translateX(-50%);
+}
+
+.food-stepper-adjust {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 100%;
+  min-height: 21px;
+  padding: 1px 2px;
+  background: transparent;
+  color: inherit;
+}
+
+.food-adjust-popover {
+  position: absolute;
+  z-index: 4;
+  bottom: calc(100% + 5px);
+  left: 50%;
+  width: 108px;
+  padding: 2px 3px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  transform: translateX(-50%);
+}
+
+.food-stepper-adjust svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
+
+.food-adjust-popover.placement-start { left: 0; transform: none; }
+.food-adjust-popover.placement-end { left: auto; right: 0; transform: none; }
+
+.food-quantity-controls { display: flex; align-items: center; justify-content: center; gap: 2px; min-height: 23px; }
+
+.food-stepper-quantity-input {
+  box-sizing: border-box;
+  width: 32px;
+  height: 23px;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  text-align: center;
+}
+
+.food-stepper-quantity-input:focus-visible { outline: 2px solid var(--green); outline-offset: 1px; }
+
+.food-stepper-quantity-input::-webkit-outer-spin-button,
+.food-stepper-quantity-input::-webkit-inner-spin-button {
+  margin: 0;
+  appearance: none;
+}
+
+.food-stepper-quantity-input { appearance: textfield; }
+
+.food-stepper-adjust:hover,
+.food-stepper-adjust:focus-visible {
+  background: var(--surface-alt);
+  outline: none;
 }
 
 .food-quantity-popover.placement-start {
@@ -277,8 +339,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 26px;
+  width: 25px;
+  height: 23px;
   padding: 0;
   border-radius: 6px;
   background: transparent;
