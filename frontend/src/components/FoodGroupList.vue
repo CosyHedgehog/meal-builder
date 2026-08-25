@@ -176,6 +176,7 @@ function toggleStepper(stepperId, isOpen) {
                 :adjusted="!!entryFor(food.id)?.overrides"
                 :adjustable="food.mode !== 'simple' && !!entryFor(food.id)"
                 :locked="locked"
+                :one-click-mode="store.oneClickMode"
                 :open="props.activeStepperId === `food-${food.id}`"
                 @decrement="entryFor(food.id) && decrement(entryFor(food.id))"
                 @increment="!locked && addLogFood(view.logDate, group.id, food.id)"

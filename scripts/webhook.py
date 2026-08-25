@@ -9,7 +9,7 @@ from datetime import datetime
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DEPLOY_SCRIPT = os.path.join(BASE_DIR, 'deploy.sh')
+DEPLOY_SCRIPT = os.path.join(BASE_DIR, 'scripts', 'deploy.sh')
 LOG_FILE = os.path.join(BASE_DIR, 'webhook.log')
 SECRET = os.environ.get('GITHUB_WEBHOOK_SECRET', '')
 PORT = int(os.environ.get('WEBHOOK_PORT', '9000'))

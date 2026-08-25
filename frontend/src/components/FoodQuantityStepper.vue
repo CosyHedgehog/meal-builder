@@ -9,6 +9,7 @@ const props = defineProps({
   open: { type: Boolean, default: false },
   colorIndex: { type: Number, default: 0 },
   oneOff: { type: Boolean, default: false },
+  oneClickMode: { type: Boolean, default: false },
   locked: { type: Boolean, default: false },
   adjusted: { type: Boolean, default: false },
   adjustable: { type: Boolean, default: false },
@@ -19,9 +20,10 @@ const popoverPlacement = ref('center')
 
 const emit = defineEmits(['decrement', 'increment', 'set-quantity', 'toggle', 'adjust'])
 
-function openQuantityPopover(event) {
+function openQuantityPopover(event, addOne = false) {
   event.stopPropagation()
   if (props.locked) return
+  if (props.oneClickMode && addOne) emit('increment')
   emit('toggle', true)
 }
 
@@ -74,7 +76,7 @@ defineExpose({ closePopover })
   <div ref="stepperWrap" class="food-stepper-wrap" :class="{ active: open }">
     <button type="button" class="food-stepper"
       :class="[`group-${colorIndex}`, { 'one-off': oneOff, 'dashboard-locked': !locked, active: open, selected: quantity > 0 }]"
-      :aria-label="`${name}, quantity ${quantity}`" @click="openQuantityPopover">
+      :aria-label="`${name}, quantity ${quantity}`" @click="openQuantityPopover($event, true)">
       <span class="food-stepper-name">{{ name }}<span v-if="oneOff" class="one-off-badge">1-off</span><span
           v-if="adjusted" class="one-off-badge">adjusted</span></span>
       <span class="food-stepper-kcal">{{ Math.round(kcal * (quantity || 1)).toLocaleString() }} kcal</span>
