@@ -26,58 +26,90 @@ async function removeGroup(group) {
 </script>
 
 <template>
-  <BaseModal title="Groups" subtitle="Organize foods into dashboard sections." panel-class="group-manager-modal" @close="emit('close')">
+  <BaseModal title="Groups" subtitle="Organize foods into dashboard sections." panel-class="group-manager-modal"
+    @close="emit('close')">
     <div class="group-manager-content">
       <div class="manager-list">
         <div v-for="item in groups()" :key="item.id" class="manager-item-row">
           <div class="manager-item-wrap" :class="{ 'is-protected': item.id === UNCATEGORIZED_GROUP_ID }">
             <div class="manager-item manager-item-editable">
-              <input v-if="item.id !== UNCATEGORIZED_GROUP_ID" :value="item.name" aria-label="Group name" @change="updateGroup(item.id, $event.target.value)" />
+              <input v-if="item.id !== UNCATEGORIZED_GROUP_ID" :value="item.name" aria-label="Group name"
+                @change="updateGroup(item.id, $event.target.value)" />
               <span v-else class="protected-group-name">{{ item.name }} <small>Default group</small></span>
             </div>
-            <ToggleSwitch
-              :model-value="item.visible !== false"
+            <ToggleSwitch :model-value="item.visible !== false"
               :label="`${item.visible !== false ? 'Hide' : 'Show'} ${item.name} on dashboard`"
-              @update:model-value="(value) => value !== (item.visible !== false) && toggleGroupVisibility(item.id)"
-            />
-            <button
-              v-if="item.id !== UNCATEGORIZED_GROUP_ID"
-              class="manager-delete"
-              type="button"
-              aria-label="Delete group"
-              @click="removeGroup(item)"
-            >×</button>
+              @update:model-value="(value) => value !== (item.visible !== false) && toggleGroupVisibility(item.id)" />
+            <button v-if="item.id !== UNCATEGORIZED_GROUP_ID" class="manager-delete" type="button"
+              aria-label="Delete group" @click="removeGroup(item)">×</button>
             <span v-else class="manager-protected" aria-hidden="true"></span>
           </div>
         </div>
       </div>
-    <div class="group-manager-actions input-field">
-      <label for="newGroupName">New group</label>
-      <div class="inline-form">
-        <input id="newGroupName" v-model="newName" placeholder="e.g. Post-workout" :aria-invalid="!!addError" aria-describedby="newGroupError" @input="addError = ''" @keyup.enter="addGroup" />
-        <button class="btn btn-primary" type="button" @click="addGroup">Add</button>
+      <div class="group-manager-actions input-field">
+        <label for="newGroupName">New group</label>
+        <div class="inline-form">
+          <input id="newGroupName" v-model="newName" placeholder="e.g. Post-workout" :aria-invalid="!!addError"
+            aria-describedby="newGroupError" @input="addError = ''" @keyup.enter="addGroup" />
+          <button class="btn btn-primary" type="button" @click="addGroup">Add</button>
+        </div>
+        <div v-if="addError" id="newGroupError" class="group-manager-error" role="alert">{{ addError }}</div>
       </div>
-      <div v-if="addError" id="newGroupError" class="group-manager-error" role="alert">{{ addError }}</div>
-    </div>
     </div>
   </BaseModal>
 </template>
 
 <style scoped>
-:deep(.modal.group-manager-modal) { width: 420px; }
-.inline-form { display: flex; gap: 8px; }
-.inline-form input { flex: 1; min-width: 0; }
-.group-manager-content { display: flex; flex-direction: column; gap: 0; margin: 0 -26px -22px; }
-.group-manager-content > .manager-list { border-width: 1px 0; border-radius: 0; padding: 0 16px; }
-.group-manager-content :deep(.manager-item-row) { border-bottom: 0; }
-.group-manager-actions { margin: 0; padding: 14px 16px 16px; border-top: 0; }
+:deep(.modal.group-manager-modal) {
+  width: 420px;
+}
+
+.inline-form {
+  display: flex;
+  gap: 8px;
+}
+
+.inline-form input {
+  flex: 1;
+  min-width: 0;
+}
+
+.group-manager-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0 -26px -22px;
+}
+
+.group-manager-content>.manager-list {
+  border-width: 1px 0;
+  border-radius: 0;
+  padding: 0 16px;
+}
+
+.group-manager-content :deep(.manager-item-row) {
+  border-bottom: 0;
+}
+
+.group-manager-actions {
+  margin: 0;
+  padding: 14px 16px 16px;
+  border-top: 0;
+}
+
 .manager-item-editable:hover input,
 .manager-item-editable:focus-within input {
   color: var(--green-strong);
 }
 
-.manager-item-wrap.is-protected { opacity: 0.6; }
-.manager-delete { color: color-mix(in srgb, var(--ink-muted) 55%, transparent); }
+.manager-item-wrap.is-protected {
+  opacity: 0.6;
+}
+
+.manager-delete {
+  color: color-mix(in srgb, var(--ink-muted) 55%, transparent);
+}
+
 .manager-delete:hover,
 .manager-delete:focus-visible {
   color: var(--red);
@@ -85,11 +117,17 @@ async function removeGroup(group) {
   border-color: transparent;
 }
 
-.manager-item input { width: 100%; border: 0; background: transparent; color: inherit; font: inherit; }
+.manager-item input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
 
 .group-manager-content :deep(.manager-item) {
   font-family: 'Inter', sans-serif;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -129,7 +167,7 @@ async function removeGroup(group) {
     min-height: 0;
   }
 
-  .group-manager-content > .manager-list {
+  .group-manager-content>.manager-list {
     flex: 1;
     min-height: 0;
     max-height: none;
