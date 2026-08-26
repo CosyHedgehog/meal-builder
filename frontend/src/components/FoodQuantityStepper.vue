@@ -82,7 +82,7 @@ defineExpose({ closePopover })
       :class="[`group-${colorIndex}`, { 'one-off': oneOff, 'dashboard-locked': !locked, active: open, selected: quantity > 0 }]"
       :aria-label="`${name}, quantity ${quantity}`" @click="openQuantityPopover($event, true)">
       <span class="food-stepper-name">{{ name }}<span v-if="oneOff" class="one-off-badge">1-off</span><span
-          v-if="adjusted" class="one-off-badge">adjusted</span></span>
+          v-if="adjusted" class="one-off-badge">ADJ</span></span>
       <span class="food-stepper-kcal">{{ Math.round(kcal * (quantity || 1)).toLocaleString() }} kcal</span>
     </button>
     <button v-if="quantity > 0" type="button" class="food-stepper-quantity" :aria-label="`Adjust ${name} quantity`"

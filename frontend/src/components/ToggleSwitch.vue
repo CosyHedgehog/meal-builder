@@ -2,7 +2,6 @@
 defineProps({
   modelValue: Boolean,
   label: String,
-  knob: { type: String, default: '' },
 })
 const emit = defineEmits(['update:modelValue'])
 </script>
@@ -16,7 +15,7 @@ const emit = defineEmits(['update:modelValue'])
     :aria-label="label"
     @click="emit('update:modelValue', !modelValue)"
   >
-    <span class="toggle-switch-knob">{{ knob }}</span>
+    <span class="toggle-switch-knob"></span>
   </button>
 </template>
 <style scoped>
@@ -24,31 +23,31 @@ const emit = defineEmits(['update:modelValue'])
   position: relative;
   display: inline-flex;
   align-items: center;
-  width: 46px;
-  height: 27px;
+  width: 36px;
+  height: 20px;
   flex-shrink: 0;
   border-radius: 999px;
   border: none;
-  background: var(--surface-alt);
-  box-shadow: inset 0 0 0 1px var(--line);
+  background: color-mix(in srgb, var(--ink-muted) 30%, var(--surface) 70%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink-muted) 25%, transparent);
   cursor: pointer;
   padding: 0;
   transition: background 0.18s ease;
 }
 
 .toggle-switch[aria-checked='true'] {
-  background: var(--green);
-  box-shadow: inset 0 0 0 1px var(--green);
+  background: var(--toggle-active);
+  box-shadow: inset 0 0 0 1px var(--toggle-active);
 }
 
 .toggle-switch-knob {
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 21px;
-  height: 21px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  background: var(--surface);
+  background: color-mix(in srgb, var(--ink-muted) 62%, var(--surface) 38%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -60,6 +59,7 @@ const emit = defineEmits(['update:modelValue'])
 }
 
 .toggle-switch[aria-checked='true'] .toggle-switch-knob {
-  transform: translateX(19px);
+  background: var(--toggle-knob-active);
+  transform: translateX(16px);
 }
 </style>

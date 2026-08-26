@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { state as store, getLog, logEntries } from '../js/data.js'
-import { view, clearDragState, dateNavDirection, boundaryBounce } from '../js/ui.js'
+import { view, dateNavDirection, boundaryBounce } from '../js/ui.js'
 import { Modals, modalStack, openModal } from '../js/modals.js'
 import { confirmState } from '../js/confirm.js'
 import DateNav from './DateNav.vue'
@@ -10,7 +10,7 @@ import FoodGroupList from './FoodGroupList.vue'
 import MobileActionSheet from './MobileActionSheet.vue'
 
 const log = computed(() => getLog(view.logDate))
-const groups = computed(() => view.dashboardEditMode ? store.groups : store.groups.filter((group) => group.visible !== false))
+const groups = computed(() => store.groups.filter((group) => group.visible !== false))
 const hiddenLoggedGroups = computed(() => {
   const hiddenIds = new Set(store.groups.filter((group) => group.visible === false).map((group) => group.id))
   const ids = new Set(logEntries(log.value).filter((entry) => hiddenIds.has(entry.groupId)).map((entry) => entry.groupId))
@@ -21,16 +21,8 @@ const dayLocked = computed(() => store.allowPreviousDayLocking && view.logDate <
 const hasOpenModal = computed(() => modalStack.length > 0 || confirmState.open)
 const activeStepperId = ref(null)
 watch(dayLocked, (locked) => {
-  if (locked) {
-    activeStepperId.value = null
-    finishDashboardEdit()
-  }
+  if (locked) activeStepperId.value = null
 })
-
-function finishDashboardEdit() {
-  clearDragState()
-  view.dashboardEditMode = false
-}
 
 function setActiveStepper(stepperId) {
   activeStepperId.value = stepperId
@@ -40,9 +32,10 @@ function setActiveStepper(stepperId) {
 
 <template>
   <div class="home">
-    <section class="manage-section">
-      <div class="manage-actions desktop-manage-actions">
-        <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.FOOD_MANAGER)">
+    <section class="manage-section legacy-manage-section desktop-nav">
+      <div class="desktop-nav-inner">
+        <div class="manage-actions desktop-manage-actions">
+        <button class="desktop-nav-button" type="button" @click="openModal(Modals.FOOD_MANAGER)">
           <svg class="desktop-manage-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
@@ -51,7 +44,7 @@ function setActiveStepper(stepperId) {
           </svg>
           Foods
         </button>
-        <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.GROUP_MANAGER)">
+        <button class="desktop-nav-button" type="button" @click="openModal(Modals.GROUP_MANAGER)">
           <svg class="desktop-manage-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect width="7" height="7" x="3" y="3" rx="1.5" />
@@ -61,7 +54,7 @@ function setActiveStepper(stepperId) {
           </svg>
           Groups
         </button>
-        <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.TRENDS)">
+        <button class="desktop-nav-button" type="button" @click="openModal(Modals.TRENDS)">
           <svg class="desktop-manage-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
@@ -69,33 +62,14 @@ function setActiveStepper(stepperId) {
           </svg>
           Trends
         </button>
-        <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.ACTIVITY)">
+        <button class="desktop-nav-button" type="button" @click="openModal(Modals.ACTIVITY)">
           <svg class="desktop-manage-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
           </svg>
           Activity
         </button>
-        <button v-if="!view.dashboardEditMode" class="manage-toggle group-add-button" type="button"
-          @click="view.dashboardEditMode = true">
-          <svg class="desktop-manage-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect width="7" height="9" x="3" y="3" rx="1.5" />
-            <rect width="7" height="5" x="14" y="3" rx="1.5" />
-            <rect width="7" height="9" x="14" y="12" rx="1.5" />
-            <rect width="7" height="5" x="3" y="16" rx="1.5" />
-          </svg>
-          Dashboard
-        </button>
-        <button v-else-if="view.dashboardEditMode" class="manage-toggle group-add-button" type="button"
-          @click="finishDashboardEdit">
-          <svg class="desktop-manage-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-          Done
-        </button>
-        <button class="manage-toggle group-add-button" type="button" @click="openModal(Modals.SETTINGS)">
+        <button class="desktop-nav-button" type="button" @click="openModal(Modals.SETTINGS)">
           <svg class="desktop-manage-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path
@@ -104,6 +78,7 @@ function setActiveStepper(stepperId) {
           </svg>
           Settings
         </button>
+        </div>
       </div>
     </section>
     <DateNav />
@@ -114,23 +89,25 @@ function setActiveStepper(stepperId) {
           <CalorieSummary :log="log" />
         </section>
 
-        <div v-if="hiddenLoggedGroups.length && !view.dashboardEditMode" class="hidden-food-note">
-          <span class="hidden-food-note-icon" aria-hidden="true">ⓘ</span>
-          <span>Food logged in hidden group{{ hiddenLoggedGroups.length === 1 ? '' : 's' }}: {{
-            hiddenLoggedGroups.map((group) => group.name).join(', ')}}. <button type="button"
-              @click="openModal(Modals.GROUP_MANAGER)">Manage groups</button></span>
-        </div>
+        <div class="day-scroll">
+          <div v-if="hiddenLoggedGroups.length" class="hidden-food-note">
+            <span class="hidden-food-note-icon" aria-hidden="true">ⓘ</span>
+            <span>Food logged in hidden group{{ hiddenLoggedGroups.length === 1 ? '' : 's' }}: {{
+              hiddenLoggedGroups.map((group) => group.name).join(', ')}}. <button type="button"
+                @click="openModal(Modals.GROUP_MANAGER)">Manage groups</button></span>
+          </div>
 
-        <div v-if="dayLocked" class="locked-day-note">
-          <span aria-hidden="true">🔒</span>
-          <span>Past day foods can't be selected. <button type="button" @click="openModal(Modals.SETTINGS)">Edit in
-              Settings</button></span>
-        </div>
+          <div v-if="dayLocked" class="locked-day-note">
+            <span aria-hidden="true">🔒</span>
+            <span>Past day foods can't be selected. <button type="button" @click="openModal(Modals.SETTINGS)">Edit in
+                Settings</button></span>
+          </div>
 
-        <section v-for="group in groups" :key="group.id" class="today-group-card">
-          <FoodGroupList :group="group" :log="log" :edit-mode="view.dashboardEditMode" :locked="dayLocked"
-            :active-stepper-id="activeStepperId" @update:active-stepper-id="setActiveStepper" />
-        </section>
+          <section v-for="group in groups" :key="group.id" class="today-group-card">
+            <FoodGroupList :group="group" :log="log" :locked="dayLocked"
+              :active-stepper-id="activeStepperId" @update:active-stepper-id="setActiveStepper" />
+          </section>
+        </div>
       </div>
     </Transition>
     <MobileActionSheet :has-open-modal="hasOpenModal" />
@@ -143,6 +120,11 @@ function setActiveStepper(stepperId) {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  --desktop-nav-height: 57px;
+  overflow: visible;
+  border: 0;
+  border-radius: 24px;
+  background: var(--bg);
 }
 
 .day-flow {
@@ -228,11 +210,10 @@ function setActiveStepper(stepperId) {
 }
 
 .today-card {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  padding: 7px 7px 7px;
-  box-shadow: 1px 2px 8px rgba(var(--shadow-rgb), 0.06);
+  background: transparent;
+  border: 0;
+  border-radius: 18px;
+  padding: 9px;
 }
 
 .locked-day-note {
@@ -295,20 +276,65 @@ function setActiveStepper(stepperId) {
   padding: 5px 12px;
 }
 
-.manage-actions {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 18px;
-  padding: 18px;
+.legacy-manage-section {
+  display: block;
 }
 
-.manage-toggle {
-  width: 100%;
-  color: var(--green);
+.desktop-nav {
+  position: sticky;
+  top: 0;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  z-index: 30;
 }
 
-.manage-toggle:hover {
-  color: var(--green-strong);
+.desktop-nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 12px 24px;
+}
+
+.desktop-manage-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 0;
+}
+
+.desktop-nav-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: color-mix(in srgb, var(--ink) 60%, transparent);
+  font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.desktop-nav-button:hover,
+.desktop-nav-button:focus-visible {
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+  color: var(--ink);
+  outline: none;
+}
+
+.desktop-nav-button.active {
+  background: var(--green);
+  color: #062119;
+  font-weight: 600;
 }
 
 .desktop-manage-icon {
@@ -323,23 +349,57 @@ function setActiveStepper(stepperId) {
 
 @media (max-width: 600px) {
   .home {
-    padding-bottom: calc(38px + env(safe-area-inset-bottom));
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    gap: 0;
+    padding-bottom: 28px;
+  }
+
+  .day-flow {
+    min-height: 0;
+    flex: 1;
+    gap: 0;
+  }
+
+  .today-date-row {
+    flex: none;
+    min-height: 36px;
+    margin-bottom: 0;
   }
 
   .today-card {
-    width: calc(100% + 48px);
-    margin-left: -24px;
+    flex: none;
+    padding: 5px 3px 8px;
+  }
+
+  .day-scroll {
+    min-height: 0;
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    padding-bottom: 10px;
+  }
+
+  .home {
+    overflow: hidden;
+    padding-bottom: calc(28px + env(safe-area-inset-bottom));
+  }
+
+  .today-card {
     border-right: 0;
     border-left: 0;
-    border-radius: 0;
   }
 
   .today-group-card {
-    width: calc(100% + 48px);
-    margin-left: -24px;
+    width: 100%;
   }
 
   .desktop-manage-actions {
+    display: none;
+  }
+  .legacy-manage-section {
     display: none;
   }
 }

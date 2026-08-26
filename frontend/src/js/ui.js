@@ -2,7 +2,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { todayStr } from './date.js'
 
 /* ---- selected log date ---- */
-export const view = reactive({ logDate: todayStr(), dashboardEditMode: false, draggedFoodId: '', draggedOverFoodId: '', draggedGroupId: '', draggedOverGroupId: '', draggedEntryId: '', draggedOverEntryId: '', dragType: '' })
+export const view = reactive({ logDate: todayStr(), draggedFoodId: '', draggedOverFoodId: '', draggedGroupId: '', draggedOverGroupId: '', draggedEntryId: '', draggedOverEntryId: '', dragType: '' })
 
 const COLLAPSE_STATE_KEY = 'meal-builder-collapse-state'
 
@@ -61,7 +61,7 @@ export function setLogDate(dateStr) {
 }
 
 /* ---- theme ---- */
-const initial = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'
+const initial = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'
 
 export const theme = ref(initial)
 export const isDark = computed(() => theme.value === 'dark')
@@ -76,7 +76,7 @@ watch(
       /* private mode */
     }
     const meta = document.getElementById('themeColorMeta')
-    if (meta) meta.setAttribute('content', value === 'dark' ? '#10150f' : '#f3f5ee')
+    if (meta) meta.setAttribute('content', value === 'dark' ? '#12140f' : '#f4f5f0')
   },
   { immediate: true },
 )

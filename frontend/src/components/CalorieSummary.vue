@@ -18,9 +18,9 @@ const groupSegments = computed(() => {
       return { group, index, kcal }
     })
     .filter(({ group, kcal }) => group.visible !== false || kcal > 0)
-    .map(({ group, index, kcal }) => {
+    .map(({ group, index, kcal }, segmentIndex) => {
       const width = Math.min(100 - offset, (kcal / barTotal.value) * 100)
-      const segment = { id: group.id, name: group.name, kcal, width, colorIndex: index }
+      const segment = { id: group.id, name: group.name, kcal, width, colorIndex: segmentIndex }
       offset += width
       return segment
     })
@@ -45,13 +45,14 @@ const groupSegments = computed(() => {
     </div>
 
     <div class="today-status-labels">
-      <div v-for="segment in groupSegments" :key="segment.id" class="status-pill">
-        <span><i class="group-swatch" :class="`group-${segment.colorIndex % 5}`"></i>{{ segment.name }}</span>
-        <strong>{{ segment.kcal.toLocaleString() }} <small>kcal</small></strong>
+      <div v-for="segment in groupSegments" :key="segment.id" class="status-pill"
+        :class="{ 'summary-zero': segment.kcal <= 0 }">
+        <span>{{ segment.name }}</span>
+        <strong>{{ segment.kcal.toLocaleString() }}</strong>
       </div>
       <div class="status-pill" :class="deficit >= 0 ? 'deficit' : 'surplus'">
         <span>{{ deficit >= 0 ? 'Deficit' : 'Surplus' }}</span>
-        <strong>{{ Math.abs(deficit).toLocaleString() }} <small>kcal</small></strong>
+        <strong>{{ Math.abs(deficit).toLocaleString() }}</strong>
       </div>
     </div>
   </div>
@@ -66,7 +67,7 @@ const groupSegments = computed(() => {
 }
 
 .today-kcal {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Inter', sans-serif;
   color: var(--ink);
   text-align: center;
   white-space: nowrap;
@@ -74,25 +75,27 @@ const groupSegments = computed(() => {
 
 .today-kcal strong {
   display: block;
-  font-size: 20px;
+  font-size: 30px;
+  font-weight: 700;
 }
 
 .goal-kcal {
   color: var(--ink-muted);
-  font: inherit;
+  font-size: 20px;
+  font-weight: 400;
 }
 
 .today-status {
   margin-top: 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
 
 .today-status-bar {
-  height: 20px;
+  height: 10px;
   border-radius: 999px;
-  background: var(--surface-alt);
+  background: rgba(255, 255, 255, 0.05);
   overflow: hidden;
   display: flex;
 }
@@ -127,7 +130,7 @@ const groupSegments = computed(() => {
 .today-status-labels {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
-  gap: 10px;
+  gap: 8px;
 }
 
 .status-pill {
@@ -135,7 +138,10 @@ const groupSegments = computed(() => {
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 0 2px;
+  min-height: 52px;
+  padding: 9px 5px 7px;
+  border-radius: 12px;
+  background: var(--chip-bg);
   font-size: 13px;
   text-align: center;
 }
@@ -149,10 +155,10 @@ const groupSegments = computed(() => {
 
 .group-swatch {
   display: inline-block;
-  width: 8px;
-  height: 8px;
-  margin-right: 5px;
-  border-radius: 2px;
+  width: 6px;
+  height: 6px;
+  margin-right: 4px;
+  border-radius: 50%;
   vertical-align: 1px;
 }
 
@@ -183,9 +189,54 @@ const groupSegments = computed(() => {
   color: var(--red);
 }
 
+.status-pill.surplus {
+  background: color-mix(in srgb, var(--red) 10%, transparent);
+}
+
+.status-pill.deficit {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.status-pill.deficit span,
+.status-pill.deficit strong {
+  color: var(--green);
+}
+
+.status-pill.summary-zero {
+  display: none;
+}
+
+@media (min-width: 601px) {
+  .today-top {
+    position: sticky;
+    top: calc(var(--desktop-nav-height, 0px) + 44px + 8px);
+    z-index: 19;
+    padding: 9px;
+    background: var(--bg);
+  }
+
+  .today-status {
+    position: sticky;
+    top: calc(var(--desktop-nav-height, 0px) + 44px + 8px + 36px + 14px);
+    z-index: 19;
+    padding: 0 9px 9px;
+    background: var(--bg);
+  }
+
+}
+
 @media (max-width: 600px) {
   .today-kcal strong {
-    font-size: 18px;
+    font-size: 30px;
+  }
+
+  .goal-kcal {
+    font-size: 20px;
+  }
+
+  .today-status {
+    margin-top: 10px;
+    gap: 12px;
   }
 
   .today-status-labels {
