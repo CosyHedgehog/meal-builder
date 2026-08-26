@@ -5,6 +5,7 @@ import json
 import os
 import subprocess
 import threading
+import traceback
 from datetime import datetime
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 
@@ -47,6 +48,7 @@ class Handler(BaseHTTPRequestHandler):
         payload = self.rfile.read(length)
         signature = self.headers.get('X-Hub-Signature-256', '')
         event = self.headers.get('X-GitHub-Event', '')
+        delivery = self.headers.get('X-GitHub-Delivery', 'unknown')
 
         if event != 'push':
             self.send_response(202)
@@ -75,19 +77,27 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         with LOCK:
-            log(f'Received push to {ref}; running deploy script')
+            log(f'Received push to {ref} (delivery {delivery}); running deploy script')
             try:
                 subprocess.run(['bash', DEPLOY_SCRIPT], cwd=BASE_DIR, check=True)
                 log('Deploy script completed successfully')
                 self.send_response(200)
             except subprocess.CalledProcessError as exc:
-                log(f'Deploy script failed: {exc}')
+                message = f'Deploy script failed with exit code {exc.returncode}'
+                log(message)
                 self.send_response(500)
-            except Exception as exc:
-                log(f'Unexpected error: {exc}')
-                self.send_response(500)
-            finally:
+                self.send_header('Content-Type', 'text/plain; charset=utf-8')
                 self.end_headers()
+                self.wfile.write(f'{message}\n'.encode('utf-8'))
+                return
+            except Exception as exc:
+                log(f'Unexpected error: {exc}\n{traceback.format_exc()}')
+                self.send_response(500)
+                self.send_header('Content-Type', 'text/plain; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(f'Unexpected webhook error: {exc}\n'.encode('utf-8'))
+                return
+            self.end_headers()
 
     def log_message(self, format, *args):
         return
