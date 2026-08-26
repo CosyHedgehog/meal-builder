@@ -12,7 +12,7 @@ const collapsed = ref(getCollapseState(`group:${props.group.id}`))
 const foods = computed(() => foodsInGroup(props.group.id))
 const entries = computed(() => logEntries(props.log).filter((entry) => entry.groupId === props.group.id))
 const displayFoods = computed(() => foods.value)
-const visibleFoods = computed(() => showAll.value ? displayFoods.value : displayFoods.value.slice(0, 10))
+const visibleFoods = computed(() => showAll.value ? displayFoods.value : displayFoods.value.slice(0, 20))
 const hasMore = computed(() => !showAll.value && visibleFoods.value.length < displayFoods.value.length)
 
 function entryFor(foodId) {
