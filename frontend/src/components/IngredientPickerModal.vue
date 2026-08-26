@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, ref } from 'vue'
+import { computed, ref } from 'vue'
 import BaseModal from './BaseModal.vue'
 import { state as store } from '../js/data.js'
 import { Modals, openModal } from '../js/modals.js'
@@ -12,7 +12,6 @@ const props = defineProps({
 const emit = defineEmits(['close'])
 
 const query = ref(props.initialQuery)
-const searchInput = ref(null)
 const excludedIds = computed(() => new Set(props.excludedIds))
 const filteredIngredients = computed(() => {
   const normalized = query.value.trim().toLowerCase()
@@ -27,10 +26,6 @@ function selectIngredient(ingredientId) {
   emit('close')
 }
 
-async function focusSearch() {
-  await nextTick()
-  searchInput.value?.focus()
-}
 </script>
 
 <template>
@@ -42,14 +37,11 @@ async function focusSearch() {
   >
     <div class="ingredient-picker-modal-content">
       <input
-        ref="searchInput"
         v-model="query"
         class="ingredient-picker-modal-search"
         type="search"
         placeholder="Search ingredients..."
         aria-label="Search ingredients"
-        autofocus
-        @vue:mounted="focusSearch"
       />
       <div class="ingredient-picker-modal-list" role="listbox" aria-label="Ingredients">
         <button
@@ -69,8 +61,15 @@ async function focusSearch() {
         </div>
       </div>
       <div class="ingredient-picker-modal-actions">
-        <button class="link-btn" type="button" @click="openModal(Modals.INGREDIENT_MANAGER)">
-          Manage ingredients <span aria-hidden="true">›</span>
+        <button class="btn btn-secondary btn-full manage-ingredients-button" type="button"
+          @click="openModal(Modals.INGREDIENT_MANAGER)">
+          <svg class="manage-ingredients-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+            stroke-linecap="round" aria-hidden="true">
+            <path d="M4 7h16M4 17h16" />
+            <circle cx="9" cy="7" r="2" />
+            <circle cx="15" cy="17" r="2" />
+          </svg>
+          Manage ingredients
         </button>
       </div>
     </div>
@@ -83,12 +82,21 @@ async function focusSearch() {
   margin: 12px -26px 0;
   padding: 12px 26px 0;
   border-top: 1px solid var(--line);
-  text-align: right;
+  text-align: center;
 }
 
-.ingredient-picker-modal-actions .link-btn {
+.manage-ingredients-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   margin: 0;
-  padding: 0;
+  font-weight: 400;
+}
+
+.manage-ingredients-icon {
+  width: 15px;
+  height: 15px;
 }
 
 @media (max-width: 480px) {
