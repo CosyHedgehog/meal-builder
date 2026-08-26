@@ -193,6 +193,7 @@ async function deleteItem(item) {
   :deep(.modal.entity-manager-modal) {
     display: flex;
     flex-direction: column;
+    overflow: hidden;
   }
 
   .entity-manager-content {

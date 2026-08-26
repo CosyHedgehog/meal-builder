@@ -41,17 +41,38 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   width: 460px;
 }
 
+:deep(.modal.confirm-modal) {
+  padding-bottom: 14px;
+}
+
 .confirm-modal h2,
 .confirm-modal > .subtitle {
   text-align: center;
 }
 
 .confirm-modal .modal-footer {
+  margin-right: -26px;
+  margin-left: -26px;
+  padding-right: 26px;
+  padding-left: 26px;
   justify-content: center;
   gap: 10px;
 }
 
 .confirm-modal .modal-footer .btn {
   min-width: 110px;
+}
+
+@media (max-width: 480px) {
+  :deep(.modal.confirm-modal) {
+    padding-bottom: 8px;
+  }
+
+  .confirm-modal .modal-footer {
+    margin-right: -18px;
+    margin-left: -18px;
+    padding-right: 18px;
+    padding-left: 18px;
+  }
 }
 </style>

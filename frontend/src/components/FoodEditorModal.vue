@@ -53,7 +53,7 @@ function endModeSwipe(event) {
   setFoodMode(deltaX < 0 ? 'simple' : 'ingredients')
 }
 
-function saveFood() {
+async function saveFood() {
   if (!draft.groupId) {
     validationMessage.value = 'Select a group before saving.'
     return
@@ -74,7 +74,26 @@ function saveFood() {
     kcal: foodMode.value === 'simple' ? fixedKcal : 0,
   }
   if (isNew || isDraftCopy.value) createFood(payload)
-  else updateFood(props.foodId, payload)
+  else {
+    const hasChanges = source.name !== payload.name?.trim()
+      || source.groupId !== payload.groupId
+      || source.mode !== payload.mode
+      || Number(source.kcal) !== payload.kcal
+      || String(source.note || '') !== String(payload.note || '').trim()
+      || JSON.stringify(source.items || []) !== JSON.stringify(payload.items || [])
+    const loggedCount = Object.values(store.logs).reduce((count, log) => count + (log.entries || [])
+      .filter((entry) => entry.foodId === props.foodId).length, 0)
+    if (hasChanges && loggedCount) {
+      const ok = await confirmAction({
+        title: 'Update logged food?',
+        message: `This food is used in ${loggedCount} logged meal${loggedCount === 1 ? '' : 's'}.\n\nSaving will update those food logs. Continue?`,
+        okLabel: 'Update food',
+        okClass: 'btn-primary',
+      })
+      if (!ok) return
+    }
+    updateFood(props.foodId, payload)
+  }
   emit('close')
 }
 
