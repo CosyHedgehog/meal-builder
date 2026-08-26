@@ -443,7 +443,7 @@ async function removeFood(food) {
 }
 
 .food-manager-content :deep(.manager-item strong) {
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 600;
 }
 

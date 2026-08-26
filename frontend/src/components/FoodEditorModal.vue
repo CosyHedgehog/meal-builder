@@ -151,7 +151,7 @@ defineExpose({ requestClose: closeEditor })
 
 .food-details-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 112px;
+  grid-template-columns: minmax(0, 1fr) 150px;
   gap: 10px;
 }
 
