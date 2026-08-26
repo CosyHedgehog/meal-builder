@@ -172,26 +172,27 @@ function toggleWeek(week) {
 @media (min-width: 481px) {
   :deep(.modal.trends-modal) {
     box-sizing: border-box;
-    height: min(500px, 92vh);
-    min-height: 560px;
+    width: min(560px, 92vw);
+    height: min(720px, 92vh);
+    min-height: 620px;
   }
 }
 
 .trends-tabs {
   display: flex;
   gap: 4px;
-  margin: 2px 0 18px;
+  margin: 2px 0 14px;
   padding: 3px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
+  border: 0;
+  border-radius: 11px;
   background: var(--surface-alt);
 }
 
 .trends-tabs button {
   flex: 1;
-  padding: 7px 10px;
+  padding: 8px 10px;
   border: 0;
-  border-radius: 7px;
+  border-radius: 8px;
   background: transparent;
   color: var(--ink-muted);
   font-size: 12px;
@@ -200,9 +201,9 @@ function toggleWeek(week) {
 }
 
 .trends-tabs button.active {
-  background: var(--surface);
+  background: var(--green);
   color: var(--ink);
-  box-shadow: 0 1px 3px rgba(var(--shadow-rgb), .12);
+  box-shadow: none;
 }
 
 .trends-tabs button:focus-visible {
@@ -211,7 +212,7 @@ function toggleWeek(week) {
 }
 
 .trends-summary {
-  margin-top: 20px;
+  margin-top: 18px;
 }
 
 .trends-weeks {
@@ -243,12 +244,8 @@ function toggleWeek(week) {
 
 .trends-summary-stats {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1px;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--line);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .trends-summary-stats>div {
@@ -256,9 +253,10 @@ function toggleWeek(week) {
   min-width: 0;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 12px 6px;
-  background: var(--surface);
+  gap: 3px;
+  padding: 13px 8px;
+  border-radius: 11px;
+  background: var(--surface-alt);
   text-align: center;
 }
 
@@ -278,6 +276,14 @@ function toggleWeek(week) {
   color: var(--red);
 }
 
+.trends-summary-stats>div:nth-child(2) {
+  background: color-mix(in srgb, var(--green) 16%, var(--surface-alt));
+}
+
+.trends-summary-stats>div:nth-child(2) strong {
+  color: var(--green);
+}
+
 .trends-weeks-list {
   min-height: 0;
   flex: 1;
@@ -288,20 +294,26 @@ function toggleWeek(week) {
 }
 
 .trends-range-selector {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 4px;
-  margin: 2px 0 18px;
-  padding: 3px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--surface-alt);
+  display: flex;
+  gap: 20px;
+  margin: 0 0 16px;
+  padding: 0 0 8px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--line);
+  scrollbar-width: none;
+}
+
+.trends-range-selector::-webkit-scrollbar {
+  display: none;
 }
 
 .trends-range-selector button {
-  padding: 7px 4px;
+  flex: 0 0 auto;
+  padding: 0 0 8px;
+  margin-bottom: -9px;
   border: 0;
-  border-radius: 7px;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
   background: transparent;
   color: var(--ink-muted);
   font-size: 12px;
@@ -310,9 +322,10 @@ function toggleWeek(week) {
 }
 
 .trends-range-selector button.active {
-  background: var(--surface);
-  color: var(--ink);
-  box-shadow: 0 1px 3px rgba(var(--shadow-rgb), .12);
+  background: transparent;
+  color: var(--green);
+  border-bottom-color: var(--green);
+  box-shadow: none;
 }
 
 .trends-range-selector button:focus-visible {

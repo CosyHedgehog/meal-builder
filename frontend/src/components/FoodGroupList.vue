@@ -110,8 +110,8 @@ function toggleStepper(stepperId, isOpen) {
           <div v-if="!foods.length" class="empty-group-state">
             <span class="empty-note">No foods in this group yet</span>
             <button v-if="!locked" type="button" class="today-chip chip-add"
-              @click="openModal(Modals.CUSTOM_ENTRY, { groupId: group.id })">
-              + Add custom
+              @click="openModal(Modals.FOOD_EDITOR, { groupId: group.id })">
+              + Add
             </button>
           </div>
           <button v-else-if="!locked" type="button" class="today-chip chip-add"

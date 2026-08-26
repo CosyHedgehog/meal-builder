@@ -209,30 +209,19 @@ function downloadJSON(filename, payload) {
   max-width: 92vw;
   padding: 20px;
   border-radius: 24px;
+  overflow: hidden;
   /* The mockup does not load Inter; on Windows this stack resolves to Arial. */
   font-family: Arial, sans-serif;
 }
 
 :deep(.modal.settings-modal h2) {
   padding-right: 42px;
-  font-size: 24px;
-  font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-  font-weight: 400;
-  line-height: 1.15;
 }
 
 :deep(.modal.settings-modal > .subtitle) {
   margin: 4px -20px 0;
   padding: 0 20px 14px;
-  color: color-mix(in srgb, var(--ink) 40%, transparent);
-  font-size: 14px;
-  line-height: 1.3;
   border-bottom: 1px solid var(--line);
-}
-
-:deep(.modal.settings-modal > .modal-close) {
-  border: 0;
-  background: transparent;
 }
 
 .settings-sections {
@@ -244,19 +233,9 @@ function downloadJSON(filename, payload) {
   flex-direction: column;
   gap: 20px;
   padding-top: 16px;
-  margin-right: -26px;
-  padding-right: 26px;
+  margin-right: -20px;
+  padding-right: 20px;
   scrollbar-gutter: stable;
-}
-
-.settings-sections::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--ink-muted) 72%, transparent);
-  background-clip: padding-box;
-}
-
-.settings-sections::-webkit-scrollbar-thumb:hover {
-  background: var(--ink-muted);
-  background-clip: padding-box;
 }
 
 .settings-section {
@@ -455,6 +434,7 @@ function downloadJSON(filename, payload) {
     max-height: 100dvh;
     border-radius: 0;
     padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+    overflow: hidden;
   }
 
   .settings-sections {

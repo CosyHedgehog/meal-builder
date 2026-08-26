@@ -52,7 +52,7 @@
 .chip-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 5px;
 }
 
 .quick-picks-viewport {
@@ -190,11 +190,11 @@
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  min-height: 52px;
+  min-height: 48px;
   max-height: none;
   overflow: visible;
   border-radius: 12px;
-  padding: 8px 11px;
+  padding: 7px 11px;
   border: 1px solid transparent;
   background: var(--chip-bg);
   color: var(--ink);
@@ -468,12 +468,13 @@
 
 @media (min-width: 601px) {
   .chip-list {
-    gap: 8px;
+    gap: 6px;
   }
 
   .food-stepper {
     border-radius: 12px;
-    padding: 10px 14px;
+    min-height: 48px;
+    padding: 8px 14px;
     transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   }
 
@@ -494,8 +495,8 @@
 
 @media (max-width: 600px) {
   .food-stepper {
-    min-height: 40px;
-    padding: 7px 11px;
+    min-height: 38px;
+    padding: 6px 11px;
   }
 
 }

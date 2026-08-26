@@ -66,8 +66,15 @@ onMounted(showNewestData)
 .trends-grid {
   display: grid;
   gap: 8px;
-  margin-top: 16px;
+  margin-top: 10px;
   position: relative;
+}
+
+.trends-section {
+  padding: 16px;
+  border: 0;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface-alt) 72%, transparent);
 }
 
 .trends-chart-viewport {
@@ -153,7 +160,7 @@ onMounted(showNewestData)
   left: 0;
   right: 0;
   height: 0;
-  border-top: 2px dashed rgba(var(--shadow-rgb), 0.32);
+  border-top: 1px dashed rgba(var(--shadow-rgb), 0.32);
   pointer-events: none;
 }
 

@@ -74,6 +74,7 @@ async function removeGroup(group) {
 .group-manager-content { display: flex; flex-direction: column; gap: 0; margin: 0 -26px -22px; }
 .group-manager-content > .group-order-note { padding: 0 20px 14px; }
 .group-manager-content > :deep(.manager-list) { border-width: 1px 0; border-radius: 0; padding: 0 16px; }
+.group-manager-content :deep(.manager-item-row) { border-bottom: 0; }
 .group-manager-actions { margin: 0; padding: 14px 16px 16px; border-top: 0; }
 .group-order-note {
   display: flex;
@@ -96,7 +97,7 @@ async function removeGroup(group) {
 
 .manager-item-wrap.is-protected { opacity: 0.6; }
 .group-manager-content :deep(.manager-drag) { opacity: 0.45; }
-.manager-delete { color: var(--ink-muted); }
+.manager-delete { color: color-mix(in srgb, var(--ink-muted) 55%, transparent); }
 .manager-delete:hover,
 .manager-delete:focus-visible {
   color: var(--red);
