@@ -227,6 +227,7 @@ function downloadJSON(filename, payload) {
 .settings-sections {
   flex: 1;
   min-height: 0;
+  height: min(560px, calc(100dvh - 150px));
   max-height: min(560px, calc(100dvh - 150px));
   overflow-y: auto;
   display: flex;
