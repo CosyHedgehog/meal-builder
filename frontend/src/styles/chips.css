@@ -506,9 +506,20 @@
 }
 
 @media (max-width: 600px) {
+  .food-stepper-wrap.active,
+  .food-stepper-wrap:hover,
+  .food-stepper-wrap:focus-within {
+    z-index: 31;
+  }
+
+  .food-quantity-popover,
+  .food-adjust-popover {
+    z-index: 32;
+  }
+
   .food-stepper {
     min-height: 38px;
-    padding: 6px 11px;
+    padding: 6px 8px;
   }
 
 }

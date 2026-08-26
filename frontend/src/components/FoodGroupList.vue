@@ -73,7 +73,8 @@ function toggleStepper(stepperId, isOpen) {
       </div>
       <div v-if="!collapsed" class="quick-picks-viewport">
         <div class="chip-list" :class="{ 'kcal-hidden': !store.showKcal }">
-          <div v-for="entry in entries.filter((item) => !item.foodId)" :key="entry.id" class="dashboard-food-item">
+          <div v-for="entry in entries.filter((item) => !item.foodId)" :key="entry.id" class="dashboard-food-item"
+            :class="{ active: props.activeStepperId === `custom-${entry.id}` }">
             <FoodQuantityStepper
               :name="entry.name || 'Custom'"
               :quantity="entry.qty"
@@ -89,7 +90,7 @@ function toggleStepper(stepperId, isOpen) {
             />
           </div>
           <template v-for="food in visibleFoods" :key="food.id">
-            <div class="dashboard-food-item">
+            <div class="dashboard-food-item" :class="{ active: props.activeStepperId === `food-${food.id}` }">
               <FoodQuantityStepper
                 :name="food.name"
                 :quantity="entryFor(food.id)?.qty || 0"
@@ -228,6 +229,11 @@ function toggleStepper(stepperId, isOpen) {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+}
+
+.dashboard-food-item.active {
+  position: relative;
+  z-index: 7;
 }
 
 .empty-group-state {

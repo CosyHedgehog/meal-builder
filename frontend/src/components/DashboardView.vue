@@ -365,6 +365,7 @@ function setActiveStepper(stepperId) {
     min-height: 0;
     flex: 1;
     gap: 0;
+    will-change: auto;
   }
 
   .today-date-row {

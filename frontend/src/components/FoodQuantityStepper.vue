@@ -41,6 +41,7 @@ function updatePopoverPlacement() {
   const panelWidth = 112
   const panelHeight = 42
   const viewportPadding = 8
+  const mobileActionSheetHeight = window.matchMedia('(max-width: 600px)').matches ? 28 : 0
   const center = rect.left + rect.width / 2
   const desiredLeft = center - panelWidth / 2 - rect.left
   const minimumEdge = Math.max(viewportPadding, paneRect?.left ?? 0)
@@ -54,7 +55,7 @@ function updatePopoverPlacement() {
     : center + panelWidth / 2 > window.innerWidth - viewportPadding
       ? 'end'
       : 'center'
-  popoverVerticalPlacement.value = rect.bottom + panelHeight > window.innerHeight - viewportPadding
+  popoverVerticalPlacement.value = rect.bottom + panelHeight > window.innerHeight - viewportPadding - mobileActionSheetHeight
     ? 'up'
     : 'down'
 }
