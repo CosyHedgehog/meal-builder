@@ -259,8 +259,8 @@
 .food-quantity-popover {
   position: absolute;
   z-index: 4;
-  top: calc(100% + 5px);
-  left: 50%;
+  top: calc(100% + 3px);
+  left: var(--popover-left, 50%);
   max-width: calc(100vw - 16px);
   display: flex;
   flex-direction: column;
@@ -268,12 +268,18 @@
   justify-content: center;
   gap: 2px;
   width: 108px;
-  min-height: 34px;
+  min-height: 32px;
   padding: 2px 3px;
   border: 1px solid var(--line);
   border-radius: 9px;
-  background: var(--surface);
-  transform: translateX(-50%);
+  background: var(--surface-alt);
+  box-shadow: 0 5px 14px rgba(var(--backdrop-rgb), 0.28);
+  transform: none;
+}
+
+.food-quantity-popover.placement-up {
+  top: auto;
+  bottom: calc(100% + 5px);
 }
 
 .food-stepper:hover {
@@ -292,29 +298,38 @@
   justify-content: center;
   gap: 3px;
   width: 100%;
-  min-height: 21px;
-  padding: 1px 2px;
+  min-height: 26px;
+  padding: 2px 4px;
+  border-radius: 6px;
   background: transparent;
   color: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
 }
 
 .food-adjust-popover {
   position: absolute;
   z-index: 4;
-  bottom: calc(100% + 5px);
+  bottom: calc(100% + 3px);
   left: 50%;
   width: 108px;
+  min-height: 32px;
   padding: 2px 3px;
   border: 1px solid var(--line);
   border-radius: 9px;
-  background: var(--surface);
-  transform: translateX(-50%);
+  background: var(--surface-alt);
+  box-shadow: 0 5px 14px rgba(var(--backdrop-rgb), 0.28);
+  transform: none;
 }
 
 .food-stepper-adjust svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
 
-.food-adjust-popover.placement-start { left: 0; transform: none; }
-.food-adjust-popover.placement-end { left: auto; right: 0; transform: none; }
+.food-adjust-popover { left: var(--popover-left, 50%); }
+
+.food-adjust-popover.placement-up {
+  bottom: calc(100% + 40px);
+}
 
 .food-quantity-controls { display: flex; align-items: center; justify-content: center; gap: 2px; min-height: 23px; }
 
@@ -344,18 +359,15 @@
 
 .food-stepper-adjust:hover,
 .food-stepper-adjust:focus-visible {
-  background: var(--surface-alt);
+  background: var(--surface);
   outline: none;
 }
 
 .food-quantity-popover.placement-start {
-  left: 0;
   transform: none;
 }
 
 .food-quantity-popover.placement-end {
-  left: auto;
-  right: 0;
   transform: none;
 }
 
@@ -377,7 +389,7 @@
 
 .food-stepper-control:hover:not(:disabled),
 .food-stepper-control:focus-visible:not(:disabled) {
-  background: var(--surface-alt);
+  background: var(--surface);
   color: var(--ink);
   outline: none;
 }

@@ -17,6 +17,8 @@ const props = defineProps({
 
 const stepperWrap = ref(null)
 const popoverPlacement = ref('center')
+const popoverVerticalPlacement = ref('down')
+const popoverLeft = ref('50%')
 
 const emit = defineEmits(['decrement', 'increment', 'set-quantity', 'toggle', 'adjust'])
 
@@ -34,14 +36,27 @@ function openQuantityPopover(event, addOne = false) {
 function updatePopoverPlacement() {
   const rect = stepperWrap.value?.getBoundingClientRect()
   if (!rect) return
+  const scrollPane = stepperWrap.value.closest('.day-scroll')
+  const paneRect = scrollPane?.getBoundingClientRect()
   const panelWidth = 112
+  const panelHeight = 42
   const viewportPadding = 8
   const center = rect.left + rect.width / 2
+  const desiredLeft = center - panelWidth / 2 - rect.left
+  const minimumEdge = Math.max(viewportPadding, paneRect?.left ?? 0)
+  const maximumEdge = Math.min(window.innerWidth - viewportPadding, paneRect?.right ?? window.innerWidth)
+  const minimumLeft = minimumEdge - rect.left
+  const maximumLeft = maximumEdge - panelWidth - rect.left
+  const adjustedLeft = Math.min(maximumLeft, Math.max(minimumLeft, desiredLeft))
+  popoverLeft.value = `${adjustedLeft}px`
   popoverPlacement.value = center - panelWidth / 2 < viewportPadding
     ? 'start'
     : center + panelWidth / 2 > window.innerWidth - viewportPadding
       ? 'end'
       : 'center'
+  popoverVerticalPlacement.value = rect.bottom + panelHeight > window.innerHeight - viewportPadding
+    ? 'up'
+    : 'down'
 }
 
 function closePopover() {
@@ -85,21 +100,27 @@ defineExpose({ closePopover })
           v-if="adjusted" class="one-off-badge">ADJ</span></span>
       <span class="food-stepper-kcal">{{ Math.round(kcal * (quantity || 1)).toLocaleString() }} kcal</span>
     </button>
-    <button v-if="quantity > 0" type="button" class="food-stepper-quantity" :aria-label="`Adjust ${name} quantity`"
+    <button v-if="quantity > 0" type="button" class="food-stepper-quantity" :aria-label="`Customize ${name} quantity`"
       @click="openQuantityPopover">{{ quantity }}</button>
-    <div v-if="open && !locked && adjustable" class="food-adjust-popover" :class="`placement-${popoverPlacement}`">
-      <button type="button" class="food-stepper-adjust" aria-label="Adjust today's quantities"
-        title="Adjust today's quantities" @click.stop="$emit('adjust'); closePopover()">
+    <div v-if="open && !locked && adjustable" class="food-adjust-popover"
+      :class="[`placement-${popoverPlacement}`, `placement-${popoverVerticalPlacement}`]"
+      :style="{ '--popover-left': popoverLeft }">
+      <button type="button" class="food-stepper-adjust"
+        :aria-label="`${adjusted ? 'Edit' : 'Customize'} today's quantities`"
+        :title="`${adjusted ? 'Edit' : 'Customize'} today's quantities`"
+        @click.stop="$emit('adjust'); closePopover()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
           stroke-linejoin="round" aria-hidden="true">
           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
           <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
         </svg>
-        <span>Adjust</span>
+        <span>{{ adjusted ? 'Edit' : 'Customize' }}</span>
       </button>
     </div>
-    <div v-if="open && !locked" class="food-quantity-popover" :class="`placement-${popoverPlacement}`" role="group"
-      :aria-label="`Adjust ${name} quantity`">
+    <div v-if="open && !locked" class="food-quantity-popover"
+      :class="[`placement-${popoverPlacement}`, `placement-${popoverVerticalPlacement}`]"
+      :style="{ '--popover-left': popoverLeft }" role="group"
+      :aria-label="`Customize ${name} quantity`">
       <div class="food-quantity-controls">
         <button type="button" class="food-stepper-control" :disabled="quantity <= 0" :aria-label="`Remove one ${name}`"
           @click.stop="quantity === 1 && closePopover(); $emit('decrement')">−</button>

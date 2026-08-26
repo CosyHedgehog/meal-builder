@@ -74,11 +74,13 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 
 
         <button
-      v-if="!isToday"
       class="date-today-arrow"
+          :class="{ 'date-today-arrow-hidden': isToday }"
       type="button"
       aria-label="Jump to today"
       title="Jump to today"
+          :aria-hidden="isToday"
+          :tabindex="isToday ? -1 : 0"
       @click="setLogDate(today)"
     >
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -184,6 +186,11 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 .date-today-arrow:hover {
   background: rgba(255, 255, 255, 0.05);
   color: var(--ink);
+}
+
+.date-today-arrow-hidden {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .date-today-arrow svg {
@@ -292,7 +299,9 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   }
 
   .date-today-arrow {
-    right: 0;
+    position: static;
+    flex: 0 0 30px;
+    transform: none;
   }
 }
 </style>
