@@ -44,7 +44,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
     <button type="button" class="date-picker-trigger" aria-label="Choose date" @click="openPicker">
       <span class="today-date">
         {{ label }}
-        <small>{{ isToday ? 'Today' : 'Selected day' }}</small>
+        <small>{{ isToday ? '' : ' ' }}</small>
       </span>
       <svg class="date-picker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <rect x="3" y="4" width="18" height="18" rx="2"></rect>
@@ -243,7 +243,6 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 @media (min-width: 601px) {
   .today-date-row {
     position: sticky;
-    top: var(--desktop-nav-height, 0px);
     z-index: 20;
     background: var(--bg);
     gap: 16px;

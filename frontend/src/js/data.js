@@ -451,8 +451,11 @@ export function reorderItems(listName, fromId, toId) {
 /* ===================== Groups ===================== */
 
 export function createGroup(name) {
-  if (!name || !name.trim()) return null
-  const group = { id: uid('group'), name: name.trim() }
+  const trimmedName = name?.trim()
+  if (!trimmedName) return null
+  const normalizedName = trimmedName.toLocaleLowerCase()
+  if (state.groups.some((group) => group.name?.trim().toLocaleLowerCase() === normalizedName)) return null
+  const group = { id: uid('group'), name: trimmedName }
   state.groups.push(group)
   save()
   return group.id

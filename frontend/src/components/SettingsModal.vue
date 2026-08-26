@@ -205,7 +205,7 @@ function downloadJSON(filename, payload) {
 </template>
 <style scoped>
 :deep(.modal.settings-modal) {
-  width: 380px;
+  width: 450px;
   max-width: 92vw;
   padding: 20px;
   border-radius: 24px;
@@ -236,8 +236,9 @@ function downloadJSON(filename, payload) {
 }
 
 .settings-sections {
+  flex: 1;
   min-height: 0;
-  max-height: min(560px, 100vh);
+  max-height: min(560px, calc(100dvh - 150px));
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -246,6 +247,16 @@ function downloadJSON(filename, payload) {
   margin-right: -26px;
   padding-right: 26px;
   scrollbar-gutter: stable;
+}
+
+.settings-sections::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--ink-muted) 72%, transparent);
+  background-clip: padding-box;
+}
+
+.settings-sections::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-muted);
+  background-clip: padding-box;
 }
 
 .settings-section {

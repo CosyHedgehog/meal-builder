@@ -134,7 +134,7 @@ body {
 .app-touch-surface {
   min-height: 100vh;
   background: var(--bg);
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 h1,

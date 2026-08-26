@@ -119,8 +119,7 @@ function setActiveStepper(stepperId) {
 .home {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  --desktop-nav-height: 57px;
+  --desktop-nav-height: 40px;
   overflow: visible;
   border: 0;
   border-radius: 24px;
@@ -281,10 +280,11 @@ function setActiveStepper(stepperId) {
 }
 
 .desktop-nav {
-  position: sticky;
+  position: fixed;
   top: 0;
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
+  left: 0;
+  width: 100%;
+  margin-left: 0;
   border-bottom: 1px solid var(--line);
   background: var(--surface);
   z-index: 30;
@@ -297,7 +297,12 @@ function setActiveStepper(stepperId) {
   gap: 20px;
   max-width: 760px;
   margin: 0 auto;
-  padding: 12px 24px;
+}
+
+@media (min-width: 601px) {
+  .desktop-nav + .today-date-row {
+    margin-top: var(--desktop-nav-height);
+  }
 }
 
 .desktop-manage-actions {
