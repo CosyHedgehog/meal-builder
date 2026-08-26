@@ -38,7 +38,8 @@ DEFAULT_DATA = {
     'logs': {},
     'maintenanceCal': 2200,
     'showKcal': True,
-    'allowPreviousDayLocking': False
+    'allowPreviousDayLocking': False,
+    'oneClickMode': False
 }
 
 def db():
@@ -393,6 +394,7 @@ class Handler(BaseHTTPRequestHandler):
             'showKcal': data.get('showKcal',True),
             'weightUnit': data.get('weightUnit','kg'),
             'allowPreviousDayLocking': data.get('allowPreviousDayLocking',False),
+            'oneClickMode': data.get('oneClickMode',False),
             'shareActivity': data.get('shareActivity',False)
         }
         try: encoded=json.dumps(safe,separators=(',',':'))
