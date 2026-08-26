@@ -113,6 +113,8 @@ html {
   color-scheme: light;
   transition: background 0.2s ease;
   overflow-x: hidden;
+  /* Keep the layout width stable when ModalHost locks page scrolling. */
+  scrollbar-gutter: stable;
 }
 
 html[data-theme='dark'] {
