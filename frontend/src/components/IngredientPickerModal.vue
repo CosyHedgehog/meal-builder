@@ -2,6 +2,7 @@
 import { computed, nextTick, ref } from 'vue'
 import BaseModal from './BaseModal.vue'
 import { state as store } from '../js/data.js'
+import { Modals, openModal } from '../js/modals.js'
 
 const props = defineProps({
   excludedIds: { type: Array, default: () => [] },
@@ -67,6 +68,35 @@ async function focusSearch() {
           <span>Add an ingredient from Manage ingredients first.</span>
         </div>
       </div>
+      <div class="ingredient-picker-modal-actions">
+        <button class="link-btn" type="button" @click="openModal(Modals.INGREDIENT_MANAGER)">
+          Manage ingredients <span aria-hidden="true">›</span>
+        </button>
+      </div>
     </div>
   </BaseModal>
 </template>
+
+<style scoped>
+.ingredient-picker-modal-actions {
+  flex: none;
+  margin: 12px -26px 0;
+  padding: 12px 26px 0;
+  border-top: 1px solid var(--line);
+  text-align: right;
+}
+
+.ingredient-picker-modal-actions .link-btn {
+  margin: 0;
+  padding: 0;
+}
+
+@media (max-width: 480px) {
+  .ingredient-picker-modal-actions {
+    margin-right: -20px;
+    margin-left: -20px;
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+}
+</style>

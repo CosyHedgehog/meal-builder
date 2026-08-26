@@ -121,29 +121,43 @@ function formatServings(value) {
 }
 
 .food-stats-range {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
-  padding: 4px;
-  border-radius: 10px;
-  background: var(--surface-alt);
+  display: flex;
+  gap: 20px;
+  margin: 0 0 16px;
+  padding: 0 0 8px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--line);
+  scrollbar-width: none;
+}
+
+.food-stats-range::-webkit-scrollbar {
+  display: none;
 }
 
 .food-stats-range button {
+  flex: 0 0 auto;
+  margin-bottom: -9px;
+  padding: 0 0 8px;
   border: 0;
-  border-radius: 7px;
-  padding: 8px 4px;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
   background: transparent;
   color: var(--ink-muted);
   font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
 }
 
 .food-stats-range button.active {
-  background: var(--surface);
-  color: var(--ink);
-  font-weight: 700;
-  box-shadow: 0 1px 3px rgba(var(--shadow-rgb), 0.14);
+  background: transparent;
+  color: var(--green);
+  border-bottom-color: var(--green);
+  box-shadow: none;
+}
+
+.food-stats-range button:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
 }
 
 .food-stats-grid {

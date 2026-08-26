@@ -63,12 +63,14 @@ async function deleteItem(item) {
     @back="secondaryActionModal && replaceModal(secondaryActionModal)"
   >
     <div class="manager-group entity-manager-content">
-      <div class="manager-browse-label">Browse {{ countLabel }}</div>
-      <input v-model="query" class="manager-search" type="search" :placeholder="searchPlaceholder" />
-
-      <div class="manager-count">{{ filteredItems.length }} {{ countLabel }}</div>
-      <div v-if="query.trim()" class="manager-search-note">
-        {{ filteredItems.length }} of {{ items.length }} {{ countLabel }} shown.
+      <div class="entity-manager-header">
+        <input v-model="query" class="manager-search" type="search" :placeholder="searchPlaceholder" />
+        <div class="manager-list-meta">
+          <div class="manager-count">{{ filteredItems.length }} {{ countLabel }}</div>
+          <div v-if="query.trim()" class="manager-search-note">
+            {{ filteredItems.length }} of {{ items.length }} {{ countLabel }} shown.
+          </div>
+        </div>
       </div>
 
       <div v-if="filteredItems.length" class="manager-list">
@@ -76,7 +78,6 @@ async function deleteItem(item) {
           <div class="manager-item-wrap">
             <button class="manager-item" type="button" @click="openEditor(item)">
               <slot name="item" :item="item" />
-              <span>›</span>
             </button>
             <button
               class="manager-delete"
@@ -99,28 +100,28 @@ async function deleteItem(item) {
 <style scoped>
 .manager-search {
   width: 100%;
-  padding: 9px 12px;
+  min-height: 42px;
+  padding: 10px 12px;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--bg);
+  border-radius: 12px;
+  background-color: var(--surface-alt);
   color: var(--ink);
-  font-size: 13px;
-  margin: 5px 0 5px;
+  font-size: 14px;
+  margin: 0;
 }
 
-.manager-browse-label {
-  margin-top: 18px;
-  color: var(--ink-muted);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.entity-manager-content {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 0;
 }
 
-.manager-count {
-  margin: 8px 0 6px;
-  color: var(--ink-muted);
-  font-size: 12px;
+.entity-manager-header {
+  flex: none;
+  margin: 0 -26px;
+  padding: 0 26px 10px;
+  border-bottom: 1px solid var(--line);
 }
 
 .manager-search:focus {
@@ -131,11 +132,61 @@ async function deleteItem(item) {
 .manager-search-note {
   font-size: 11px;
   color: var(--ink-muted);
-  margin: -6px 0 10px;
+}
+
+.manager-list-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 9px;
+}
+
+.manager-count {
+  color: var(--ink-muted);
+  font-size: 12px;
 }
 
 .food-manager-actions {
-  padding-top: 14px;
+  flex: none;
+  margin: 12px -26px -22px;
+  padding: 14px 26px 22px;
+  border-top: 1px solid var(--line);
+}
+
+.food-manager-actions .btn-full {
+  margin-top: 0;
+}
+
+.entity-manager-content > .manager-list {
+  flex: 1;
+  min-height: 0;
+  max-height: 52vh;
+  margin: 0 -26px;
+  padding: 0 26px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.entity-manager-content :deep(.manager-item-row) {
+  border-bottom: 0;
+}
+
+.entity-manager-content :deep(.manager-item) {
+  min-height: 50px;
+  padding: 8px;
+  border-radius: 10px;
+}
+
+.entity-manager-content :deep(.manager-item strong) {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.entity-manager-content :deep(.manager-item small) {
+  margin-top: 3px;
+  font-size: 12px;
 }
 
 @media (max-width: 480px) {
@@ -145,21 +196,33 @@ async function deleteItem(item) {
   }
 
   .entity-manager-content {
-    display: flex;
     flex: 1;
-    min-height: 0;
-    flex-direction: column;
   }
 
   .entity-manager-content > .manager-list {
-    flex: 1;
-    min-height: 0;
     max-height: none;
     overflow-y: auto;
   }
 
   .food-manager-actions {
-    flex: none;
+    margin-right: -20px;
+    margin-left: -20px;
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+
+  .entity-manager-header {
+    margin-right: -20px;
+    margin-left: -20px;
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+
+  .entity-manager-content > .manager-list {
+    margin-right: -20px;
+    margin-left: -20px;
+    padding-right: 20px;
+    padding-left: 20px;
   }
 }
 </style>

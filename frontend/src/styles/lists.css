@@ -108,9 +108,9 @@
   flex: none;
   width: 26px;
   height: 26px;
-  border: 1px solid transparent;
+  border: 0;
   background: transparent;
-  color: var(--red);
+  color: color-mix(in srgb, var(--ink-muted) 55%, transparent);
   border-radius: 8px;
   padding: 0;
   font-size: 18px;
@@ -122,9 +122,8 @@
 }
 
 .manager-delete:hover {
-  background: rgba(181, 70, 57, 0.08);
+  background: transparent;
   color: var(--red);
-  border-color: rgba(181, 70, 57, 0.25);
 }
 
 .manager-delete:focus-visible {

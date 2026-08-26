@@ -137,7 +137,7 @@ function downloadJSON(filename, payload) {
             </div>
             <div class="settings-info-note">
               <span aria-hidden="true">ⓘ</span>
-              <span>Clicking a food on the dashboard increments it instantly.</span>
+              <span>Clicking a food on the dashboard increments it.</span>
             </div>
           </div>
         </div>
@@ -287,7 +287,7 @@ function downloadJSON(filename, payload) {
 
 .settings-card > .settings-row,
 .settings-option {
-  padding: 14px 16px;
+  padding: 10px 12px;
 }
 
 .settings-card > .settings-row + .settings-row,

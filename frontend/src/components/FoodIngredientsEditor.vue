@@ -1,6 +1,6 @@
 <script setup>
-import { computed, nextTick, ref } from 'vue'
-import { state as store, getIngredient, itemKcal } from '../js/data.js'
+import { computed, nextTick } from 'vue'
+import { getIngredient, itemKcal } from '../js/data.js'
 import { Modals, openModal } from '../js/modals.js'
 import { confirmAction } from '../js/confirm.js'
 
@@ -8,18 +8,9 @@ const props = defineProps({
     draft: { type: Object, required: true },
 })
 
-const pendingIngredientId = ref('')
-const pendingQty = ref('')
-const ingredientQuery = ref('')
-const ingredientQuantityInput = ref(null)
-const isAddRowExpanded = ref(false)
+const ingredientQuantityInputs = new Map()
 
 const usedIds = computed(() => new Set(props.draft.items.map((item) => item.ingredientId)))
-const availableIngredients = computed(() => store.ingredients.filter((ingredient) => !usedIds.value.has(ingredient.id)))
-const filteredIngredients = computed(() => {
-    const normalized = ingredientQuery.value.trim().toLowerCase()
-    return availableIngredients.value.filter((ingredient) => !normalized || ingredient.name.toLowerCase().includes(normalized))
-})
 const ingredientRows = computed(() => props.draft.items.map((item) => ({
     item,
     ingredient: getIngredient(item.ingredientId),
@@ -30,42 +21,21 @@ const totalKcal = computed(() => props.draft.items.length
     : Math.round(Number(props.draft.kcal) || 0))
 
 async function selectIngredient(ingredientId) {
-    pendingIngredientId.value = ingredientId
-    ingredientQuery.value = getIngredient(ingredientId)?.name || ''
+    props.draft.items.push({ ingredientId, amount: 1 })
     await nextTick()
-    ingredientQuantityInput.value?.focus()
+    ingredientQuantityInputs.get(ingredientId)?.focus()
 }
 
 function openIngredientPicker() {
     openModal(Modals.INGREDIENT_PICKER, {
         excludedIds: [...usedIds.value],
-        initialQuery: ingredientQuery.value,
         onSelect: selectIngredient,
     })
 }
 
-function expandAddRow() {
-    isAddRowExpanded.value = true
-}
-
-function collapseAddRow() {
-    isAddRowExpanded.value = false
-    pendingIngredientId.value = ''
-    pendingQty.value = ''
-    ingredientQuery.value = ''
-}
-
-function addIngredientRow() {
-    if (!pendingIngredientId.value) return
-    const amount = parseFloat(pendingQty.value)
-    props.draft.items.push({
-        ingredientId: pendingIngredientId.value,
-        amount: !Number.isFinite(amount) || amount <= 0 ? 1 : amount,
-    })
-    pendingIngredientId.value = ''
-    pendingQty.value = ''
-    ingredientQuery.value = ''
-    isAddRowExpanded.value = false
+function setIngredientQuantityInput(ingredientId, element) {
+    if (element) ingredientQuantityInputs.set(ingredientId, element)
+    else ingredientQuantityInputs.delete(ingredientId)
 }
 
 async function removeRow(ingredientId) {
@@ -106,7 +76,8 @@ async function removeRow(ingredientId) {
                             <div class="item-kcal">{{ row.kcal.toLocaleString() }} kcal</div>
                         </div>
                         <div class="quantity-control">
-                            <input v-model.number="row.item.amount" class="item-qty" type="number" step="any" min="0"
+                            <input :ref="(element) => setIngredientQuantityInput(row.item.ingredientId, element)"
+                                v-model.number="row.item.amount" class="item-qty" type="number" step="any" min="0"
                                 @click.stop />
                             <span>{{ row.ingredient?.unit === 'g' ? 'g' : '' }}</span>
                         </div>
@@ -116,29 +87,9 @@ async function removeRow(ingredientId) {
                 </div>
             </div>
         </div>
-        <div v-if="!isAddRowExpanded" class="add-item-row">
-            <button class="add-ingredient-trigger" type="button" @click="expandAddRow">
-                <span aria-hidden="true">＋</span> Add ingredient
-            </button>
-        </div>
-        <div v-else class="add-item-expanded">
-            <button class="ingredient-picker-trigger" type="button" @click="openIngredientPicker">
-                <span>{{ ingredientQuery || 'Choose an ingredient...' }}</span>
-            </button>
-            <div v-if="pendingIngredientId" class="add-amount-row">
-                <input ref="ingredientQuantityInput" v-model="pendingQty" class="add-item-qty" type="number" step="any"
-                    min="0" placeholder="Amount" aria-label="Ingredient amount"
-                    @keydown.enter.prevent="addIngredientRow" />
-                <span class="add-unit">{{ getIngredient(pendingIngredientId)?.unit === 'g' ? 'g' : 'each' }}</span>
-                <button class="add-confirm-button" type="button" aria-label="Add ingredient" @click="addIngredientRow">✓</button>
-            </div>
-            <div class="add-item-footer">
-                <button class="link-btn" type="button" @click="collapseAddRow">Cancel</button>
-                <button class="link-btn manage-ingredients-link" type="button" @click="openModal(Modals.INGREDIENT_MANAGER)">
-                    Manage ingredients <span aria-hidden="true">›</span>
-                </button>
-            </div>
-        </div>
+        <button class="add-ingredient-trigger" type="button" @click="openIngredientPicker">
+            <span aria-hidden="true">＋</span> Add ingredient
+        </button>
     </section>
 </template>
 
@@ -371,126 +322,6 @@ async function removeRow(ingredientId) {
     outline-offset: 1px;
 }
 
-.add-item-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 100px 40px;
-    gap: 5px;
-    padding: 10px 0 3px;
-    align-items: end;
-}
-
-.add-item-label-row {
-    grid-column: 1 / -1;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.add-item-label {
-    margin-bottom: 1px;
-    color: var(--ink-muted);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
-
-.manage-ingredients-link {
-    margin: 0;
-    padding: 0;
-    font-size: 11px;
-}
-
-.manage-ingredients-chevron {
-    display: inline-block;
-    margin-left: 3px;
-    font-size: 15px;
-    line-height: 0;
-    vertical-align: -1px;
-}
-
-.add-item-select,
-.add-item-qty {
-    width: 100%;
-    min-width: 0;
-    min-height: 40px;
-    padding: 10px 12px;
-    border: 1px solid var(--line);
-    border-radius: 9px;
-    background-color: var(--bg);
-    color: var(--ink);
-    font-size: 14px;
-}
-
-.add-item-select:focus,
-.add-item-qty:focus {
-    outline: 2px solid var(--green);
-    outline-offset: 1px;
-}
-
-.ingredient-picker-button {
-    position: relative;
-    padding-right: 28px;
-    overflow: hidden;
-    color: var(--ink-muted);
-    text-align: left;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.ingredient-picker-trigger {
-    position: relative;
-    min-width: 0;
-}
-
-.ingredient-picker-input {
-    appearance: none;
-    padding-right: 34px;
-    cursor: pointer;
-}
-
-.ingredient-picker-trigger::after {
-    position: absolute;
-    top: 50%;
-    right: 13px;
-    width: 7px;
-    height: 7px;
-    border-right: 1.5px solid var(--ink-muted);
-    border-bottom: 1.5px solid var(--ink-muted);
-    content: '';
-    pointer-events: none;
-    transform: translateY(-65%) rotate(45deg);
-}
-
-.ingredient-picker-button.has-selection {
-    color: var(--ink);
-}
-
-.ingredient-picker-button:hover {
-    border-color: var(--green-light);
-    background: var(--surface-alt);
-    color: var(--green-strong);
-}
-
-.ingredient-picker-button:focus-visible {
-    outline: 2px solid var(--green);
-    outline-offset: 1px;
-}
-
-.add-item-qty {
-    font-family: 'IBM Plex Mono', monospace;
-    text-align: center;
-}
-
-.add-item-button {
-    align-self: center;
-    min-height: 40px;
-    margin: 0;
-    padding: 8px 4px;
-    white-space: nowrap;
-}
-
 @media (max-width: 600px) {
     .food-ingredients-section {
         display: contents;
@@ -550,35 +381,6 @@ async function removeRow(ingredientId) {
         padding: 2px 0;
     }
 
-    .add-item-row {
-        flex: none;
-        margin-top: 0;
-        grid-template-columns: minmax(0, 1fr) 70px 40px;
-    }
-
-    .add-item-label-row {
-        grid-column: 1 / -1;
-    }
-
-    .ingredient-picker-trigger {
-        grid-column: 1;
-    }
-
-    .add-item-select {
-        grid-column: 1;
-        min-width: 0;
-        padding-right: 12px;
-    }
-
-    .add-item-qty {
-        grid-column: 2;
-    }
-
-    .add-item-button {
-        grid-column: 3;
-        padding-right: 6px;
-        padding-left: 6px;
-    }
 }
 
 .food-ingredients-section {
@@ -669,14 +471,7 @@ async function removeRow(ingredientId) {
     appearance: textfield;
 }
 
-.add-item-row {
-    display: block;
-    width: 100%;
-    padding: 0;
-}
-
-.add-ingredient-trigger,
-.add-item-expanded {
+.add-ingredient-trigger {
     width: 100%;
     border: 1px dashed var(--line);
     border-radius: 10px;
@@ -700,68 +495,6 @@ async function removeRow(ingredientId) {
     font-size: 18px;
     line-height: 0;
     vertical-align: -2px;
-}
-
-.add-item-expanded {
-    padding: 10px;
-    border-style: solid;
-    border-color: color-mix(in srgb, var(--green) 35%, var(--line));
-    background: color-mix(in srgb, var(--surface-alt) 70%, transparent);
-}
-
-.ingredient-picker-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    min-height: 38px;
-    padding: 8px 10px;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    background: var(--surface);
-    color: var(--ink-muted);
-    font-size: 13px;
-    text-align: left;
-}
-
-.ingredient-picker-trigger:hover {
-    border-color: var(--green-light);
-    color: var(--green-strong);
-}
-
-.add-amount-row {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    margin-top: 8px;
-}
-
-.add-amount-row .add-item-qty {
-    width: 96px;
-    min-height: 36px;
-    padding: 8px;
-}
-
-.add-unit {
-    color: var(--ink-muted);
-    font-size: 12px;
-}
-
-.add-confirm-button {
-    width: 34px;
-    height: 34px;
-    margin-left: auto;
-    border-radius: 8px;
-    background: color-mix(in srgb, var(--green) 18%, transparent);
-    color: var(--green-strong);
-    font-size: 17px;
-}
-
-.add-item-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 8px;
 }
 
 @media (max-width: 600px) {
