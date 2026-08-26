@@ -44,8 +44,8 @@ const emit = defineEmits(['update:modelValue'])
 }
 
 .food-mode-tabs button.active {
-  background: var(--green);
-  color: #062119;
+  background: var(--surface);
+  color: var(--ink);
   font-weight: 700;
 }
 </style>

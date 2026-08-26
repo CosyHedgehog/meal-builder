@@ -178,7 +178,7 @@ function downloadJSON(filename, payload) {
         <div class="settings-card">
           <div class="settings-row account-row">
             <div class="settings-account">
-              <span>Signed in as <strong>{{ auth.user?.username || 'Unknown user' }}</strong></span>
+              Signed in as<strong>{{auth.user?.username || 'Unknown user' }}</strong>
             </div>
             <button class="settings-action" type="button" @click="logOut">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
@@ -261,10 +261,10 @@ function downloadJSON(filename, payload) {
 .settings-account {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  gap: 5px;
   padding: 2px 0;
   color: var(--ink);
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .settings-account strong {
@@ -298,7 +298,7 @@ function downloadJSON(filename, payload) {
 }
 
 .settings-row label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 400;
   color: color-mix(in srgb, var(--ink) 80%, transparent);
 }
@@ -375,19 +375,18 @@ function downloadJSON(filename, payload) {
 .settings-row input,
 .unit-select {
   width: 80px;
-  padding: 9px 10px;
+  padding: 5px 5px;
   border: 1px solid var(--line);
   border-radius: 9px;
   background: var(--settings-control-bg);
   color: var(--ink);
   font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 13px;
   text-align: center;
 }
 
 #maintenanceInput {
-  width: 96px;
+  width: 70px;
   appearance: textfield;
 }
 

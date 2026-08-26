@@ -229,7 +229,7 @@ async function removeRow(ingredientId) {
 .food-total strong {
     color: var(--green-strong);
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 16px;
+    font-size: 14px;
     white-space: nowrap;
 }
 
@@ -247,7 +247,7 @@ async function removeRow(ingredientId) {
 
 .ingredient-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto 24px;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: 8px;
     min-height: 40px;
@@ -625,7 +625,7 @@ async function removeRow(ingredientId) {
 
 .item-name {
     font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
     color: var(--ink);
 }
@@ -649,7 +649,7 @@ async function removeRow(ingredientId) {
     min-height: 34px;
     background: var(--surface-alt);
     font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 400;
     appearance: textfield;
 }
