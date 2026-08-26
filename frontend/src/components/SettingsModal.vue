@@ -127,7 +127,7 @@ function downloadJSON(filename, payload) {
             </div>
             <div class="settings-info-note">
               <span aria-hidden="true">ⓘ</span>
-              <span>Food items from previous days can't be selected. Helps prevent accidental changes. Updates still apply to logged food.</span>
+              <span>Food items from previous days can't be selected.</span>
             </div>
           </div>
           <div class="settings-option">
@@ -137,7 +137,7 @@ function downloadJSON(filename, payload) {
             </div>
             <div class="settings-info-note">
               <span aria-hidden="true">ⓘ</span>
-              <span>Clicking a food on the dashboard adds one serving and opens its quantity controls.</span>
+              <span>Clicking a food on the dashboard increments it instantly.</span>
             </div>
           </div>
         </div>
@@ -153,7 +153,7 @@ function downloadJSON(filename, payload) {
             </div>
             <div class="settings-info-note">
               <span aria-hidden="true">ⓘ</span>
-              <span>People who follow you can see your daily calories, maintenance calories, and the food items logged for each shared day in Activity.</span>
+              <span>People who follow you can see your logged activity.</span>
             </div>
           </div>
           <div class="settings-row data-actions">
@@ -195,7 +195,7 @@ function downloadJSON(filename, payload) {
             </div>
             <div class="settings-info-note account-delete-note">
               <span aria-hidden="true">ⓘ</span>
-              <span>Permanently removes your account, nutrition data, follows, sessions, and shared activity. This cannot be undone.</span>
+              <span>Permanently removes your account, data, and settings. This action cannot be undone.</span>
             </div>
           </div>
         </div>

@@ -274,7 +274,7 @@ class Handler(BaseHTTPRequestHandler):
                 with open(HTML_PATH, 'rb') as f: body = f.read()
             except FileNotFoundError:
                 return json_response(self, 500, {'error':'Frontend build not found. Run npm run build in frontend/.'})
-            self.send_response(200); self.send_header('Content-Type','text/html; charset=utf-8'); self.send_header('Content-Length',str(len(body))); self.end_headers(); self.wfile.write(body); return
+            self.send_response(200); self.send_header('Content-Type','text/html; charset=utf-8'); self.send_header('Content-Length',str(len(body))); self.send_header('Cache-Control', 'no-store'); self.end_headers(); self.wfile.write(body); return
         static = resolve_static_path(path)
         if static:
             return serve_static_file(self, *static)
