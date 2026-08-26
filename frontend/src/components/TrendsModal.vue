@@ -172,7 +172,7 @@ function toggleWeek(week) {
 @media (min-width: 481px) {
   :deep(.modal.trends-modal) {
     box-sizing: border-box;
-    width: min(500px, 92vw);
+    width: min(450px, 92vw);
     min-height: 620px;
   }
 }
