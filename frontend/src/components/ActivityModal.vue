@@ -10,6 +10,18 @@ const activity = ref([])
 const loading = ref(true)
 const error = ref('')
 const expandedActivity = ref(null)
+const activityFilter = ref('all')
+const activityFilterOptions = [
+  { value: 'all', label: 'All' },
+  { value: 'me', label: 'Me' },
+  { value: 'others', label: 'Others' },
+]
+
+const filteredActivity = computed(() => {
+  if (activityFilter.value === 'me') return activity.value.filter((item) => item.username === auth.user?.username)
+  if (activityFilter.value === 'others') return activity.value.filter((item) => item.username !== auth.user?.username)
+  return activity.value
+})
 
 function calorieBalance(item) {
   return item.maintenance_calories - item.calories
@@ -68,22 +80,29 @@ watch(
 </script>
 
 <template>
-  <BaseModal title="Activity" subtitle="From you and people you follow"
+  <BaseModal title="Activity" subtitle="Recent activity from you and people you follow"
     panel-class="activity-modal" @close="emit('close')">
+    <div class="activity-filter-selector" role="tablist" aria-label="Activity filter">
+      <button v-for="option in activityFilterOptions" :key="option.value" type="button" role="tab"
+        :aria-selected="activityFilter === option.value" :class="{ active: activityFilter === option.value }"
+        @click="activityFilter = option.value">
+        {{ option.label }}
+      </button>
+    </div>
     <div class="manager-group activity-modal-content">
       <div class="activity-modal-middle">
         <div v-if="loading" class="empty-note">Loading activity...</div>
         <div v-else-if="error" class="form-error">{{ error }}</div>
-        <div v-else-if="!activity.length" class="activity-empty">
+        <div v-else-if="!filteredActivity.length" class="activity-empty">
           <svg class="activity-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
           </svg>
-          <strong>No activity yet</strong>
-          <p>Follow someone who shares daily calories to see their progress here.</p>
+          <strong>{{ activity.length ? 'No matching activity' : 'No activity yet' }}</strong>
+          <p>{{ activity.length ? 'Try a different activity filter.' : 'Follow someone who shares daily calories to see their progress here.' }}</p>
         </div>
         <div v-else class="activity-list">
-          <article v-for="item in activity" :key="activityKey(item)" class="activity-item">
+          <article v-for="item in filteredActivity" :key="activityKey(item)" class="activity-item">
             <button class="activity-item-button" type="button" :class="{ 'is-you': item.username === auth.user?.username }" :data-initials="item.username === auth.user?.username ? 'Y' : item.username.slice(0, 2).toUpperCase()" :aria-expanded="expandedActivity === activityKey(item)"
               @click="toggleActivity(item)">
               <div class="activity-item-header">
@@ -375,6 +394,44 @@ watch(
   padding-right: 20px;
   overflow-y: auto;
   scrollbar-width: thin;
+}
+
+.activity-filter-selector {
+  display: flex;
+  gap: 20px;
+  padding: 0 0 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.activity-filter-selector::-webkit-scrollbar {
+  display: none;
+}
+
+.activity-filter-selector button {
+  flex: 0 0 auto;
+  margin-bottom: -9px;
+  padding: 0 0 8px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.activity-filter-selector button.active {
+  background: transparent;
+  color: var(--green);
+  border-bottom-color: var(--green);
+  box-shadow: none;
+}
+
+.activity-filter-selector button:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
 }
 
 .activity-modal-content::before {
