@@ -437,17 +437,6 @@ export async function setShareActivity(value) {
 
 /* ===================== Ordering ===================== */
 
-export function reorderItems(listName, fromId, toId) {
-  const list = state[listName]
-  if (!list || !fromId || !toId || fromId === toId) return
-  const fromIndex = list.findIndex((x) => x.id === fromId)
-  const toIndex = list.findIndex((x) => x.id === toId)
-  if (fromIndex === -1 || toIndex === -1) return
-  const [moved] = list.splice(fromIndex, 1)
-  list.splice(toIndex, 0, moved)
-  save()
-}
-
 /* ===================== Groups ===================== */
 
 export function createGroup(name) {
@@ -709,17 +698,6 @@ export function insertFood(foodId, targetFoodId) {
   const [moved] = state.foods.splice(fromIndex, 1)
   const adjustedTargetIndex = fromIndex < targetIndex ? targetIndex - 1 : targetIndex
   state.foods.splice(adjustedTargetIndex, 0, moved)
-  save()
-}
-
-export function reorderGroups(fromId, toId) {
-  if (!fromId || !toId || fromId === toId) return
-  const fromIndex = state.groups.findIndex((group) => group.id === fromId)
-  const toIndex = state.groups.findIndex((group) => group.id === toId)
-  if (fromIndex === -1 || toIndex === -1) return
-  const moved = state.groups[fromIndex]
-  state.groups[fromIndex] = state.groups[toIndex]
-  state.groups[toIndex] = moved
   save()
 }
 

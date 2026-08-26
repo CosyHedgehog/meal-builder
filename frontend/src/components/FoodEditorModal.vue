@@ -108,14 +108,10 @@ defineExpose({ requestClose: closeEditor })
       <div v-if="isDraftCopy" class="copy-food-badge">COPY OF EXISTING FOOD</div>
       <div class="food-details-row">
         <div class="input-field food-field">
-          <label for="foodName">Name</label>
-          <input id="foodName" v-model="draft.name" placeholder="New food" />
+          <input id="foodName" v-model="draft.name" placeholder="New food" aria-label="Food name" />
         </div>
         <div class="input-field food-field">
-          <div class="food-group-label-row">
-            <label for="foodGroup">Group</label>
-          </div>
-          <select id="foodGroup" v-model="draft.groupId">
+          <select id="foodGroup" class="food-group-select" v-model="draft.groupId" aria-label="Food group">
             <option value="" disabled hidden>Select a group...</option>
             <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
           </select>
@@ -136,9 +132,6 @@ defineExpose({ requestClose: closeEditor })
       <div v-if="validationMessage" class="food-validation">{{ validationMessage }}</div>
       <div class="food-actions">
         <button class="btn btn-primary primary-wide" type="button" @click="saveFood">{{ isDraftCopy ? 'Create copy' : (isNew ? 'Create food' : 'Save food') }}</button>
-        <button v-if="isNew" class="btn btn-secondary duplicate-food-button" type="button" @click="closeEditor">
-          Cancel
-        </button>
       </div>
     </div>
   </BaseModal>
@@ -156,32 +149,24 @@ defineExpose({ requestClose: closeEditor })
   letter-spacing: 0.08em;
 }
 
-.food-field {
-  margin-bottom: 8px;
-}
-
 .food-details-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 112px;
   gap: 10px;
 }
 
-.food-group-label-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 6px;
+.food-group-select {
+  background-color: var(--surface-alt);
+  color: var(--ink);
 }
 
-.food-group-label-row label {
-  margin-bottom: 0;
+.food-group-select option {
+  background-color: var(--surface);
+  color: var(--ink);
 }
 
-.create-group-link {
-  margin: 0;
-  padding: 0;
-  font-size: 11px;
+:global(html[data-theme='dark']) .food-group-select {
+  color-scheme: dark;
 }
 
 .add-item-label-row {
@@ -267,10 +252,6 @@ defineExpose({ requestClose: closeEditor })
 .food-actions .primary-wide {
   width: 100%;
   margin-top: 0;
-}
-
-.duplicate-food-button {
-  width: 100%;
 }
 
 @media (max-width: 600px) {

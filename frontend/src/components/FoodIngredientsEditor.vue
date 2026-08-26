@@ -12,6 +12,7 @@ const pendingIngredientId = ref('')
 const pendingQty = ref('')
 const ingredientQuery = ref('')
 const ingredientQuantityInput = ref(null)
+const isAddRowExpanded = ref(false)
 
 const usedIds = computed(() => new Set(props.draft.items.map((item) => item.ingredientId)))
 const availableIngredients = computed(() => store.ingredients.filter((ingredient) => !usedIds.value.has(ingredient.id)))
@@ -43,6 +44,17 @@ function openIngredientPicker() {
     })
 }
 
+function expandAddRow() {
+    isAddRowExpanded.value = true
+}
+
+function collapseAddRow() {
+    isAddRowExpanded.value = false
+    pendingIngredientId.value = ''
+    pendingQty.value = ''
+    ingredientQuery.value = ''
+}
+
 function addIngredientRow() {
     if (!pendingIngredientId.value) return
     const amount = parseFloat(pendingQty.value)
@@ -53,6 +65,7 @@ function addIngredientRow() {
     pendingIngredientId.value = ''
     pendingQty.value = ''
     ingredientQuery.value = ''
+    isAddRowExpanded.value = false
 }
 
 async function removeRow(ingredientId) {
@@ -71,8 +84,7 @@ async function removeRow(ingredientId) {
     <section class="food-ingredients-section">
         <div class="meal-section-heading">
             <div>
-                <div class="meal-section-label">Ingredients <span class="meal-section-note">({{ draft.items.length }}
-                        added)</span></div>
+                <div class="meal-section-label">{{ draft.items.length }} ingredients</div>
             </div>
             <div class="food-total" aria-label="Calculated food calorie total">
                 <strong>{{ totalKcal.toLocaleString() }} <small>kcal</small></strong>
@@ -89,9 +101,9 @@ async function removeRow(ingredientId) {
                         <div class="ingredient-name-wrap">
                             <button type="button" class="item-name"
                                 @click="openModal(Modals.INGREDIENT_EDITOR, { ingredientId: row.item.ingredientId })">
-                                <span class="item-edit-icon" aria-hidden="true">✎</span>
                                 <span>{{ row.ingredient?.name || 'Unknown' }}</span>
                             </button>
+                            <div class="item-kcal">{{ row.kcal.toLocaleString() }} kcal</div>
                         </div>
                         <div class="quantity-control">
                             <input v-model.number="row.item.amount" class="item-qty" type="number" step="any" min="0"
@@ -99,30 +111,33 @@ async function removeRow(ingredientId) {
                             <span>{{ row.ingredient?.unit === 'g' ? 'g' : '' }}</span>
                         </div>
                     </div>
-                    <div class="item-kcal mono">{{ row.kcal.toLocaleString() }} kcal</div>
                     <button class="item-remove" :aria-label="`Remove ${row.ingredient?.name || 'ingredient'}`"
                         @click.stop="removeRow(row.item.ingredientId)">×</button>
                 </div>
             </div>
         </div>
-        <div class="add-item-row">
-            <div class="add-item-label-row">
-                <label class="add-item-label">Add an ingredient</label>
-                <button class="link-btn manage-ingredients-link" type="button"
-                    @click="openModal(Modals.INGREDIENT_MANAGER)">
-                    Manage ingredients <span class="manage-ingredients-chevron" aria-hidden="true">›</span>
+        <div v-if="!isAddRowExpanded" class="add-item-row">
+            <button class="add-ingredient-trigger" type="button" @click="expandAddRow">
+                <span aria-hidden="true">＋</span> Add ingredient
+            </button>
+        </div>
+        <div v-else class="add-item-expanded">
+            <button class="ingredient-picker-trigger" type="button" @click="openIngredientPicker">
+                <span>{{ ingredientQuery || 'Choose an ingredient...' }}</span>
+            </button>
+            <div v-if="pendingIngredientId" class="add-amount-row">
+                <input ref="ingredientQuantityInput" v-model="pendingQty" class="add-item-qty" type="number" step="any"
+                    min="0" placeholder="Amount" aria-label="Ingredient amount"
+                    @keydown.enter.prevent="addIngredientRow" />
+                <span class="add-unit">{{ getIngredient(pendingIngredientId)?.unit === 'g' ? 'g' : 'each' }}</span>
+                <button class="add-confirm-button" type="button" aria-label="Add ingredient" @click="addIngredientRow">✓</button>
+            </div>
+            <div class="add-item-footer">
+                <button class="link-btn" type="button" @click="collapseAddRow">Cancel</button>
+                <button class="link-btn manage-ingredients-link" type="button" @click="openModal(Modals.INGREDIENT_MANAGER)">
+                    Manage ingredients <span aria-hidden="true">›</span>
                 </button>
             </div>
-            <div class="ingredient-picker-trigger" role="button" tabindex="0" aria-label="Open ingredient chooser"
-                @keydown.enter="openIngredientPicker" @keydown.space.prevent="openIngredientPicker">
-                <input readonly v-model="ingredientQuery" class="add-item-select ingredient-picker-input" type="text"
-                    placeholder="Choose an ingredient..." aria-label="Choose an ingredient"
-                    @click="openIngredientPicker" />
-            </div>
-            <input ref="ingredientQuantityInput" v-model="pendingQty" class="add-item-qty" type="number" step="any"
-                min="0" :placeholder="getIngredient(pendingIngredientId)?.unit === 'g' ? 'g' : 'each'"
-                @keydown.enter.prevent="addIngredientRow" />
-            <button class="link-btn add-item-button" type="button" @click="addIngredientRow">＋ Add</button>
         </div>
     </section>
 </template>
@@ -272,8 +287,7 @@ async function removeRow(ingredientId) {
     background: transparent;
     overflow: hidden;
     color: var(--ink);
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 11px;
     text-overflow: ellipsis;
     text-align: left;
     white-space: nowrap;
@@ -564,6 +578,218 @@ async function removeRow(ingredientId) {
         grid-column: 3;
         padding-right: 6px;
         padding-left: 6px;
+    }
+}
+
+.food-ingredients-section {
+    gap: 10px;
+}
+
+.food-ingredients-list-container {
+    max-height: 320px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    overflow: visible;
+}
+
+.ingredient-list {
+    border-radius: 0;
+    background: transparent;
+}
+
+.ingredient-row {
+    min-height: 50px;
+    padding: 7px 4px;
+    border-top: 0;
+    border-radius: 10px;
+    background: transparent;
+}
+
+.ingredient-row + .ingredient-row {
+    border-top: 0;
+}
+
+.ingredient-row:hover {
+    background: var(--surface-alt);
+}
+
+.ingredient-row-main {
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.ingredient-name-wrap {
+    display: block;
+}
+
+.item-name {
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+}
+
+.item-kcal {
+    width: auto;
+    min-width: 0;
+    margin-top: 3px;
+    color: color-mix(in srgb, var(--ink) 40%, transparent);
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+    font-size: 12px;
+    text-align: left;
+}
+
+.quantity-control {
+    grid-template-columns: 64px 24px;
+    width: 94px;
+}
+
+.item-qty {
+    min-height: 34px;
+    background: var(--surface-alt);
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    appearance: textfield;
+}
+
+.item-qty::-webkit-outer-spin-button,
+.item-qty::-webkit-inner-spin-button,
+.add-item-qty::-webkit-outer-spin-button,
+.add-item-qty::-webkit-inner-spin-button {
+    margin: 0;
+    appearance: none;
+}
+
+.add-item-qty {
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    appearance: textfield;
+}
+
+.add-item-row {
+    display: block;
+    width: 100%;
+    padding: 0;
+}
+
+.add-ingredient-trigger,
+.add-item-expanded {
+    width: 100%;
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    background: transparent;
+}
+
+.add-ingredient-trigger {
+    padding: 11px 10px;
+    color: var(--ink-muted);
+    font-size: 13px;
+    text-align: left;
+}
+
+.add-ingredient-trigger:hover {
+    border-color: var(--green-light);
+    color: var(--green-strong);
+}
+
+.add-ingredient-trigger span {
+    margin-right: 5px;
+    font-size: 18px;
+    line-height: 0;
+    vertical-align: -2px;
+}
+
+.add-item-expanded {
+    padding: 10px;
+    border-style: solid;
+    border-color: color-mix(in srgb, var(--green) 35%, var(--line));
+    background: color-mix(in srgb, var(--surface-alt) 70%, transparent);
+}
+
+.ingredient-picker-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--ink-muted);
+    font-size: 13px;
+    text-align: left;
+}
+
+.ingredient-picker-trigger:hover {
+    border-color: var(--green-light);
+    color: var(--green-strong);
+}
+
+.add-amount-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 8px;
+}
+
+.add-amount-row .add-item-qty {
+    width: 96px;
+    min-height: 36px;
+    padding: 8px;
+}
+
+.add-unit {
+    color: var(--ink-muted);
+    font-size: 12px;
+}
+
+.add-confirm-button {
+    width: 34px;
+    height: 34px;
+    margin-left: auto;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--green) 18%, transparent);
+    color: var(--green-strong);
+    font-size: 17px;
+}
+
+.add-item-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+}
+
+@media (max-width: 600px) {
+    .ingredient-row {
+        grid-template-columns: minmax(0, 1fr) 56px 22px;
+    }
+
+    .ingredient-row-main {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-column: 1 / span 2;
+    }
+
+    .ingredient-name-wrap {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .quantity-control {
+        grid-column: 2;
+        grid-row: 1;
+        width: 80px;
+        grid-template-columns: 56px 18px;
+    }
+
+    .item-remove {
+        grid-column: 3;
+        grid-row: 1;
     }
 }
 </style>

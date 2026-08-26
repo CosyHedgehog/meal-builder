@@ -8,7 +8,6 @@ const emit = defineEmits(['update:modelValue'])
 
 <template>
   <div class="food-mode-control">
-    <span class="food-mode-label">Food type</span>
     <div class="food-mode-tabs" role="group" aria-label="Food type">
       <button type="button" :class="{ active: modelValue === 'ingredients' }" @click="emit('update:modelValue', 'ingredients')">
         Ingredients
@@ -22,49 +21,31 @@ const emit = defineEmits(['update:modelValue'])
 
 <style scoped>
 .food-mode-control {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 3px;
   margin: 2px 0 4px;
-}
-
-.food-mode-label {
-  color: var(--ink-muted);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .food-mode-tabs {
   display: flex;
-  gap: 12px;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--surface-alt);
 }
 
 .food-mode-tabs button {
-  position: relative;
-  min-height: 28px;
-  padding: 4px 0;
+  flex: 1;
+  min-height: 30px;
+  padding: 5px 8px;
+  border-radius: 8px;
   border: 0;
   background: transparent;
   color: var(--ink-muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .food-mode-tabs button.active {
-  color: var(--green-strong);
-  font-weight: 700;
-}
-
-.food-mode-tabs button.active::after {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  height: 2px;
-  border-radius: 2px;
   background: var(--green);
-  content: '';
+  color: #062119;
+  font-weight: 700;
 }
 </style>
