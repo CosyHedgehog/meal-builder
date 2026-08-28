@@ -12,6 +12,7 @@ const selectedDailyRange = ref(window.innerWidth <= 480 ? 14 : 30)
 const dailyRangeOptions = [7, 14, 30, 90]
 const { days, windowLoggedDays, windowAverageKcal, windowAverageDeficit, windowTotalDeficit, windowProjectedKgPerWeek, weeklyBreakdown, trackingSummary } = useTrendsChart(selectedDailyRange)
 const KCAL_PER_KG = 7700
+const LB_PER_KG = 2.20462
 const dailyRangeLabel = computed(() => selectedDailyRange.value === 'all' ? 'All time' : `last ${days.value} days`)
 const loggedDays = computed(() => windowLoggedDays.value.length)
 const totalWeightChangeDisplay = computed(() => Math.abs(windowTotalDeficit.value) / 7700 * (store.weightUnit === 'lb' ? 2.20462 : 1))
@@ -48,12 +49,17 @@ function balanceLabel(day) {
   return day.deficit >= 0 ? 'deficit' : 'surplus'
 }
 
-function weeklyKgChange(week) {
-  return week.totalDeficit / KCAL_PER_KG
+function displayWeightChange(deficit) {
+  const kilograms = deficit / KCAL_PER_KG
+  return kilograms * (store.weightUnit === 'lb' ? LB_PER_KG : 1)
 }
 
-function dailyKgChange(day) {
-  return day.deficit / KCAL_PER_KG
+function weeklyWeightChange(week) {
+  return displayWeightChange(week.totalDeficit)
+}
+
+function dailyWeightChange(day) {
+  return displayWeightChange(day.deficit)
 }
 
 function toggleWeek(week) {
@@ -113,7 +119,7 @@ function toggleWeek(week) {
           <span>Week</span>
           <span>Avg kcal</span>
           <span>Avg Deficit</span>
-          <span>Kg Lost</span>
+          <span>{{ store.weightUnit === 'lb' ? 'Lbs Lost' : 'Kg Lost' }}</span>
           <span>Days logged</span>
           <span></span>
         </div>
@@ -130,7 +136,7 @@ function toggleWeek(week) {
               <strong>{{ week.averageDeficit.toLocaleString() }}</strong>
             </div>
             <div class="trends-week-stat" :class="{ surplus: week.averageDeficit < 0 }">
-              <strong>{{ weeklyKgChange(week).toFixed(2) }}</strong>
+              <strong>{{ weeklyWeightChange(week).toFixed(2) }}</strong>
             </div>
             <div class="trends-week-days">{{ week.loggedDays }}/{{ week.totalDays }}</div>
             <span class="trends-week-chevron" aria-hidden="true">›</span>
@@ -147,7 +153,7 @@ function toggleWeek(week) {
               </span>
               <span v-else class="trends-week-detail-balance no-log">—</span>
               <span v-if="day.hasLog" class="trends-week-detail-change" :class="{ surplus: day.deficit < 0 }">
-                {{ dailyKgChange(day).toFixed(2) }}
+                {{ dailyWeightChange(day).toFixed(2) }}
               </span>
               <span v-else class="trends-week-detail-change no-log">—</span>
               <span aria-hidden="true"></span>
