@@ -68,9 +68,6 @@ export function useTrendsChart(selectedRange = ref(30)) {
     }),
   )
 
-  const goalLineBottom = computed(() =>
-    Math.round(24 + (store.maintenanceCal / scale.value) * BAR_HEIGHT),
-  )
   const loggedDays = computed(() => history.value.filter((entry) => entry.hasLog))
   const avgDeficit = computed(() =>
     loggedDays.value.length
@@ -118,7 +115,7 @@ export function useTrendsChart(selectedRange = ref(30)) {
       const logged = range.filter((entry) => entry.hasLog)
       if (!logged.length) continue
       const average = (field) => Math.round(logged.reduce((sum, entry) => sum + entry[field], 0) / logged.length)
-      weeks.push({ start: range[0].date, end: range[range.length - 1].date, year: Number(range[0].date.slice(0, 4)), loggedDays: logged.length, totalDays: range.length, averageKcal: average('total'), averageDeficit: average('deficit'), days: range })
+      weeks.push({ start: range[0].date, end: range[range.length - 1].date, year: Number(range[0].date.slice(0, 4)), loggedDays: logged.length, totalDays: range.length, averageKcal: average('total'), averageDeficit: average('deficit'), totalDeficit: logged.reduce((sum, entry) => sum + entry.deficit, 0), days: range })
     }
     return weeks.reverse()
   })
@@ -141,7 +138,6 @@ export function useTrendsChart(selectedRange = ref(30)) {
   return {
     days,
     bars,
-    goalLineBottom,
     avgDeficit,
     projectedKgPerWeek,
     windowLoggedDays,

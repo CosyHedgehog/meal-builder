@@ -9,8 +9,9 @@ import { setLogDate } from '../js/ui.js'
 
 const emit = defineEmits(['close'])
 const selectedDailyRange = ref(window.innerWidth <= 480 ? 14 : 30)
-const dailyRangeOptions = [7, 14, 30, 90, 'all']
+const dailyRangeOptions = [7, 14, 30, 90]
 const { days, windowLoggedDays, windowAverageKcal, windowAverageDeficit, windowTotalDeficit, windowProjectedKgPerWeek, weeklyBreakdown, trackingSummary } = useTrendsChart(selectedDailyRange)
+const KCAL_PER_KG = 7700
 const dailyRangeLabel = computed(() => selectedDailyRange.value === 'all' ? 'All time' : `last ${days.value} days`)
 const loggedDays = computed(() => windowLoggedDays.value.length)
 const totalWeightChangeDisplay = computed(() => Math.abs(windowTotalDeficit.value) / 7700 * (store.weightUnit === 'lb' ? 2.20462 : 1))
@@ -47,6 +48,14 @@ function balanceLabel(day) {
   return day.deficit >= 0 ? 'deficit' : 'surplus'
 }
 
+function weeklyKgChange(week) {
+  return week.totalDeficit / KCAL_PER_KG
+}
+
+function dailyKgChange(day) {
+  return day.deficit / KCAL_PER_KG
+}
+
 function toggleWeek(week) {
   expandedWeek.value = expandedWeek.value === week.start ? null : week.start
 }
@@ -62,7 +71,8 @@ function toggleWeek(week) {
         :class="{ active: activeTab === 'weekly' }" @click="activeTab = 'weekly'">Weekly breakdown</button>
     </div>
 
-    <template v-if="activeTab === 'daily'">
+    <div class="trends-modal-content">
+      <template v-if="activeTab === 'daily'">
       <div class="trends-range-selector" role="tablist" aria-label="Daily trends range">
         <button v-for="range in dailyRangeOptions" :key="range" type="button" role="tab"
           :aria-selected="selectedDailyRange === range" :class="{ active: selectedDailyRange === range }"
@@ -95,17 +105,15 @@ function toggleWeek(week) {
           </div>
         </div>
       </section>
-    </template>
+      </template>
 
-    <section v-else class="trends-weeks">
-      <div class="trends-section-heading">
-        <span>Weekly breakdown</span>
-      </div>
+      <section v-else class="trends-weeks">
       <div class="trends-weeks-list">
         <div class="trends-week-header-row" aria-hidden="true">
           <span>Week</span>
           <span>Avg kcal</span>
-          <span>Avg kcal deficit / surplus</span>
+          <span>Avg Deficit</span>
+          <span>Kg Lost</span>
           <span>Days logged</span>
           <span></span>
         </div>
@@ -119,7 +127,10 @@ function toggleWeek(week) {
               <strong>{{ week.averageKcal.toLocaleString() }}</strong>
             </div>
             <div class="trends-week-stat" :class="{ surplus: week.averageDeficit < 0 }">
-              <strong>{{ Math.abs(week.averageDeficit).toLocaleString() }}</strong>
+              <strong>{{ week.averageDeficit.toLocaleString() }}</strong>
+            </div>
+            <div class="trends-week-stat" :class="{ surplus: week.averageDeficit < 0 }">
+              <strong>{{ weeklyKgChange(week).toFixed(2) }}</strong>
             </div>
             <div class="trends-week-days">{{ week.loggedDays }}/{{ week.totalDays }}</div>
             <span class="trends-week-chevron" aria-hidden="true">›</span>
@@ -132,15 +143,20 @@ function toggleWeek(week) {
               <span v-if="day.hasLog" class="trends-week-calories">{{ day.total.toLocaleString() }}</span>
               <span v-else class="trends-week-calories">—</span>
               <span v-if="day.hasLog" class="trends-week-detail-balance" :class="{ surplus: day.deficit < 0 }">
-                {{ Math.abs(day.deficit).toLocaleString() }}
+                {{ day.deficit.toLocaleString() }}
               </span>
               <span v-else class="trends-week-detail-balance no-log">—</span>
+              <span v-if="day.hasLog" class="trends-week-detail-change" :class="{ surplus: day.deficit < 0 }">
+                {{ dailyKgChange(day).toFixed(2) }}
+              </span>
+              <span v-else class="trends-week-detail-change no-log">—</span>
               <span aria-hidden="true"></span>
             </div>
           </div>
         </template>
-      </div>
-    </section>
+        </div>
+      </section>
+    </div>
   </BaseModal>
 </template>
 
@@ -163,6 +179,20 @@ function toggleWeek(week) {
   flex-direction: column;
 }
 
+.trends-modal-content {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.trends-modal-content::before {
+  content: '';
+  flex: none;
+  margin: 0 -26px;
+  border-top: 1px solid var(--line);
+}
+
 :deep(.modal.trends-modal) {
   display: flex;
   flex-direction: column;
@@ -180,21 +210,21 @@ function toggleWeek(week) {
 .trends-tabs {
   display: flex;
   gap: 4px;
-  margin: 2px 0 14px;
-  padding: 3px;
+  margin: 2px 0 10px;
+  padding: 2px;
   border: 0;
-  border-radius: 11px;
+  border-radius: 8px;
   background: var(--surface-alt);
 }
 
 .trends-tabs button {
   flex: 1;
-  padding: 8px 10px;
+  padding: 6px 8px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 6px;
   background: transparent;
   color: var(--ink-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -286,20 +316,27 @@ function toggleWeek(week) {
 .trends-weeks-list {
   min-height: 0;
   flex: 1;
+  margin-right: -26px;
+  margin-left: -26px;
+  padding-top: 10px;
+  overflow-x: hidden;
   overflow-y: auto;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--surface);
 }
 
 .trends-range-selector {
   display: flex;
   gap: 20px;
-  margin: 0 0 16px;
+  margin: 10px 0 16px;
   padding: 0 0 8px;
   overflow-x: auto;
-  border-bottom: 1px solid var(--line);
   scrollbar-width: none;
+}
+
+@media (max-width: 480px) {
+  .trends-weeks-list {
+    margin-right: -20px;
+    margin-left: -20px;
+  }
 }
 
 .trends-range-selector::-webkit-scrollbar {
@@ -335,7 +372,7 @@ function toggleWeek(week) {
 .trends-year-heading {
   padding: 10px 12px 6px;
   border-bottom: 1px solid var(--line);
-  background: var(--surface-alt);
+  background: transparent;
   color: var(--green);
   font-size: 11px;
   font-weight: 700;
@@ -345,12 +382,12 @@ function toggleWeek(week) {
 
 .trends-week-header-row {
   display: grid;
-  grid-template-columns: minmax(110px, 1.3fr) repeat(2, minmax(68px, .8fr)) minmax(52px, .6fr) 18px;
+  grid-template-columns: minmax(110px, 1.3fr) repeat(2, minmax(68px, .8fr)) repeat(2, minmax(52px, .6fr)) 18px;
   align-items: center;
   gap: 8px;
   padding: 7px 12px;
   border-bottom: 1px solid var(--line);
-  background: transparent;
+  background: var(--surface-alt);
   color: var(--ink-muted);
   font-size: 10px;
   font-weight: 700;
@@ -358,22 +395,22 @@ function toggleWeek(week) {
   text-transform: uppercase;
 }
 
-.trends-week-header-row>span:nth-child(n+2):nth-child(-n+4) {
+.trends-week-header-row>span:nth-child(n+2):nth-child(-n+5) {
   justify-self: center;
   text-align: center;
 }
 
-.trends-week-header-row>span:nth-child(5) {
+.trends-week-header-row>span:nth-child(6) {
   justify-self: end;
 }
 
 .trends-week-row {
   display: grid;
   width: 100%;
-  grid-template-columns: minmax(110px, 1.3fr) repeat(2, minmax(68px, .8fr)) minmax(52px, .6fr) 18px;
+  grid-template-columns: minmax(110px, 1.3fr) repeat(2, minmax(68px, .8fr)) repeat(2, minmax(52px, .6fr)) 18px;
   align-items: center;
   gap: 8px;
-  padding: 11px 12px;
+  padding: 8px 12px;
   border-top: 0;
   border-right: 0;
   border-left: 0;
@@ -458,10 +495,10 @@ function toggleWeek(week) {
 
 .trends-week-detail-row {
   display: grid;
-  grid-template-columns: minmax(110px, 1.3fr) repeat(2, minmax(68px, .8fr)) minmax(52px, .6fr) 18px;
+  grid-template-columns: minmax(110px, 1.3fr) repeat(2, minmax(68px, .8fr)) repeat(2, minmax(52px, .6fr)) 18px;
   align-items: center;
   gap: 8px;
-  padding: 7px 12px;
+  padding: 5px 12px;
 }
 
 .trends-week-detail-row>div {
@@ -497,11 +534,25 @@ function toggleWeek(week) {
   white-space: nowrap;
 }
 
+.trends-week-detail-change {
+  grid-column: 4;
+  color: var(--green) !important;
+  white-space: nowrap;
+}
+
 .trends-week-detail-balance.surplus {
   color: var(--red) !important;
 }
 
+.trends-week-detail-change.surplus {
+  color: var(--red) !important;
+}
+
 .trends-week-detail-balance.no-log {
+  color: var(--ink-muted) !important;
+}
+
+.trends-week-detail-change.no-log {
   color: var(--ink-muted) !important;
 }
 
@@ -543,29 +594,29 @@ function toggleWeek(week) {
   }
 
   .trends-week-header-row {
-    grid-template-columns: minmax(82px, 1.25fr) repeat(2, minmax(58px, .8fr)) minmax(48px, .6fr) 14px;
+    grid-template-columns: minmax(82px, 1.25fr) repeat(2, minmax(58px, .8fr)) repeat(2, minmax(48px, .6fr)) 14px;
     gap: 5px;
     padding: 8px;
     font-size: 9px;
   }
 
   .trends-week-row {
-    grid-template-columns: minmax(82px, 1.25fr) repeat(2, minmax(58px, .8fr)) minmax(48px, .6fr) 14px;
+    grid-template-columns: minmax(82px, 1.25fr) repeat(2, minmax(58px, .8fr)) repeat(2, minmax(48px, .6fr)) 14px;
     gap: 5px;
-    padding: 11px 8px;
+    padding: 8px;
   }
 
   .trends-week-detail-row {
     display: grid;
-    grid-template-columns: minmax(82px, 1.25fr) repeat(2, minmax(58px, .8fr)) minmax(48px, .6fr) 14px;
+    grid-template-columns: minmax(82px, 1.25fr) repeat(2, minmax(58px, .8fr)) repeat(2, minmax(48px, .6fr)) 14px;
     align-items: center;
     gap: 5px;
-    padding: 7px 12px;
+    padding: 5px 12px;
   }
 
   .trends-week-date,
   .trends-week-days {
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .trends-week-stat strong {

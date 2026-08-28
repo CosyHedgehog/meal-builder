@@ -233,6 +233,13 @@ defineExpose({ requestClose: closeEditor })
   gap: 7px;
 }
 
+.food-editor-content::before {
+  content: '';
+  flex: none;
+  margin: 0 -26px;
+  border-top: 1px solid var(--line);
+}
+
 .food-validation {
   margin: 2px 0 -4px;
   color: var(--red);
@@ -265,12 +272,16 @@ defineExpose({ requestClose: closeEditor })
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-top: 14px;
+  margin: 14px -26px -5px;
+  padding: 14px 26px 0;
+  border-top: 1px solid var(--line);
 }
 
 .food-actions .primary-wide {
   width: 100%;
   margin-top: 0;
+  padding: 9px 14px;
+  font-size: 13px;
 }
 
 @media (max-width: 600px) {
@@ -282,6 +293,11 @@ defineExpose({ requestClose: closeEditor })
   .food-editor-content {
     flex: 1;
     min-height: 0;
+  }
+
+  .food-editor-content::before {
+    margin-right: -20px;
+    margin-left: -20px;
   }
 
   .food-ingredients-section {
@@ -299,7 +315,8 @@ defineExpose({ requestClose: closeEditor })
 
   .food-actions {
     flex: none;
-    margin-top: 7px;
+    margin: 7px -20px -8px;
+    padding: 10px 20px 0;
   }
 }
 

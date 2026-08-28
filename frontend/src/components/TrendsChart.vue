@@ -4,7 +4,7 @@ import { setLogDate, view } from '../js/ui.js'
 import { useTrendsChart } from '../js/useTrendsChart.js'
 
 const props = defineProps({ range: { type: [Number, String], default: 30 } })
-const { days, bars, goalLineBottom } = useTrendsChart(toRef(props, 'range'))
+const { days, bars } = useTrendsChart(toRef(props, 'range'))
 const chartViewport = ref(null)
 
 function showNewestData() {
@@ -37,8 +37,6 @@ onMounted(showNewestData)
           minWidth: days >= 30 ? `${days * 18}px` : '100%',
         }"
       >
-        <div class="trends-goal-line" :style="{ bottom: goalLineBottom + 'px' }"></div>
-
         <button v-for="bar in bars" :key="bar.date" type="button" class="trends-day"
           :class="{ active: bar.date === view.logDate, today: bar.isToday }" :title="bar.label"
           :aria-label="`Load ${bar.label}`" @click="setLogDate(bar.date)">
@@ -56,7 +54,6 @@ onMounted(showNewestData)
     <div class="trends-legend">
       <span class="legend-item"><span class="legend-swatch under-goal"></span>Under maintenance</span>
       <span class="legend-item"><span class="legend-swatch over-goal"></span>Over maintenance</span>
-      <span class="legend-item"><span class="legend-swatch maintenance"></span>Maintenance calories</span>
     </div>
 
   </section>
@@ -154,16 +151,6 @@ onMounted(showNewestData)
   background: var(--trends-empty);
 }
 
-.trends-goal-line {
-  position: absolute;
-  z-index: 1;
-  left: 0;
-  right: 0;
-  height: 0;
-  border-top: 1px dashed rgba(var(--shadow-rgb), 0.32);
-  pointer-events: none;
-}
-
 .trends-day-label {
   position: relative;
   margin-top: 8px;
@@ -210,17 +197,6 @@ onMounted(showNewestData)
 
 .legend-swatch.over-goal {
   background: var(--trends-over);
-}
-
-.legend-swatch.maintenance {
-  width: 18px;
-  height: 2px;
-  border-radius: 2px;
-  background: repeating-linear-gradient(90deg,
-      var(--ink-muted) 0px,
-      var(--ink-muted) 4px,
-      transparent 4px,
-      transparent 7px);
 }
 
 </style>

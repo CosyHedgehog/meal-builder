@@ -391,8 +391,7 @@ async function removeFood(food) {
 
 .food-manager-actions {
   flex: none;
-  margin-right: -26px;
-  margin-left: -26px;
+  margin: 0 -26px -5px;
   padding-right: 26px;
   padding-left: 26px;
   padding-top: 14px;
@@ -400,10 +399,8 @@ async function removeFood(food) {
 }
 
 .food-manager-actions .btn-full {
-  min-height: 44px;
   margin-top: 0;
   border-radius: 12px;
-  font-size: 14px;
 }
 
 .food-options {
@@ -631,8 +628,7 @@ async function removeFood(food) {
 
   .food-manager-actions {
     flex: none;
-    margin-right: -20px;
-    margin-left: -20px;
+    margin: 0 -20px -8px;
     padding-right: 20px;
     padding-left: 20px;
   }
