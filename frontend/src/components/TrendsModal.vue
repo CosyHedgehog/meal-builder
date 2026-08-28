@@ -51,7 +51,7 @@ function balanceLabel(day) {
 
 function displayWeightChange(deficit) {
   const kilograms = deficit / KCAL_PER_KG
-  return kilograms * (store.weightUnit === 'lb' ? LB_PER_KG : 1)
+  return -kilograms * (store.weightUnit === 'lb' ? LB_PER_KG : 1)
 }
 
 function weeklyWeightChange(week) {
@@ -60,6 +60,18 @@ function weeklyWeightChange(week) {
 
 function dailyWeightChange(day) {
   return displayWeightChange(day.deficit)
+}
+
+function formatWeightChange(value) {
+  const formatted = value.toFixed(2)
+  return value > 0 ? `+${formatted}` : formatted
+}
+
+function formatKcalDifference(deficit) {
+  const formatted = Math.abs(deficit).toLocaleString()
+  if (deficit > 0) return `-${formatted}`
+  if (deficit < 0) return `+${formatted}`
+  return formatted
 }
 
 function toggleWeek(week) {
@@ -118,14 +130,12 @@ function toggleWeek(week) {
         <div class="trends-week-header-row" aria-hidden="true">
           <span>Week</span>
           <span>Avg kcal</span>
-          <span>Avg Deficit</span>
-          <span>{{ store.weightUnit === 'lb' ? 'Lbs Lost' : 'Kg Lost' }}</span>
-          <span>Days logged</span>
+          <span>Kcal Δ</span>
+          <span>{{ store.weightUnit === 'lb' ? 'Lbs Δ' : 'Kg Δ' }}</span>
+          <span>Logged</span>
           <span></span>
         </div>
-        <template v-for="(week, index) in weeklyBreakdown" :key="week.start">
-          <div v-if="index === 0 || weeklyBreakdown[index - 1].year !== week.year" class="trends-year-heading">{{
-            week.year }}</div>
+        <template v-for="week in weeklyBreakdown" :key="week.start">
           <button class="trends-week-row" type="button" :aria-expanded="expandedWeek === week.start"
             @click="toggleWeek(week)">
             <div class="trends-week-date">{{ formatWeek(week.start) }} – {{ formatWeek(week.end) }}</div>
@@ -133,10 +143,10 @@ function toggleWeek(week) {
               <strong>{{ week.averageKcal.toLocaleString() }}</strong>
             </div>
             <div class="trends-week-stat" :class="{ surplus: week.averageDeficit < 0 }">
-              <strong>{{ week.averageDeficit.toLocaleString() }}</strong>
+              <strong>{{ formatKcalDifference(week.averageDeficit) }}</strong>
             </div>
             <div class="trends-week-stat" :class="{ surplus: week.averageDeficit < 0 }">
-              <strong>{{ weeklyWeightChange(week).toFixed(2) }}</strong>
+              <strong>{{ formatWeightChange(weeklyWeightChange(week)) }}</strong>
             </div>
             <div class="trends-week-days">{{ week.loggedDays }}/{{ week.totalDays }}</div>
             <span class="trends-week-chevron" aria-hidden="true">›</span>
@@ -149,11 +159,11 @@ function toggleWeek(week) {
               <span v-if="day.hasLog" class="trends-week-calories">{{ day.total.toLocaleString() }}</span>
               <span v-else class="trends-week-calories">—</span>
               <span v-if="day.hasLog" class="trends-week-detail-balance" :class="{ surplus: day.deficit < 0 }">
-                {{ day.deficit.toLocaleString() }}
+                {{ formatKcalDifference(day.deficit) }}
               </span>
               <span v-else class="trends-week-detail-balance no-log">—</span>
               <span v-if="day.hasLog" class="trends-week-detail-change" :class="{ surplus: day.deficit < 0 }">
-                {{ dailyWeightChange(day).toFixed(2) }}
+                {{ formatWeightChange(dailyWeightChange(day)) }}
               </span>
               <span v-else class="trends-week-detail-change no-log">—</span>
               <span aria-hidden="true"></span>

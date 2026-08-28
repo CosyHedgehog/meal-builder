@@ -575,6 +575,29 @@ async function removeFood(food) {
   color: var(--red);
 }
 
+@media (min-width: 481px) {
+  :deep(.modal.food-manager-modal) {
+    display: flex;
+    height: min(760px, 92vh);
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .food-manager-content {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    flex-direction: column;
+  }
+
+  .food-manager-content :deep(.manager-list) {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+  }
+}
+
 @media (max-width: 480px) {
   .food-filters {
     grid-template-columns: minmax(0, 1fr) auto;

@@ -403,6 +403,7 @@ function downloadJSON(filename, payload) {
   display: inline-flex;
   gap: 3px;
   padding: 3px;
+  border: 1px solid var(--line);
   border-radius: 9px;
   background: var(--settings-control-bg);
 }
