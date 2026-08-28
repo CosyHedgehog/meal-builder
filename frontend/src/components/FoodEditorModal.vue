@@ -229,8 +229,16 @@ defineExpose({ requestClose: closeEditor })
 
 .food-editor-content {
   display: flex;
+  min-height: 0;
+  flex: 1;
   flex-direction: column;
   gap: 7px;
+}
+
+:deep(.modal.food-editor-modal) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .food-editor-content::before {
@@ -272,7 +280,7 @@ defineExpose({ requestClose: closeEditor })
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin: 14px -26px -5px;
+  margin: auto -26px -5px;
   padding: 14px 26px 0;
   border-top: 1px solid var(--line);
 }
@@ -284,15 +292,17 @@ defineExpose({ requestClose: closeEditor })
   font-size: 13px;
 }
 
+@media (min-width: 601px) {
+  :deep(.modal.food-editor-modal) {
+    height: min(720px, 92vh);
+    min-height: 560px;
+  }
+}
+
 @media (max-width: 600px) {
   :deep(.modal.food-editor-modal) {
     display: flex;
     flex-direction: column;
-  }
-
-  .food-editor-content {
-    flex: 1;
-    min-height: 0;
   }
 
   .food-editor-content::before {
@@ -315,7 +325,7 @@ defineExpose({ requestClose: closeEditor })
 
   .food-actions {
     flex: none;
-    margin: 7px -20px -8px;
+    margin: auto -20px -8px;
     padding: 10px 20px 0;
   }
 }

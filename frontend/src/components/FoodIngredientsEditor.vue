@@ -96,6 +96,8 @@ async function removeRow(ingredientId) {
 <style scoped>
 .food-ingredients-section {
     display: flex;
+    min-height: 0;
+    flex: 1;
     flex-direction: column;
     margin-top: 2px;
     gap: 7px;
@@ -388,7 +390,8 @@ async function removeRow(ingredientId) {
 }
 
 .food-ingredients-list-container {
-    max-height: 320px;
+    flex: 1;
+    max-height: none;
     padding: 0;
     border: 0;
     border-radius: 0;
@@ -397,6 +400,9 @@ async function removeRow(ingredientId) {
 }
 
 .ingredient-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
     border-radius: 0;
     background: transparent;
 }
