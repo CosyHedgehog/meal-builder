@@ -94,11 +94,14 @@ function downloadJSON(filename, payload) {
               @change="setMaintenance($event.target.value)" />
           </div>
           <div class="settings-row">
-            <label>Weight display</label>
-            <select v-model="weightUnit" class="unit-select">
-              <option value="kg">kg</option>
-              <option value="lb">lb</option>
-            </select>
+            <span class="settings-row-label">Weight display</span>
+            <div class="unit-chips" role="radiogroup" aria-label="Weight display unit">
+              <button v-for="unit in ['kg', 'lb']" :key="unit" type="button" role="radio"
+                :aria-checked="weightUnit === unit" :class="{ active: weightUnit === unit }"
+                @click="weightUnit = unit">
+                {{ unit }}
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -297,7 +300,8 @@ function downloadJSON(filename, payload) {
   border-top: 1px solid var(--line);
 }
 
-.settings-row label {
+.settings-row label,
+.settings-row-label {
   font-size: 13px;
   font-weight: 400;
   color: color-mix(in srgb, var(--ink) 80%, transparent);
@@ -372,8 +376,7 @@ function downloadJSON(filename, payload) {
   color: var(--red);
 }
 
-.settings-row input,
-.unit-select {
+.settings-row input {
   width: 80px;
   padding: 5px 5px;
   border: 1px solid var(--line);
@@ -396,32 +399,34 @@ function downloadJSON(filename, payload) {
   appearance: none;
 }
 
-.unit-select {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  color-scheme: dark;
-  padding-right: 26px;
-  background-image: linear-gradient(45deg, transparent 50%, var(--ink-muted) 50%),
-    linear-gradient(135deg, var(--ink-muted) 50%, transparent 50%);
-  background-repeat: no-repeat;
-  background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50%;
-  background-size: 5px 5px, 5px 5px;
-  text-align: center;
+.unit-chips {
+  display: inline-flex;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 9px;
+  background: var(--settings-control-bg);
 }
 
-.unit-select {
-  width: 68px;
-  min-width: 68px;
-  padding: 6px 10px;
-  border-color: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  background-color: var(--settings-control-bg);
+.unit-chips button {
+  min-width: 34px;
+  padding: 5px 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink-muted);
+  font: 600 12px/1 Arial, sans-serif;
+  cursor: pointer;
 }
 
-.unit-select option {
-  background: var(--surface-alt);
+.unit-chips button:hover,
+.unit-chips button:focus-visible {
   color: var(--ink);
+}
+
+.unit-chips button.active {
+  border-color: var(--green);
+  background: var(--green);
+  color: #fff;
 }
 
 @media (max-width: 480px) {
