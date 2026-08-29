@@ -49,7 +49,6 @@ function toggleStepper(stepperId, isOpen) {
 
 function startPointerDrag(event, type, id) {
   if (event.button !== 0) return
-  event.currentTarget?.setPointerCapture?.(event.pointerId)
   pendingDrag.type = type
   pendingDrag.id = id
   pendingDrag.pointerId = event.pointerId
@@ -79,7 +78,6 @@ function handlePointerMove(event) {
 
 function handlePointerUp(event) {
   if (event.pointerId !== pendingDrag.pointerId) return
-  event.target.releasePointerCapture?.(event.pointerId)
   if (pendingDrag.active) {
     const targetId = pendingDrag.type === 'group' ? view.draggedOverGroupId : view.draggedOverFoodId
     if (pendingDrag.type === 'group') reorderGroups(pendingDrag.id, targetId)
