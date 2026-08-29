@@ -1,8 +1,10 @@
-<script setup>
+﻿<script setup>
 import { computed, ref } from 'vue'
 import BaseModal from './BaseModal.vue'
 import { state as store, foodKcal } from '../js/data.js'
 import { prettyDate, shiftDateStr, todayStr } from '../js/date.js'
+import { setLogDate } from '../js/ui.js'
+import { closeAllModals } from '../js/modals.js'
 
 const props = defineProps({
   foodId: { type: String, required: true },
@@ -10,137 +12,141 @@ const props = defineProps({
 const emit = defineEmits(['close'])
 
 const food = computed(() => store.foods.find((item) => item.id === props.foodId))
-const range = ref('30')
+const range = ref('all')
 const rangeOptions = [
-  { value: '7', label: '7 days' },
   { value: '30', label: '30 days' },
   { value: '90', label: '90 days' },
   { value: 'all', label: 'All time' },
 ]
 
 const foodKcalValue = computed(() => foodKcal(food.value))
+
 const usage = computed(() => {
   const today = todayStr()
   const start = range.value === 'all' ? '' : shiftDateStr(today, -(Number(range.value) - 1))
   return Object.entries(store.logs)
     .filter(([date]) => (!start || date >= start) && date <= today)
     .map(([date, log]) => {
-      const servings = (log.entries || [])
-        .filter((entry) => entry.foodId === props.foodId)
-        .reduce((sum, entry) => sum + (Number(entry.qty) > 0 ? Number(entry.qty) : 1), 0)
-      return { date, servings, kcal: Math.round(servings * foodKcalValue.value) }
+      const matchingEntries = (log.entries || []).filter((entry) => entry.foodId === props.foodId)
+      const servings = matchingEntries.reduce((sum, entry) => sum + (Number(entry.qty) > 0 ? Number(entry.qty) : 1), 0)
+      return {
+        date,
+        servings,
+        kcal: Math.round(servings * foodKcalValue.value),
+        entryCount: matchingEntries.length,
+      }
     })
     .filter((day) => day.servings > 0)
     .sort((a, b) => b.date.localeCompare(a.date))
 })
+
 const totalServings = computed(() => usage.value.reduce((sum, day) => sum + day.servings, 0))
 const totalKcal = computed(() => usage.value.reduce((sum, day) => sum + day.kcal, 0))
-const averageServings = computed(() => usage.value.length ? totalServings.value / usage.value.length : 0)
-const lastUsed = computed(() => usage.value[0]?.date || '')
 
 function formatServings(value) {
   return Number.isInteger(value) ? value.toLocaleString() : value.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')
+}
+
+function navigateToLog(dateStr) {
+  setLogDate(dateStr)
+  closeAllModals()
 }
 </script>
 
 <template>
   <BaseModal
-    :title="`${food?.name || 'Food'} stats`"
-    subtitle="See how often this food has been used."
-    panel-class="food-stats-modal"
+    :title="`${food?.name || 'Food'} logs`"
+    :subtitle="`Logged on ${usage.length} day${usage.length === 1 ? '' : 's'} (${formatServings(totalServings)} total servings).`"
+    panel-class="food-logs-modal"
     @close="emit('close')"
   >
-    <div class="food-stats-content">
-      <div class="food-stats-kcal">
-        <strong>{{ foodKcalValue.toLocaleString() }} kcal</strong>
-        <span>per serving</span>
-      </div>
-
-      <div class="food-stats-range" role="tablist" aria-label="Stats date range">
-        <button
-          v-for="option in rangeOptions"
-          :key="option.value"
-          type="button"
-          role="tab"
-          :aria-selected="range === option.value"
-          :class="{ active: range === option.value }"
-          @click="range = option.value"
-        >{{ option.label }}</button>
-      </div>
-
-      <div class="food-stats-grid">
-        <div><strong>{{ formatServings(totalServings) }}</strong><span>servings logged</span></div>
-        <div><strong>{{ usage.length }}</strong><span>days used</span></div>
-        <div><strong>{{ lastUsed ? prettyDate(lastUsed) : '—' }}</strong><span>last logged</span></div>
-        <div><strong>{{ formatServings(averageServings) }}</strong><span>avg servings / day used</span></div>
-      </div>
-
-      <div class="food-stats-total">{{ totalKcal.toLocaleString() }} kcal estimated in this period</div>
-
-      <section class="food-stats-history">
-        <h3>Recent history</h3>
-        <div v-if="!usage.length" class="empty-note">No logged servings in this period.</div>
-        <div v-else class="food-stats-history-list">
-          <div v-for="day in usage" :key="day.date" class="food-stats-history-row">
-            <span>{{ prettyDate(day.date) }}</span>
-            <span>{{ formatServings(day.servings) }} serving{{ day.servings === 1 ? '' : 's' }}</span>
-            <strong>{{ day.kcal.toLocaleString() }} kcal</strong>
-          </div>
+    <div class="food-logs-content">
+      <div class="food-logs-header-meta">
+        <div class="food-logs-range" role="tablist" aria-label="Logs date range">
+          <button
+            v-for="option in rangeOptions"
+            :key="option.value"
+            type="button"
+            role="tab"
+            :aria-selected="range === option.value"
+            :class="{ active: range === option.value }"
+            @click="range = option.value"
+          >
+            {{ option.label }}
+          </button>
         </div>
-      </section>
+        <div class="food-logs-summary-text">
+          {{ totalKcal.toLocaleString() }} kcal total
+        </div>
+      </div>
+
+      <div v-if="usage.length" class="food-logs-list" role="list">
+        <div v-for="day in usage" :key="day.date" class="food-log-item-row">
+          <button
+            type="button"
+            class="food-log-item-btn"
+            :title="`Jump to log for ${prettyDate(day.date)}`"
+            @click="navigateToLog(day.date)"
+          >
+            <div class="food-log-date-wrap">
+              <strong class="food-log-date">{{ prettyDate(day.date) }}</strong>
+              <small class="food-log-servings">
+                {{ formatServings(day.servings) }} serving{{ day.servings === 1 ? '' : 's' }}
+                &bull; Click to open log
+              </small>
+            </div>
+            <div class="food-log-right">
+              <span class="food-log-kcal">{{ day.kcal.toLocaleString() }} kcal</span>
+              <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </div>
+          </button>
+        </div>
+      </div>
+      <div v-else class="empty-note">
+        No logged servings found in this period.
+      </div>
     </div>
   </BaseModal>
 </template>
 
 <style scoped>
-:deep(.modal.food-stats-modal) {
+:deep(.modal.food-logs-modal) {
   display: flex;
   height: min(680px, calc(100dvh - 32px));
   flex-direction: column;
   overflow: hidden;
+  width: 480px;
 }
 
-.food-stats-content {
+.food-logs-content {
   display: flex;
   flex: 1;
   min-height: 0;
   flex-direction: column;
+  gap: 10px;
+}
+
+.food-logs-header-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 -26px 4px;
+  padding: 0 26px 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.food-logs-range {
+  display: flex;
   gap: 16px;
 }
 
-.food-stats-kcal {
-  display: flex;
-  align-items: baseline;
-  gap: 7px;
-  color: var(--ink-muted);
-}
-
-.food-stats-kcal strong {
-  color: var(--green);
-  font-size: 24px;
-}
-
-.food-stats-range {
-  display: flex;
-  gap: 20px;
-  margin: 0 0 16px;
-  padding: 0 0 8px;
-  overflow-x: auto;
-  border-bottom: 1px solid var(--line);
-  scrollbar-width: none;
-}
-
-.food-stats-range::-webkit-scrollbar {
-  display: none;
-}
-
-.food-stats-range button {
-  flex: 0 0 auto;
-  margin-bottom: -9px;
-  padding: 0 0 8px;
+.food-logs-range button {
+  padding: 4px 0;
   border: 0;
   border-bottom: 2px solid transparent;
-  border-radius: 0;
   background: transparent;
   color: var(--ink-muted);
   font-size: 12px;
@@ -148,106 +154,126 @@ function formatServings(value) {
   cursor: pointer;
 }
 
-.food-stats-range button.active {
-  background: transparent;
+.food-logs-range button.active {
   color: var(--green);
   border-bottom-color: var(--green);
-  box-shadow: none;
 }
 
-.food-stats-range button:focus-visible {
-  outline: 2px solid var(--green);
-  outline-offset: 2px;
+.food-logs-summary-text {
+  color: var(--ink-muted);
+  font-size: 12px;
 }
 
-.food-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1px;
-  overflow: hidden;
+.food-logs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-height: 0;
+  margin: 0 -26px;
+  padding: 0 26px;
+  overflow-y: auto;
+}
+
+.food-log-item-row {
+  width: 100%;
+}
+
+.food-log-item-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 13px;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: var(--line);
-}
-
-.food-stats-grid > div {
-  display: flex;
-  min-height: 72px;
-  flex-direction: column;
-  justify-content: center;
-  gap: 3px;
-  padding: 10px 12px;
   background: var(--surface);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.food-stats-grid strong {
-  font-size: 16px;
+.food-log-item-btn:hover,
+.food-log-item-btn:focus-visible {
+  background: var(--surface-alt);
+  border-color: var(--green-light);
+  color: var(--ink);
+  outline: none;
 }
 
-.food-stats-grid span,
-.food-stats-total {
+.food-log-date-wrap {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.food-log-date {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.food-log-servings {
+  margin-top: 3px;
   color: var(--ink-muted);
   font-size: 11px;
 }
 
-.food-stats-total {
-  text-align: right;
-}
-
-.food-stats-history {
+.food-log-right {
   display: flex;
-  min-height: 0;
-  flex: 1;
-  flex-direction: column;
-}
-
-.food-stats-history h3 {
-  flex: none;
-  margin-bottom: 8px;
-  font-size: 16px;
-}
-
-.food-stats-history-list {
-  min-height: 0;
-  border-top: 1px solid var(--line);
-  overflow-y: auto;
-}
-
-.food-stats-history-row {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr auto;
-  gap: 8px;
   align-items: center;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--line);
-  font-size: 12px;
+  gap: 8px;
+  flex: none;
 }
 
-.food-stats-history-row span:nth-child(2) {
+.food-log-kcal {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green-strong);
+}
+
+.chevron-icon {
+  width: 15px;
+  height: 15px;
   color: var(--ink-muted);
+  flex: none;
+  opacity: 0.6;
+}
+
+.food-log-item-btn:hover .chevron-icon {
+  color: var(--green-strong);
+  opacity: 1;
+}
+
+.empty-note {
+  padding: 32px 0;
+  color: var(--ink-muted);
+  text-align: center;
+  font-size: 13px;
 }
 
 @media (max-width: 480px) {
-  :deep(.modal.food-stats-modal) {
+  :deep(.modal.food-logs-modal) {
     height: 100dvh;
     max-height: 100dvh;
   }
 
-  .food-stats-range button {
-    font-size: 11px;
+  .food-logs-header-meta {
+    margin-right: -20px;
+    margin-left: -20px;
+    padding-right: 20px;
+    padding-left: 20px;
   }
 
-  .food-stats-history-row {
-    grid-template-columns: 1fr auto;
-  }
-
-  .food-stats-history-row strong {
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  .food-stats-history-row span:nth-child(2) {
-    grid-column: 1 / -1;
+  .food-logs-list {
+    margin-right: -20px;
+    margin-left: -20px;
+    padding-right: 20px;
+    padding-left: 20px;
   }
 }
 </style>
