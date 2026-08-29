@@ -6,6 +6,7 @@ export const Modals = Object.freeze({
   IMPORT_DATA: 'import-data',
   INGREDIENT_EDITOR: 'ingredient-editor',
   INGREDIENT_MANAGER: 'ingredient-manager',
+  INGREDIENT_FOODS: 'ingredient-foods',
   FOOD_EDITOR: 'food-editor',
   FOOD_NOTES: 'food-notes',
   FOOD_STATS: 'food-stats',

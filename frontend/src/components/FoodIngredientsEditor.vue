@@ -247,7 +247,15 @@ async function removeRow(ingredientId) {
                 <div class="combobox-dropdown-footer">
                     <button
                         type="button"
-                        class="combobox-manage-link"
+                        class="combobox-footer-action"
+                        @click="createNewIngredient(searchQuery.trim())"
+                    >
+                        <span class="footer-action-icon">＋</span>
+                        New ingredient
+                    </button>
+                    <button
+                        type="button"
+                        class="combobox-footer-action"
                         @click="isDropdownOpen = false; openModal(Modals.INGREDIENT_MANAGER)"
                     >
                         <svg class="manage-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
@@ -792,30 +800,40 @@ async function removeRow(ingredientId) {
 .combobox-dropdown-footer {
     position: sticky;
     bottom: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
     background: var(--surface);
     border-top: 1px solid var(--line);
     padding: 6px;
     z-index: 2;
 }
 
-.combobox-manage-link {
+.combobox-footer-action {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 5px;
     width: 100%;
-    padding: 6px 10px;
+    padding: 6px 8px;
     border: 0;
     border-radius: 6px;
     background: var(--surface-alt);
     color: var(--ink-muted);
     font-size: 11px;
     cursor: pointer;
+    white-space: nowrap;
 }
 
-.combobox-manage-link:hover {
+.combobox-footer-action:hover {
     color: var(--ink);
     background: color-mix(in srgb, var(--surface-alt) 80%, var(--line));
+}
+
+.footer-action-icon {
+    font-size: 13px;
+    line-height: 1;
+    color: var(--green-strong);
 }
 
 .manage-icon {

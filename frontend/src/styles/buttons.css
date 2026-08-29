@@ -1,4 +1,4 @@
-button {
+﻿button {
   font-family: 'Inter', sans-serif;
   cursor: pointer;
   border: none;
@@ -37,6 +37,15 @@ button {
 
 .btn-secondary:hover {
   background: rgba(255, 255, 255, 0.08);
+}
+
+.btn-danger {
+  background: var(--red);
+  color: #fff;
+}
+
+.btn-danger:hover {
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--red) 35%, transparent);
 }
 
 .btn-danger-outline {
