@@ -10,6 +10,7 @@ import ModalHost from './components/ModalHost.vue'
 import ConfirmModal from './components/ConfirmModal.vue'
 
 const swipeStart = ref(null)
+let normalViewportHeight = 0
 
 function flushOnHide() {
   if (document.visibilityState === 'hidden') flushSave()
@@ -18,9 +19,21 @@ function flushOnHide() {
 onMounted(() => {
   initAuth()
   document.addEventListener('visibilitychange', flushOnHide)
+  normalViewportHeight = window.visualViewport?.height || window.innerHeight
+  window.visualViewport?.addEventListener('resize', onViewportResize)
 })
 
-onUnmounted(() => document.removeEventListener('visibilitychange', flushOnHide))
+onUnmounted(() => {
+  document.removeEventListener('visibilitychange', flushOnHide)
+  window.visualViewport?.removeEventListener('resize', onViewportResize)
+})
+
+function onViewportResize() {
+  const viewportHeight = window.visualViewport?.height || window.innerHeight
+  if (viewportHeight > normalViewportHeight) normalViewportHeight = viewportHeight
+  if (viewportHeight < normalViewportHeight * 0.9) return
+  if (window.scrollY > 0) window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+}
 
 function shiftDay(amount) {
   const next = shiftDateStr(view.logDate, amount)

@@ -282,17 +282,21 @@ onUnmounted(() => {
   justify-content: center;
   width: 22px;
   height: 22px;
-  border: 1px solid var(--green);
+  z-index: 2;
+  border: 2px solid var(--green);
   border-radius: 50%;
-  background: var(--green-soft);
-  color: var(--green-strong);
+  background: var(--surface);
+  color: var(--green);
   font-size: 16px;
   line-height: 1;
   transform: translateY(-50%);
+  box-shadow: 0 2px 8px rgba(var(--shadow-rgb), 0.55);
+  pointer-events: none;
 }
 
 .dashboard-food-item.drag-over {
   position: relative;
+  z-index: 7;
 }
 
 .dashboard-food-item.drag-over :deep(.food-stepper) {
@@ -307,17 +311,20 @@ onUnmounted(() => {
   position: absolute;
   top: -24px;
   right: -5px;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 20px;
   height: 20px;
-  border: 1px solid var(--green);
+  border: 2px solid var(--green);
   border-radius: 50%;
-  background: var(--green-soft);
-  color: var(--green-strong);
+  background: var(--surface);
+  color: var(--green);
   font-size: 14px;
   line-height: 1;
+  box-shadow: 0 2px 8px rgba(var(--shadow-rgb), 0.55);
+  pointer-events: none;
 }
 
 .chip-group-header-name {
