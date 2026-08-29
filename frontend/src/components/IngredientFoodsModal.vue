@@ -70,11 +70,16 @@ function openFood(food) {
 
 <style scoped>
 :deep(.modal.ingredient-foods-modal) {
-  width: 440px;
+  display: flex;
+  height: min(680px, calc(100dvh - 32px));
+  flex-direction: column;
+  overflow: hidden;
+  width: 480px;
 }
 
 .ingredient-foods-content {
   display: flex;
+  flex: 1;
   flex-direction: column;
   min-height: 0;
 }
@@ -184,7 +189,16 @@ function openFood(food) {
 @media (max-width: 480px) {
   :deep(.modal.ingredient-foods-modal) {
     display: flex;
+    box-sizing: border-box;
+    width: 100vw;
+    max-width: none;
+    height: 100dvh;
+    max-height: 100dvh;
     flex-direction: column;
+    border-radius: 0;
+    padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .ingredient-foods-content {

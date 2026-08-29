@@ -419,6 +419,11 @@ async function removeIngredient(item) {
   border-radius: 12px;
 }
 
+.ingredient-manager-content > .empty-note {
+  flex: 1;
+  min-height: 0;
+}
+
 .ingredient-options {
   position: relative;
   flex: none;

@@ -53,7 +53,7 @@ function saveVariant() {
           :class="{ adjusted: Number(row.amount) !== baseAmounts.get(row.ingredientId) }">
           <span class="adjust-food-name">
             <span>{{ getIngredient(row.ingredientId)?.name || 'Unknown ingredient' }}</span>
-            <small>{{ Math.round(itemKcal({ ...row, amount: 1 })).toLocaleString() }} kcal</small>
+            <small>{{ Math.round(itemKcal(row)).toLocaleString() }} kcal</small>
           </span>
           <input v-model.number="row.amount" class="adjust-food-qty" type="number" min="0" step="any"
             :aria-label="`${getIngredient(row.ingredientId)?.name || 'Ingredient'} amount`"

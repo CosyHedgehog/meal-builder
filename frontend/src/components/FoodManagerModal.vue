@@ -1,7 +1,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import BaseModal from './BaseModal.vue'
-import { state as store, deleteFood, foodKcal, foodsInGroup } from '../js/data.js'
+import { state as store, deleteFood, foodKcal, foodsInGroup, archiveFood, restoreFood } from '../js/data.js'
 import { confirmAction } from '../js/confirm.js'
 import { openModal, replaceModal, Modals } from '../js/modals.js'
 
@@ -17,19 +17,35 @@ const sortOptions = [
   { value: 'logs', label: 'logs' },
 ]
 const sortMenuOpen = ref(false)
+const showArchived = ref(false)
 const groups = computed(() => store.groups)
 const groupNames = computed(() => new Map(groups.value.map((group) => [group.id, group.name])))
 const sortLabel = computed(() => sortOptions.find((option) => option.value === sortKey.value)?.label || 'calories')
-const foods = computed(() => selectedGroupId.value ? foodsInGroup(selectedGroupId.value) : store.foods)
+const activeFoods = computed(() => selectedGroupId.value ? foodsInGroup(selectedGroupId.value) : store.foods.filter((f) => !f.archived))
+const archivedFoods = computed(() => {
+  const base = selectedGroupId.value
+    ? store.foods.filter((f) => f.groupId === selectedGroupId.value && f.archived)
+    : store.foods.filter((f) => f.archived)
+  return base
+})
+const sourceFoods = computed(() => showArchived.value ? archivedFoods.value : activeFoods.value)
 const filteredFoods = computed(() => {
   const value = query.value.trim().toLowerCase()
-  const matchingFoods = value ? foods.value.filter((food) => food.name.toLowerCase().includes(value)) : foods.value
+  const matchingFoods = value ? sourceFoods.value.filter((food) => food.name.toLowerCase().includes(value)) : sourceFoods.value
   return [...matchingFoods].sort((first, second) => {
     if (sortKey.value === 'name') return first.name.localeCompare(second.name)
     if (sortKey.value === 'ingredients') return second.items.length - first.items.length
     if (sortKey.value === 'logs') return foodLogCount(second.id) - foodLogCount(first.id)
     return foodKcal(second) - foodKcal(first)
   })
+})
+const foodCountLabel = computed(() => {
+  const visibleCount = filteredFoods.value.length
+  const totalCount = sourceFoods.value.length
+  const foodLabel = totalCount === 1 ? 'food' : 'foods'
+  return visibleCount === totalCount
+    ? `Showing ${visibleCount} ${foodLabel}`
+    : `Showing ${visibleCount} of ${totalCount} ${foodLabel}`
 })
 const openOptionsFoodId = ref(null)
 const foodMenuPlacement = ref('down')
@@ -90,12 +106,20 @@ function openFoodStats(food) {
 }
 onMounted(() => document.addEventListener('click', closeFoodOptions))
 onBeforeUnmount(() => document.removeEventListener('click', closeFoodOptions))
+async function doArchiveFood(food) {
+  openOptionsFoodId.value = null
+  archiveFood(food.id)
+}
+async function doRestoreFood(food) {
+  openOptionsFoodId.value = null
+  restoreFood(food.id)
+}
 async function removeFood(food) {
   const logCount = foodLogCount(food.id)
   const message = logCount
-    ? `"${food.name}" is logged ${logCount} time${logCount === 1 ? '' : 's'}. Deleting it will remove those log entries and change your calorie history. Continue?`
-    : `Delete "${food.name}"?`
-  const ok = await confirmAction({ title: 'Delete food', message, okLabel: 'Delete food' })
+    ? `"${food.name}" is logged ${logCount} time${logCount === 1 ? '' : 's'}. Deleting it permanently will remove those log entries and change your calorie history. Continue?`
+    : `Permanently delete "${food.name}"? This cannot be undone.`
+  const ok = await confirmAction({ title: 'Delete food', message, okLabel: 'Delete permanently' })
   if (ok) deleteFood(food.id)
 }
 </script>
@@ -117,7 +141,24 @@ async function removeFood(food) {
         </label>
       </div>
       <div class="food-list-meta">
-        <div class="food-count">{{ filteredFoods.length }} food{{ filteredFoods.length === 1 ? '' : 's' }}</div>
+        <div class="food-archive-tabs">
+          <button
+            type="button"
+            class="food-archive-tab"
+            :class="{ active: !showArchived }"
+            @click="showArchived = false"
+          >Active</button>
+          <button
+            type="button"
+            class="food-archive-tab"
+            :class="{ active: showArchived }"
+            @click="showArchived = true"
+          >
+            Archived
+            <span v-if="archivedFoods.length" class="archive-badge">{{ archivedFoods.length }}</span>
+          </button>
+        </div>
+        <span class="food-list-count" aria-live="polite">{{ foodCountLabel }}</span>
         <div class="food-sort-control">
           <button
             class="food-sort-label"
@@ -147,7 +188,7 @@ async function removeFood(food) {
       <div v-if="filteredFoods.length" class="manager-list">
         <div v-for="item in filteredFoods" :key="item.id" class="manager-item-row">
           <div class="manager-item-wrap">
-            <button class="manager-item" type="button" @click="openEditor(item)">
+            <button class="manager-item" type="button" :class="{ 'is-archived': item.archived }" @click="!item.archived && openEditor(item)">
               <span>
                 <strong class="food-item-title">
                   {{ item.name }}
@@ -170,6 +211,7 @@ async function removeFood(food) {
                   <span v-if="!selectedGroupId" class="food-group-chip">
                     {{ groupNames.get(item.groupId) || 'Uncategorized' }}
                   </span>
+                  <span v-if="item.archived" class="food-archived-chip">Archived</span>
                 </strong>
                 <small>
                   {{ foodKcal(item).toLocaleString() }} kcal · {{ item.items.length ? `${item.items.length} ingredient${item.items.length === 1 ? '' : 's'}` : 'simple food' }}
@@ -194,42 +236,65 @@ async function removeFood(food) {
                 :class="{ 'food-options-menu-up': foodMenuPlacement === 'up' }"
                 role="menu"
               >
-                <button type="button" role="menuitem" @click.stop="openFoodStats(item)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                    <line x1="16" y1="2" x2="16" y2="6" />
-                    <line x1="8" y1="2" x2="8" y2="6" />
-                    <line x1="3" y1="10" x2="21" y2="10" />
-                  </svg>
-                  View logs
-                </button>
-                <button type="button" role="menuitem" @click.stop="openFoodNotes(item)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path d="M5 5h14v11H8l-3 3V5Z" />
-                    <path d="M8 9h8M8 12h5" />
-                  </svg>
-                  {{ item.note ? 'Edit notes' : 'Add notes' }}
-                </button>
-                <button type="button" role="menuitem" @click.stop="duplicateFood(item)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <rect x="8" y="8" width="11" height="11" rx="2" />
-                    <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
-                  </svg>
-                  Duplicate
-                </button>
-                <button class="delete-option" type="button" role="menuitem" @click.stop="openOptionsFoodId = null; removeFood(item)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
-                  </svg>
-                  Delete
-                </button>
+                <!-- Active food actions -->
+                <template v-if="!item.archived">
+                  <button type="button" role="menuitem" @click.stop="openFoodStats(item)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                    View logs
+                  </button>
+                  <button type="button" role="menuitem" @click.stop="openFoodNotes(item)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M5 5h14v11H8l-3 3V5Z" />
+                      <path d="M8 9h8M8 12h5" />
+                    </svg>
+                    {{ item.note ? 'Edit notes' : 'Add notes' }}
+                  </button>
+                  <button type="button" role="menuitem" @click.stop="duplicateFood(item)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <rect x="8" y="8" width="11" height="11" rx="2" />
+                      <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+                    </svg>
+                    Duplicate
+                  </button>
+                  <button class="archive-option" type="button" role="menuitem" @click.stop="doArchiveFood(item)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polyline points="21 8 21 21 3 21 3 8" />
+                      <rect x="1" y="3" width="22" height="5" />
+                      <line x1="10" y1="12" x2="14" y2="12" />
+                    </svg>
+                    Archive
+                  </button>
+                </template>
+                <!-- Archived food actions -->
+                <template v-else>
+                  <button type="button" role="menuitem" @click.stop="doRestoreFood(item)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polyline points="1 4 1 10 7 10" />
+                      <path d="M3.51 15a9 9 0 1 0 .49-3.5" />
+                    </svg>
+                    Restore
+                  </button>
+                  <button class="delete-option" type="button" role="menuitem" @click.stop="openOptionsFoodId = null; removeFood(item)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+                    </svg>
+                    Delete
+                  </button>
+                </template>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div v-else class="empty-note">No foods match that search.</div>
-      <div class="food-manager-actions">
+      <div v-else class="empty-note">
+        {{ showArchived ? 'No archived foods.' : 'No foods match that search.' }}
+      </div>
+      <div v-if="!showArchived" class="food-manager-actions">
         <button class="btn btn-primary btn-full" type="button" @click="openEditor()">＋ New food</button>
       </div>
     </div>
@@ -300,9 +365,63 @@ async function removeFood(food) {
   border-bottom: 1px solid var(--line);
 }
 
-.food-count {
+.food-archive-tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.food-archive-tab {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 11px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
   color: var(--ink-muted);
   font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.food-archive-tab.active {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.archive-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 20px;
+  background: var(--ink-muted);
+  color: var(--surface);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.food-archive-tab.active .archive-badge {
+  background: var(--red);
+}
+
+.food-list-count {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink-muted);
+  font-size: 11px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .food-sort-label {
@@ -405,6 +524,11 @@ async function removeFood(food) {
   border-radius: 12px;
 }
 
+.food-manager-content > .empty-note {
+  flex: 1;
+  min-height: 0;
+}
+
 .food-options {
   position: relative;
   flex: none;
@@ -473,6 +597,28 @@ async function removeFood(food) {
   letter-spacing: 0.04em;
   line-height: 1;
   text-transform: uppercase;
+}
+
+.food-archived-chip {
+  flex: none;
+  padding: 3px 6px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--ink-muted) 14%, transparent);
+  color: var(--ink-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.manager-item.is-archived {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.archive-option {
+  color: var(--ink-muted);
 }
 
 .food-note-indicator {
@@ -604,6 +750,17 @@ async function removeFood(food) {
   .food-filters {
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 7px;
+  }
+
+  .food-list-meta {
+    flex-wrap: wrap;
+  }
+
+  .food-list-count {
+    order: 3;
+    flex-basis: 100%;
+    padding-top: 2px;
+    text-align: left;
   }
 
   .manager-filter,

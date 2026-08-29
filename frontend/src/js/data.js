@@ -343,7 +343,49 @@ export function visibleGroups() {
 }
 
 export function foodsInGroup(groupId) {
-  return state.foods.filter((f) => f.groupId === groupId)
+  return state.foods.filter((f) => f.groupId === groupId && !f.archived)
+}
+
+export function reorderGroups(groupId, targetGroupId) {
+  if (!groupId || !targetGroupId || groupId === targetGroupId) return
+  const fromIndex = state.groups.findIndex((group) => group.id === groupId)
+  const targetIndex = state.groups.findIndex((group) => group.id === targetGroupId)
+  if (fromIndex === -1 || targetIndex === -1) return
+  const moved = state.groups[fromIndex]
+  state.groups[fromIndex] = state.groups[targetIndex]
+  state.groups[targetIndex] = moved
+  save()
+}
+
+export function reorderFoodWithinGroup(foodId, targetFoodId) {
+  if (!foodId || !targetFoodId || foodId === targetFoodId) return
+  const food = getFood(foodId)
+  const targetFood = getFood(targetFoodId)
+  if (!food || !targetFood || food.groupId !== targetFood.groupId) return
+  const groupIndexes = state.foods
+    .map((item, index) => item.groupId === food.groupId && !item.archived ? index : -1)
+    .filter((index) => index !== -1)
+  const fromIndex = state.foods.findIndex((item) => item.id === foodId)
+  const targetIndex = state.foods.findIndex((item) => item.id === targetFoodId)
+  if (!groupIndexes.includes(fromIndex) || !groupIndexes.includes(targetIndex)) return
+  const moved = state.foods[fromIndex]
+  state.foods[fromIndex] = state.foods[targetIndex]
+  state.foods[targetIndex] = moved
+  save()
+}
+
+export function archiveFood(id) {
+  const food = state.foods.find((f) => f.id === id)
+  if (!food) return
+  food.archived = true
+  save()
+}
+
+export function restoreFood(id) {
+  const food = state.foods.find((f) => f.id === id)
+  if (!food) return
+  food.archived = false
+  save()
 }
 
 export function getLog(dateStr) {

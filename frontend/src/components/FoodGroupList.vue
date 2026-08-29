@@ -1,8 +1,8 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import FoodQuantityStepper from './FoodQuantityStepper.vue'
-import { state as store, addLogFood, bumpLogEntry, setLogEntryQty, logEntries, foodsInGroup, foodKcal, entryFoodKcal } from '../js/data.js'
-import { view, getCollapseState, setCollapseState } from '../js/ui.js'
+import { state as store, addLogFood, bumpLogEntry, setLogEntryQty, logEntries, foodsInGroup, foodKcal, entryFoodKcal, reorderFoodWithinGroup, reorderGroups } from '../js/data.js'
+import { view, getCollapseState, setCollapseState, clearDragState } from '../js/ui.js'
 import { Modals, openModal } from '../js/modals.js'
 
 const props = defineProps({ group: { type: Object, required: true }, log: { type: Object, required: true }, locked: { type: Boolean, default: false }, activeStepperId: { type: String, default: null } })
@@ -11,9 +11,19 @@ const showAll = ref(false)
 const collapsed = ref(getCollapseState(`group:${props.group.id}`))
 const foods = computed(() => foodsInGroup(props.group.id))
 const entries = computed(() => logEntries(props.log).filter((entry) => entry.groupId === props.group.id))
-const displayFoods = computed(() => foods.value)
+// Also show archived foods that are already logged today so the user can still see/adjust them
+const loggedFoodIds = computed(() => new Set(entries.value.map((e) => e.foodId)))
+const displayFoods = computed(() => {
+  const active = foods.value
+  const archivedButLogged = store.foods.filter(
+    (f) => f.archived && f.groupId === props.group.id && loggedFoodIds.value.has(f.id)
+  )
+  return [...active, ...archivedButLogged]
+})
 const visibleFoods = computed(() => showAll.value ? displayFoods.value : displayFoods.value.slice(0, 20))
 const hasMore = computed(() => !showAll.value && visibleFoods.value.length < displayFoods.value.length)
+const pendingDrag = { type: '', id: '', pointerId: null, startX: 0, startY: 0, active: false }
+let suppressClickCleanup = null
 
 function entryFor(foodId) {
   return entries.value.find((entry) => entry.foodId === foodId)
@@ -36,15 +46,97 @@ function toggleCollapsed() {
 function toggleStepper(stepperId, isOpen) {
   emit('update:activeStepperId', isOpen ? stepperId : null)
 }
+
+function startPointerDrag(event, type, id) {
+  if (event.button !== 0) return
+  pendingDrag.type = type
+  pendingDrag.id = id
+  pendingDrag.pointerId = event.pointerId
+  pendingDrag.startX = event.clientX
+  pendingDrag.startY = event.clientY
+  pendingDrag.active = false
+}
+
+function handlePointerMove(event) {
+  if (event.pointerId !== pendingDrag.pointerId || !pendingDrag.type) return
+  const distance = Math.hypot(event.clientX - pendingDrag.startX, event.clientY - pendingDrag.startY)
+  if (!pendingDrag.active && distance < 8) return
+  if (!pendingDrag.active) {
+    pendingDrag.active = true
+    view.dragType = pendingDrag.type
+    if (pendingDrag.type === 'group') view.draggedGroupId = pendingDrag.id
+    else view.draggedFoodId = pendingDrag.id
+  }
+  event.preventDefault()
+  const target = document.elementFromPoint(event.clientX, event.clientY)
+  if (pendingDrag.type === 'group') {
+    view.draggedOverGroupId = target?.closest('[data-group-id]')?.dataset.groupId || ''
+  } else {
+    view.draggedOverFoodId = target?.closest('[data-food-id]')?.dataset.foodId || ''
+  }
+}
+
+function handlePointerUp(event) {
+  if (event.pointerId !== pendingDrag.pointerId) return
+  if (pendingDrag.active) {
+    const targetId = pendingDrag.type === 'group' ? view.draggedOverGroupId : view.draggedOverFoodId
+    if (pendingDrag.type === 'group') reorderGroups(pendingDrag.id, targetId)
+    else reorderFoodWithinGroup(pendingDrag.id, targetId)
+    suppressClickCleanup?.()
+    const suppressClick = (clickEvent) => {
+      const dashboardTarget = clickEvent.target.closest?.('.dashboard-food-item, .group-header-main')
+      if (!dashboardTarget) {
+        suppressClickCleanup?.()
+        return
+      }
+      clickEvent.preventDefault()
+      clickEvent.stopPropagation()
+      suppressClickCleanup?.()
+    }
+    const timeoutId = setTimeout(() => suppressClickCleanup?.(), 0)
+    suppressClickCleanup = () => {
+      clearTimeout(timeoutId)
+      document.removeEventListener('click', suppressClick, true)
+      suppressClickCleanup = null
+    }
+    document.addEventListener('click', suppressClick, true)
+  }
+  pendingDrag.type = ''
+  pendingDrag.id = ''
+  pendingDrag.pointerId = null
+  pendingDrag.active = false
+  clearDragState()
+}
+
+function cancelPointerDrag() {
+  if (pendingDrag.active) clearDragState()
+  pendingDrag.type = ''
+  pendingDrag.id = ''
+  pendingDrag.pointerId = null
+  pendingDrag.active = false
+}
+
+onMounted(() => {
+  document.addEventListener('pointermove', handlePointerMove, { passive: false })
+  document.addEventListener('pointerup', handlePointerUp)
+  document.addEventListener('pointercancel', cancelPointerDrag)
+})
+
+onUnmounted(() => {
+  suppressClickCleanup?.()
+  document.removeEventListener('pointermove', handlePointerMove)
+  document.removeEventListener('pointerup', handlePointerUp)
+  document.removeEventListener('pointercancel', cancelPointerDrag)
+})
 </script>
 
 <template>
   <div class="today-chips">
-    <div class="chip-group" :class="{ 'dashboard-locked': locked }">
+    <div class="chip-group" :data-group-id="group.id" :class="{ 'dashboard-locked': locked, dragging: view.draggedGroupId === group.id, 'drag-over': view.draggedOverGroupId === group.id && view.draggedGroupId !== group.id }">
       <div
         class="chip-group-header"
       >
-        <span class="group-header-main">
+        <span class="group-header-main" :class="{ 'dashboard-draggable': !locked }" @pointerdown="!locked && startPointerDrag($event, 'group', group.id)">
           <i class="group-header-swatch" :class="`group-${store.groups.findIndex((item) => item.id === group.id) % 5}`"></i>
           <span
             class="chip-group-header-name"
@@ -67,6 +159,7 @@ function toggleStepper(stepperId, isOpen) {
             class="group-add-food-button"
             :aria-label="`Add food to ${group.name}`"
             :title="`Add food to ${group.name}`"
+            @pointerdown.stop
             @click.stop="openModal(Modals.FOOD_EDITOR, { groupId: group.id })"
           >+</button>
         </span>
@@ -90,7 +183,8 @@ function toggleStepper(stepperId, isOpen) {
             />
           </div>
           <template v-for="food in visibleFoods" :key="food.id">
-            <div class="dashboard-food-item" :class="{ active: props.activeStepperId === `food-${food.id}` }">
+            <div class="dashboard-food-item" :data-food-id="food.id" :class="{ active: props.activeStepperId === `food-${food.id}`, dragging: view.draggedFoodId === food.id, 'drag-over': view.draggedOverFoodId === food.id }"
+              @pointerdown="startPointerDrag($event, 'food', food.id)">
               <FoodQuantityStepper
                 :name="food.name"
                 :quantity="entryFor(food.id)?.qty || 0"
@@ -146,6 +240,74 @@ function toggleStepper(stepperId, isOpen) {
   display: inline-flex;
   align-items: center;
   cursor: pointer;
+}
+
+.group-header-main.dashboard-draggable,
+.dashboard-food-item {
+  cursor: grab;
+  touch-action: none;
+}
+
+.group-header-main.dashboard-draggable:active,
+.dashboard-food-item:active {
+  cursor: grabbing;
+}
+
+.chip-group.dragging,
+.dashboard-food-item.dragging {
+  opacity: 0.45;
+}
+
+.chip-group.drag-over .chip-group-header {
+  color: var(--green-strong);
+}
+
+.chip-group.drag-over .chip-group-header::after {
+  content: '⇄';
+  position: absolute;
+  top: 50%;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--green);
+  border-radius: 50%;
+  background: var(--green-soft);
+  color: var(--green-strong);
+  font-size: 16px;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+
+.dashboard-food-item.drag-over {
+  position: relative;
+}
+
+.dashboard-food-item.drag-over :deep(.food-stepper) {
+  outline: 2px dashed var(--green);
+  outline-offset: 0;
+  background: color-mix(in srgb, var(--green-soft) 70%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--green) 28%, transparent);
+}
+
+.dashboard-food-item.drag-over::after {
+  content: '⇄';
+  position: absolute;
+  top: -24px;
+  right: -5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--green);
+  border-radius: 50%;
+  background: var(--green-soft);
+  color: var(--green-strong);
+  font-size: 14px;
+  line-height: 1;
 }
 
 .chip-group-header-name {
