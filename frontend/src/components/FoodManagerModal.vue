@@ -186,7 +186,9 @@ async function removeFood(food) {
               aria-label="Sort foods by"
               @click.stop="toggleSortMenu"
             >
-              <span class="food-sort-icon" aria-hidden="true">≡</span>
+              <svg class="food-sort-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M4 6h16M4 12h10M4 18h6" />
+              </svg>
               <span>Sorted by {{ sortLabel }}</span>
             </button>
             <div v-if="sortMenuOpen" class="food-sort-menu" role="listbox" aria-label="Sort foods by">
@@ -410,11 +412,10 @@ async function removeFood(food) {
   white-space: nowrap;
 }
 
-.food-sort-icon {
+.food-sort-svg {
+  width: 14px;
+  height: 14px;
   color: var(--green);
-  font-size: 15px;
-  line-height: 1;
-  transform: rotate(90deg);
 }
 
 .food-sort-control {
