@@ -170,11 +170,35 @@ async function removeFood(food) {
               aria-label="Filter foods by status"
               @click.stop="toggleArchiveMenu"
             >
-              <span>{{ showArchived ? `Archived (${archivedFoods.length})` : 'Active' }}</span>
+              <svg v-if="!showArchived" class="food-status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" />
+                <path d="m8 12 2.5 2.5L16 9" />
+              </svg>
+              <svg v-else class="food-status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 6h18" />
+                <path d="M5 6v14h14V6" />
+                <path d="M8 6V4h8v2" />
+                <path d="M9 10h6" />
+              </svg>
+              <span>{{ showArchived ? 'Archived' : 'Active' }}</span>
             </button>
             <div v-if="archiveMenuOpen" class="food-sort-menu" role="listbox" aria-label="Filter foods by status">
-              <button type="button" role="option" :aria-selected="!showArchived" @click.stop="chooseArchive('active')">Active</button>
-              <button type="button" role="option" :aria-selected="showArchived" @click.stop="chooseArchive('archived')">Archived ({{ archivedFoods.length }})</button>
+              <button type="button" role="option" :aria-selected="!showArchived" @click.stop="chooseArchive('active')">
+                <svg class="food-status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="m8 12 2.5 2.5L16 9" />
+                </svg>
+                Active
+              </button>
+              <button type="button" role="option" :aria-selected="showArchived" @click.stop="chooseArchive('archived')">
+                <svg class="food-status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M3 6h18" />
+                  <path d="M5 6v14h14V6" />
+                  <path d="M8 6V4h8v2" />
+                  <path d="M9 10h6" />
+                </svg>
+                Archived
+              </button>
             </div>
           </div>
           <div class="food-sort-control">
@@ -465,7 +489,9 @@ async function removeFood(food) {
 }
 
 .food-sort-menu button {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   width: 100%;
   border: 0;
   border-radius: 7px;
@@ -474,6 +500,13 @@ async function removeFood(food) {
   color: var(--ink);
   font-size: 12px;
   text-align: left;
+}
+
+.food-status-icon {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--green);
 }
 
 .food-sort-menu button:hover,
