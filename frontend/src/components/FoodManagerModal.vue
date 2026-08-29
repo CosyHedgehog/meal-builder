@@ -17,6 +17,7 @@ const sortOptions = [
   { value: 'logs', label: 'logs' },
 ]
 const sortMenuOpen = ref(false)
+const archiveMenuOpen = ref(false)
 const showArchived = ref(false)
 const groups = computed(() => store.groups)
 const groupNames = computed(() => new Map(groups.value.map((group) => [group.id, group.name])))
@@ -77,17 +78,28 @@ function toggleFoodOptions(foodId) {
   if (openOptionsFoodId.value === foodId) updateFoodMenuPlacement(foodId)
 }
 function toggleSortMenu() {
+  archiveMenuOpen.value = false
   sortMenuOpen.value = !sortMenuOpen.value
 }
 function chooseSort(value) {
   sortKey.value = value
   sortMenuOpen.value = false
 }
+function toggleArchiveMenu() {
+  sortMenuOpen.value = false
+  archiveMenuOpen.value = !archiveMenuOpen.value
+}
+function chooseArchive(value) {
+  showArchived.value = value === 'archived'
+  archiveMenuOpen.value = false
+}
 function closeFoodOptions(event) {
   if (event.target.closest('.food-options')) return
   if (event.target.closest('.food-sort-control')) return
+  if (event.target.closest('.food-archive-control')) return
   openOptionsFoodId.value = null
   sortMenuOpen.value = false
+  archiveMenuOpen.value = false
   foodMenuPlacement.value = 'down'
 }
 function duplicateFood(food) {
@@ -108,7 +120,13 @@ onMounted(() => document.addEventListener('click', closeFoodOptions))
 onBeforeUnmount(() => document.removeEventListener('click', closeFoodOptions))
 async function doArchiveFood(food) {
   openOptionsFoodId.value = null
-  archiveFood(food.id)
+  const ok = await confirmAction({
+    title: 'Archive food?',
+    message: `"${food.name}" will be removed from the active food list and be hidden from the dashboard unless it is already selected. Previous log entries will remain intact. Continue?`,
+    okLabel: 'Archive',
+    okClass: 'btn-primary',
+  })
+  if (ok) archiveFood(food.id)
 }
 async function doRestoreFood(food) {
   openOptionsFoodId.value = null
@@ -141,47 +159,48 @@ async function removeFood(food) {
         </label>
       </div>
       <div class="food-list-meta">
-        <div class="food-archive-tabs">
-          <button
-            type="button"
-            class="food-archive-tab"
-            :class="{ active: !showArchived }"
-            @click="showArchived = false"
-          >Active</button>
-          <button
-            type="button"
-            class="food-archive-tab"
-            :class="{ active: showArchived }"
-            @click="showArchived = true"
-          >
-            Archived
-            <span v-if="archivedFoods.length" class="archive-badge">{{ archivedFoods.length }}</span>
-          </button>
-        </div>
         <span class="food-list-count" aria-live="polite">{{ foodCountLabel }}</span>
-        <div class="food-sort-control">
-          <button
-            class="food-sort-label"
-            type="button"
-            aria-haspopup="listbox"
-            :aria-expanded="sortMenuOpen"
-            aria-label="Sort foods by"
-            @click.stop="toggleSortMenu"
-          >
-          <span class="food-sort-icon" aria-hidden="true">≡</span>
-            <span>Sorted by {{ sortLabel }}</span>
-          </button>
-          <div v-if="sortMenuOpen" class="food-sort-menu" role="listbox" aria-label="Sort foods by">
+        <div class="food-list-controls">
+          <div class="food-sort-control food-archive-control">
             <button
-              v-for="option in sortOptions"
-              :key="option.value"
+              class="food-sort-label"
               type="button"
-              role="option"
-              :aria-selected="sortKey === option.value"
-              @click.stop="chooseSort(option.value)"
+              aria-haspopup="listbox"
+              :aria-expanded="archiveMenuOpen"
+              aria-label="Filter foods by status"
+              @click.stop="toggleArchiveMenu"
             >
-              Sorted by {{ option.label }}
+              <span>{{ showArchived ? `Archived (${archivedFoods.length})` : 'Active' }}</span>
             </button>
+            <div v-if="archiveMenuOpen" class="food-sort-menu" role="listbox" aria-label="Filter foods by status">
+              <button type="button" role="option" :aria-selected="!showArchived" @click.stop="chooseArchive('active')">Active</button>
+              <button type="button" role="option" :aria-selected="showArchived" @click.stop="chooseArchive('archived')">Archived ({{ archivedFoods.length }})</button>
+            </div>
+          </div>
+          <div class="food-sort-control">
+            <button
+              class="food-sort-label"
+              type="button"
+              aria-haspopup="listbox"
+              :aria-expanded="sortMenuOpen"
+              aria-label="Sort foods by"
+              @click.stop="toggleSortMenu"
+            >
+              <span class="food-sort-icon" aria-hidden="true">≡</span>
+              <span>Sorted by {{ sortLabel }}</span>
+            </button>
+            <div v-if="sortMenuOpen" class="food-sort-menu" role="listbox" aria-label="Sort foods by">
+              <button
+                v-for="option in sortOptions"
+                :key="option.value"
+                type="button"
+                role="option"
+                :aria-selected="sortKey === option.value"
+                @click.stop="chooseSort(option.value)"
+              >
+                Sorted by {{ option.label }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -365,55 +384,6 @@ async function removeFood(food) {
   border-bottom: 1px solid var(--line);
 }
 
-.food-archive-tabs {
-  display: flex;
-  gap: 2px;
-  background: var(--surface-alt);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 3px;
-}
-
-.food-archive-tab {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 11px;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--ink-muted);
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.12s, color 0.12s;
-}
-
-.food-archive-tab.active {
-  background: var(--surface);
-  color: var(--ink);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-}
-
-.archive-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 17px;
-  height: 17px;
-  padding: 0 4px;
-  border-radius: 20px;
-  background: var(--ink-muted);
-  color: var(--surface);
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.food-archive-tab.active .archive-badge {
-  background: var(--red);
-}
-
 .food-list-count {
   min-width: 0;
   overflow: hidden;
@@ -422,6 +392,13 @@ async function removeFood(food) {
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.food-list-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
 }
 
 .food-sort-label {
@@ -753,14 +730,19 @@ async function removeFood(food) {
   }
 
   .food-list-meta {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    gap: 8px;
   }
 
   .food-list-count {
-    order: 3;
-    flex-basis: 100%;
+    flex: 1 1 auto;
     padding-top: 2px;
     text-align: left;
+  }
+
+  .food-list-controls {
+    flex: none;
+    gap: 8px;
   }
 
   .manager-filter,
