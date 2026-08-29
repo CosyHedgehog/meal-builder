@@ -16,6 +16,7 @@ const activityFilterOptions = [
   { value: 'me', label: 'Me' },
   { value: 'others', label: 'Others' },
 ]
+const activitySwipeStart = ref(null)
 
 const filteredActivity = computed(() => {
   if (activityFilter.value === 'me') return activity.value.filter((item) => item.username === auth.user?.username)
@@ -56,6 +57,23 @@ function toggleActivity(item) {
   expandedActivity.value = expandedActivity.value === key ? null : key
 }
 
+function onActivityTouchStart(event) {
+  const touch = event.changedTouches[0]
+  activitySwipeStart.value = { x: touch.clientX, y: touch.clientY }
+}
+
+function onActivityTouchEnd(event) {
+  if (!activitySwipeStart.value) return
+  const touch = event.changedTouches[0]
+  const deltaX = touch.clientX - activitySwipeStart.value.x
+  const deltaY = touch.clientY - activitySwipeStart.value.y
+  activitySwipeStart.value = null
+  if (Math.abs(deltaX) < 50 || Math.abs(deltaX) <= Math.abs(deltaY)) return
+  const currentIndex = activityFilterOptions.findIndex((option) => option.value === activityFilter.value)
+  const nextIndex = Math.max(0, Math.min(activityFilterOptions.length - 1, currentIndex + (deltaX < 0 ? 1 : -1)))
+  activityFilter.value = activityFilterOptions[nextIndex].value
+}
+
 async function loadFeed() {
   loading.value = true
   error.value = ''
@@ -81,7 +99,8 @@ watch(
 
 <template>
   <BaseModal title="Activity" subtitle="Recent activity from you and people you follow"
-    panel-class="activity-modal" @close="emit('close')">
+    panel-class="activity-modal" :on-touch-start="onActivityTouchStart" :on-touch-end="onActivityTouchEnd"
+    @close="emit('close')">
     <div class="activity-filter-selector" role="tablist" aria-label="Activity filter">
       <button v-for="option in activityFilterOptions" :key="option.value" type="button" role="tab"
         :aria-selected="activityFilter === option.value" :class="{ active: activityFilter === option.value }"
