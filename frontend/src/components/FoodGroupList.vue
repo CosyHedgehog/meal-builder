@@ -248,6 +248,12 @@ onUnmounted(() => {
 .dashboard-food-item {
   cursor: grab;
   touch-action: none;
+}
+
+.group-header-main.dashboard-draggable,
+.dashboard-food-item,
+.dashboard-food-item .today-chip,
+.today-chip.chip-add {
   user-select: none;
   -webkit-user-select: none;
 }
