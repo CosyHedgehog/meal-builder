@@ -1,6 +1,6 @@
 <script setup>
-import { computed, nextTick } from 'vue'
-import { getIngredient, itemKcal } from '../js/data.js'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { state as store, getIngredient, itemKcal } from '../js/data.js'
 import { Modals, openModal } from '../js/modals.js'
 import { confirmAction } from '../js/confirm.js'
 
@@ -9,6 +9,11 @@ const props = defineProps({
 })
 
 const ingredientQuantityInputs = new Map()
+const searchQuery = ref('')
+const isDropdownOpen = ref(false)
+const highlightedIndex = ref(-1)
+const searchInputRef = ref(null)
+const comboboxRef = ref(null)
 
 const usedIds = computed(() => new Set(props.draft.items.map((item) => item.ingredientId)))
 const ingredientRows = computed(() => props.draft.items.map((item) => ({
@@ -20,18 +25,111 @@ const totalKcal = computed(() => props.draft.items.length
     ? Math.round(props.draft.items.reduce((sum, item) => sum + itemKcal(item), 0))
     : Math.round(Number(props.draft.kcal) || 0))
 
+const filteredIngredients = computed(() => {
+    const q = searchQuery.value.trim().toLowerCase()
+    return store.ingredients.filter((ingredient) => (
+        !usedIds.value.has(ingredient.id)
+        && (!q || ingredient.name.toLowerCase().includes(q))
+    ))
+})
+
+const canCreateNew = computed(() => {
+    const q = searchQuery.value.trim()
+    if (!q) return false
+    const lower = q.toLowerCase()
+    return !store.ingredients.some((i) => i.name.toLowerCase() === lower)
+})
+
+// Options for keyboard navigation: filtered ingredients + (optional create new)
+const dropdownOptions = computed(() => {
+    const items = filteredIngredients.value.map((ing) => ({ type: 'ingredient', item: ing }))
+    if (canCreateNew.value) {
+        items.push({ type: 'create', name: searchQuery.value.trim() })
+    }
+    return items
+})
+
 async function selectIngredient(ingredientId) {
-    props.draft.items.push({ ingredientId, amount: 1 })
+    if (!props.draft.items.some((item) => item.ingredientId === ingredientId)) {
+        props.draft.items.push({ ingredientId, amount: 1 })
+    }
+    searchQuery.value = ''
+    isDropdownOpen.value = false
+    highlightedIndex.value = -1
     await nextTick()
     ingredientQuantityInputs.get(ingredientId)?.focus()
 }
 
-function openIngredientPicker() {
-    openModal(Modals.INGREDIENT_PICKER, {
-        excludedIds: [...usedIds.value],
-        onSelect: selectIngredient,
+function createNewIngredient(name = searchQuery.value.trim()) {
+    isDropdownOpen.value = false
+    openModal(Modals.INGREDIENT_EDITOR, {
+        initialName: name,
+        onCreated: (createdId) => {
+            selectIngredient(createdId)
+        },
     })
 }
+
+function handleOptionSelect(opt) {
+    if (!opt) return
+    if (opt.type === 'ingredient') {
+        selectIngredient(opt.item.id)
+    } else if (opt.type === 'create') {
+        createNewIngredient(opt.name)
+    }
+}
+
+function onSearchFocus() {
+    isDropdownOpen.value = true
+}
+
+function onSearchInput() {
+    isDropdownOpen.value = true
+    highlightedIndex.value = 0
+}
+
+function onSearchKeydown(e) {
+    if (!isDropdownOpen.value && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+        isDropdownOpen.value = true
+        return
+    }
+    if (!isDropdownOpen.value) return
+
+    if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        if (dropdownOptions.value.length > 0) {
+            highlightedIndex.value = (highlightedIndex.value + 1) % dropdownOptions.value.length
+        }
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        if (dropdownOptions.value.length > 0) {
+            highlightedIndex.value = (highlightedIndex.value - 1 + dropdownOptions.value.length) % dropdownOptions.value.length
+        }
+    } else if (e.key === 'Enter') {
+        e.preventDefault()
+        if (highlightedIndex.value >= 0 && highlightedIndex.value < dropdownOptions.value.length) {
+            handleOptionSelect(dropdownOptions.value[highlightedIndex.value])
+        } else if (dropdownOptions.value.length > 0) {
+            handleOptionSelect(dropdownOptions.value[0])
+        }
+    } else if (e.key === 'Escape') {
+        isDropdownOpen.value = false
+    }
+}
+
+function handleClickOutside(event) {
+    if (comboboxRef.value && !comboboxRef.value.contains(event.target)) {
+        isDropdownOpen.value = false
+    }
+}
+
+onMounted(() => {
+    document.addEventListener('pointerdown', handleClickOutside)
+})
+
+onUnmounted(() => {
+    document.removeEventListener('pointerdown', handleClickOutside)
+})
 
 function setIngredientQuantityInput(ingredientId, element) {
     if (element) ingredientQuantityInputs.set(ingredientId, element)
@@ -62,8 +160,8 @@ async function removeRow(ingredientId) {
         </div>
         <div class="food-ingredients-list-container" :class="{ empty: !draft.items.length }">
             <div v-if="!draft.items.length" class="food-ingredients-empty" aria-live="polite">
-                <strong>No ingredients selected</strong>
-                <span>Choose an ingredient below to build this food.</span>
+                <strong>No ingredients added</strong>
+                <span>Search or type an ingredient below to add it.</span>
             </div>
             <div class="ingredient-list">
                 <div v-for="row in ingredientRows" :key="row.item.ingredientId" class="ingredient-row">
@@ -87,9 +185,81 @@ async function removeRow(ingredientId) {
                 </div>
             </div>
         </div>
-        <button class="add-ingredient-trigger" type="button" @click="openIngredientPicker">
-            <span aria-hidden="true">＋</span> Add ingredient
-        </button>
+
+        <div ref="comboboxRef" class="ingredient-combobox">
+            <div class="combobox-input-wrap">
+                <span class="combobox-search-icon" aria-hidden="true">🔍</span>
+                <input
+                    ref="searchInputRef"
+                    v-model="searchQuery"
+                    type="text"
+                    class="combobox-input"
+                    placeholder="Search or add ingredient..."
+                    autocomplete="off"
+                    @focus="onSearchFocus"
+                    @input="onSearchInput"
+                    @keydown="onSearchKeydown"
+                />
+                <button
+                    v-if="searchQuery"
+                    type="button"
+                    class="combobox-clear-btn"
+                    aria-label="Clear search"
+                    @click="searchQuery = ''; searchInputRef?.focus()"
+                >×</button>
+            </div>
+
+            <div v-if="isDropdownOpen" class="combobox-dropdown" role="listbox">
+                <div v-if="dropdownOptions.length === 0" class="combobox-empty">
+                    <span>No ingredients found</span>
+                </div>
+
+                <template v-for="(opt, idx) in dropdownOptions" :key="opt.type === 'ingredient' ? opt.item.id : 'create-new'">
+                    <button
+                        v-if="opt.type === 'ingredient'"
+                        type="button"
+                        class="combobox-option"
+                        :class="{ 'is-highlighted': highlightedIndex === idx }"
+                        role="option"
+                        @click="handleOptionSelect(opt)"
+                        @mouseenter="highlightedIndex = idx"
+                    >
+                        <span class="option-name">{{ opt.item.name }}</span>
+                        <span class="option-meta">{{ opt.item.kcal }} kcal {{ opt.item.unit === 'g' ? '/ 100g' : '/ item' }}</span>
+                    </button>
+
+                    <button
+                        v-else-if="opt.type === 'create'"
+                        type="button"
+                        class="combobox-option combobox-create-option"
+                        :class="{ 'is-highlighted': highlightedIndex === idx }"
+                        role="option"
+                        @click="handleOptionSelect(opt)"
+                        @mouseenter="highlightedIndex = idx"
+                    >
+                        <span class="option-name">
+                            <strong class="create-badge">＋ Create</strong> "{{ opt.name }}"
+                        </span>
+                        <span class="option-meta">New ingredient</span>
+                    </button>
+                </template>
+
+                <div class="combobox-dropdown-footer">
+                    <button
+                        type="button"
+                        class="combobox-manage-link"
+                        @click="isDropdownOpen = false; openModal(Modals.INGREDIENT_MANAGER)"
+                    >
+                        <svg class="manage-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                            <path d="M4 7h16M4 17h16" />
+                            <circle cx="9" cy="7" r="2" />
+                            <circle cx="15" cy="17" r="2" />
+                        </svg>
+                        Manage ingredients
+                    </button>
+                </div>
+            </div>
+        </div>
     </section>
 </template>
 
@@ -477,30 +647,180 @@ async function removeRow(ingredientId) {
     appearance: textfield;
 }
 
-.add-ingredient-trigger {
+.ingredient-combobox {
+    position: relative;
     width: 100%;
+    margin-top: 4px;
+}
+
+.combobox-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.combobox-search-icon {
+    position: absolute;
+    left: 12px;
+    font-size: 13px;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.combobox-input {
+    width: 100%;
+    min-height: 40px;
+    padding: 9px 34px 9px 34px;
     border: 1px dashed var(--line);
     border-radius: 10px;
-    background: transparent;
-}
-
-.add-ingredient-trigger {
-    padding: 11px 10px;
-    color: var(--ink-muted);
+    background: var(--surface);
+    color: var(--ink);
     font-size: 13px;
-    text-align: left;
+    transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.add-ingredient-trigger:hover {
+.combobox-input:focus {
+    border-style: solid;
     border-color: var(--green-light);
+    background: var(--surface-alt);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(var(--green-rgb, 76, 175, 80), 0.15);
+}
+
+.combobox-clear-btn {
+    position: absolute;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--surface-alt);
+    color: var(--ink-muted);
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.combobox-clear-btn:hover {
+    color: var(--ink);
+    background: var(--line);
+}
+
+.combobox-dropdown {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 20;
+    max-height: 220px;
+    overflow-y: auto;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+}
+
+.combobox-empty {
+    padding: 12px;
+    color: var(--ink-muted);
+    font-size: 12px;
+    text-align: center;
+}
+
+.combobox-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    padding: 9px 12px;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+    font-size: 12px;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.1s ease;
+}
+
+.combobox-option:last-of-type {
+    border-bottom: 0;
+}
+
+.combobox-option:hover,
+.combobox-option.is-highlighted {
+    background: var(--surface-alt);
     color: var(--green-strong);
 }
 
-.add-ingredient-trigger span {
-    margin-right: 5px;
-    font-size: 18px;
-    line-height: 0;
-    vertical-align: -2px;
+.combobox-option .option-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.combobox-option .option-meta {
+    flex: none;
+    color: var(--ink-muted);
+    font-size: 11px;
+}
+
+.combobox-create-option {
+    background: color-mix(in srgb, var(--green) 6%, transparent);
+}
+
+.combobox-create-option:hover,
+.combobox-create-option.is-highlighted {
+    background: color-mix(in srgb, var(--green) 14%, transparent);
+}
+
+.create-badge {
+    color: var(--green-strong);
+    font-weight: 700;
+}
+
+.combobox-dropdown-footer {
+    position: sticky;
+    bottom: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    padding: 6px;
+    z-index: 2;
+}
+
+.combobox-manage-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 6px 10px;
+    border: 0;
+    border-radius: 6px;
+    background: var(--surface-alt);
+    color: var(--ink-muted);
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.combobox-manage-link:hover {
+    color: var(--ink);
+    background: color-mix(in srgb, var(--surface-alt) 80%, var(--line));
+}
+
+.manage-icon {
+    width: 13px;
+    height: 13px;
 }
 
 @media (max-width: 600px) {

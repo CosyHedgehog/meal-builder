@@ -10,14 +10,18 @@ import {
 import { confirmAction } from '../js/confirm.js'
 import { useDiscardChanges } from '../js/useDiscardChanges.js'
 
-const props = defineProps({ ingredientId: { type: String, default: null } })
+const props = defineProps({
+  ingredientId: { type: String, default: null },
+  initialName: { type: String, default: '' },
+  onCreated: { type: Function, default: null },
+})
 const emit = defineEmits(['close'])
 
 const existing = store.ingredients.find((i) => i.id === props.ingredientId)
 const isNew = !existing
 
 const draft = reactive({
-  name: existing ? existing.name : '',
+  name: existing ? existing.name : (props.initialName || ''),
   unit: existing ? existing.unit : 'g',
   kcal: existing ? String(existing.kcal) : '',
 })
@@ -26,8 +30,12 @@ const { confirmDiscard } = useDiscardChanges(draft)
 async function submit() {
   const value = parseFloat(draft.kcal)
   if (!draft.name.trim() || !Number.isFinite(value) || value < 0) return
-  if (isNew) addIngredient({ name: draft.name, unit: draft.unit, kcal: value })
-  else {
+  if (isNew) {
+    const createdId = addIngredient({ name: draft.name, unit: draft.unit, kcal: value })
+    if (props.onCreated && createdId) {
+      props.onCreated(createdId)
+    }
+  } else {
     const usedIn = ingredientUsage(props.ingredientId)
     const hasChanges = draft.name.trim() !== existing.name
       || draft.unit !== existing.unit
