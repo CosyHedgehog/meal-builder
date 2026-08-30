@@ -47,8 +47,8 @@ function shiftDay(amount) {
 function onTouchStart(event) {
   if (!auth.user || !store.loaded) return
   if (event.target.closest('.mobile-action-sheet, .modal, .modal-backdrop, .mobile-actions-backdrop')) return
-  if (event.target.closest('.dashboard-food-item, .group-header-main')) return
   const touch = event.changedTouches[0]
+  view.dragConsumedSwipe = false
   swipeStart.value = { x: touch.clientX, y: touch.clientY }
 }
 
@@ -58,6 +58,10 @@ function onTouchEnd(event) {
   const deltaX = touch.clientX - swipeStart.value.x
   const deltaY = touch.clientY - swipeStart.value.y
   swipeStart.value = null
+  if (view.dragConsumedSwipe) {
+    view.dragConsumedSwipe = false
+    return
+  }
   if (Math.abs(deltaX) < 50 || Math.abs(deltaX) <= Math.abs(deltaY)) return
   shiftDay(deltaX < 0 ? 1 : -1)
 }

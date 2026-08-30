@@ -80,6 +80,7 @@ function handlePointerMove(event) {
   if (!pendingDrag.active && (distance < 8 || !mobileDragReady)) return
   if (!pendingDrag.active) {
     pendingDrag.active = true
+    view.dragConsumedSwipe = true
     view.dragType = pendingDrag.type
     if (pendingDrag.type === 'group') view.draggedGroupId = pendingDrag.id
     else view.draggedFoodId = pendingDrag.id
@@ -131,7 +132,10 @@ function handlePointerUp(event) {
 function cancelPointerDrag() {
   clearTimeout(mobileDragTimer)
   mobileDragTimer = null
-  if (pendingDrag.active) clearDragState()
+  if (pendingDrag.active) {
+    view.dragConsumedSwipe = true
+    clearDragState()
+  }
   pendingDrag.type = ''
   pendingDrag.id = ''
   pendingDrag.pointerId = null

@@ -2,7 +2,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { todayStr } from './date.js'
 
 /* ---- selected log date ---- */
-export const view = reactive({ logDate: todayStr(), draggedFoodId: '', draggedOverFoodId: '', draggedGroupId: '', draggedOverGroupId: '', draggedEntryId: '', draggedOverEntryId: '', dragType: '' })
+export const view = reactive({ logDate: todayStr(), draggedFoodId: '', draggedOverFoodId: '', draggedGroupId: '', draggedOverGroupId: '', draggedEntryId: '', draggedOverEntryId: '', dragType: '', dragConsumedSwipe: false })
 
 const COLLAPSE_STATE_KEY = 'meal-builder-collapse-state'
 
