@@ -23,6 +23,9 @@ const displayFoods = computed(() => {
 const visibleFoods = computed(() => showAll.value ? displayFoods.value : displayFoods.value.slice(0, 20))
 const hasMore = computed(() => !showAll.value && visibleFoods.value.length < displayFoods.value.length)
 const pendingDrag = { type: '', id: '', pointerId: null, startX: 0, startY: 0, active: false }
+const mobileDragDelay = 450
+let mobileDragTimer = null
+let mobileDragReady = false
 let suppressClickCleanup = null
 
 function entryFor(foodId) {
@@ -49,18 +52,32 @@ function toggleStepper(stepperId, isOpen) {
 
 function startPointerDrag(event, type, id) {
   if (event.button !== 0) return
+  clearTimeout(mobileDragTimer)
+  mobileDragTimer = null
+  mobileDragReady = event.pointerType !== 'touch'
   pendingDrag.type = type
   pendingDrag.id = id
   pendingDrag.pointerId = event.pointerId
   pendingDrag.startX = event.clientX
   pendingDrag.startY = event.clientY
   pendingDrag.active = false
+  if (!mobileDragReady) {
+    const pointerId = event.pointerId
+    mobileDragTimer = setTimeout(() => {
+      if (pendingDrag.pointerId === pointerId && pendingDrag.type) mobileDragReady = true
+      mobileDragTimer = null
+    }, mobileDragDelay)
+  }
 }
 
 function handlePointerMove(event) {
   if (event.pointerId !== pendingDrag.pointerId || !pendingDrag.type) return
   const distance = Math.hypot(event.clientX - pendingDrag.startX, event.clientY - pendingDrag.startY)
-  if (!pendingDrag.active && distance < 8) return
+  if (!pendingDrag.active && distance >= 8 && !mobileDragReady) {
+    cancelPointerDrag()
+    return
+  }
+  if (!pendingDrag.active && (distance < 8 || !mobileDragReady)) return
   if (!pendingDrag.active) {
     pendingDrag.active = true
     view.dragType = pendingDrag.type
@@ -78,6 +95,8 @@ function handlePointerMove(event) {
 
 function handlePointerUp(event) {
   if (event.pointerId !== pendingDrag.pointerId) return
+  clearTimeout(mobileDragTimer)
+  mobileDragTimer = null
   if (pendingDrag.active) {
     const targetId = pendingDrag.type === 'group' ? view.draggedOverGroupId : view.draggedOverFoodId
     if (pendingDrag.type === 'group') reorderGroups(pendingDrag.id, targetId)
@@ -105,15 +124,19 @@ function handlePointerUp(event) {
   pendingDrag.id = ''
   pendingDrag.pointerId = null
   pendingDrag.active = false
+  mobileDragReady = false
   clearDragState()
 }
 
 function cancelPointerDrag() {
+  clearTimeout(mobileDragTimer)
+  mobileDragTimer = null
   if (pendingDrag.active) clearDragState()
   pendingDrag.type = ''
   pendingDrag.id = ''
   pendingDrag.pointerId = null
   pendingDrag.active = false
+  mobileDragReady = false
 }
 
 onMounted(() => {
@@ -123,6 +146,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  clearTimeout(mobileDragTimer)
   suppressClickCleanup?.()
   document.removeEventListener('pointermove', handlePointerMove)
   document.removeEventListener('pointerup', handlePointerUp)
@@ -244,7 +268,7 @@ onUnmounted(() => {
 
 .group-header-main.dashboard-draggable,
 .dashboard-food-item {
-  cursor: grab;
+  /* cursor: grab; */
   touch-action: none;
 }
 
@@ -302,6 +326,7 @@ onUnmounted(() => {
   outline-offset: 0;
   background: color-mix(in srgb, var(--green-soft) 70%, transparent);
   box-shadow: 0 0 10px color-mix(in srgb, var(--green) 28%, transparent);
+  cursor: grabbing;
 }
 
 .dashboard-food-item.drag-over::after {
