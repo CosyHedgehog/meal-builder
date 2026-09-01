@@ -64,6 +64,11 @@ function closePopover() {
   emit('toggle', false)
 }
 
+function openAdjustModal() {
+  closePopover()
+  emit('adjust')
+}
+
 function handleDocumentClick(event) {
   if (!event.target.closest('.food-stepper-wrap')) emit('toggle', false)
 }
@@ -109,7 +114,7 @@ defineExpose({ closePopover })
       <button type="button" class="food-stepper-adjust"
         :aria-label="`${adjusted ? 'Edit' : 'Customize'} today's quantities`"
         :title="`${adjusted ? 'Edit' : 'Customize'} today's quantities`"
-        @click.stop="$emit('adjust'); closePopover()">
+        @click.stop="openAdjustModal">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
           stroke-linejoin="round" aria-hidden="true">
           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
