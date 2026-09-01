@@ -149,6 +149,7 @@ function startIngredientDrag(event, ingredientId) {
     if (event.button !== 0) return
     event.preventDefault()
     event.stopPropagation()
+    event.currentTarget?.setPointerCapture?.(event.pointerId)
     ingredientDrag.id = ingredientId
     ingredientDrag.pointerId = event.pointerId
     ingredientDrag.active = false
@@ -165,7 +166,8 @@ function handleIngredientPointerMove(event) {
         draggedIngredientId.value = ingredientDrag.id
     }
     event.preventDefault()
-    draggedOverIngredientId.value = event.target?.closest('.ingredient-row')?.dataset.ingredientId || ''
+    draggedOverIngredientId.value = document.elementFromPoint(event.clientX, event.clientY)
+        ?.closest('.ingredient-row')?.dataset.ingredientId || ''
 }
 
 function finishIngredientDrag(event) {
