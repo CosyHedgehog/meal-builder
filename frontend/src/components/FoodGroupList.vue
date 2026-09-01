@@ -31,6 +31,12 @@ let suppressClickCleanup = null
 function entryFor(foodId) {
   return entries.value.find((entry) => entry.foodId === foodId)
 }
+function isSameGroupFoodTarget(foodId) {
+  if (view.dragType !== 'food' || view.draggedOverFoodId !== foodId) return false
+  const draggedFood = store.foods.find((item) => item.id === view.draggedFoodId)
+  const targetFood = store.foods.find((item) => item.id === foodId)
+  return draggedFood?.groupId === targetFood?.groupId
+}
 function setFoodQuantity(food, quantity) {
   if (props.locked || !Number.isFinite(quantity) || quantity < 0) return
   const entry = entryFor(food.id)
@@ -168,7 +174,7 @@ onUnmounted(() => {
 
 <template>
   <div class="today-chips">
-    <div class="chip-group" :data-group-id="group.id" :class="{ 'dashboard-locked': locked, dragging: view.draggedGroupId === group.id, 'drag-over': view.draggedOverGroupId === group.id && view.draggedGroupId !== group.id }">
+    <div class="chip-group" :data-group-id="group.id" :class="{ 'dashboard-locked': locked, dragging: view.draggedGroupId === group.id, 'drag-over': view.draggedOverGroupId === group.id && view.draggedGroupId !== group.id && view.dragType === 'group', 'food-move-over': view.draggedOverGroupId === group.id && view.dragType === 'food' && store.foods.find((item) => item.id === view.draggedFoodId)?.groupId !== group.id }">
       <div
         class="chip-group-header"
       >
@@ -219,7 +225,7 @@ onUnmounted(() => {
             />
           </div>
           <template v-for="food in visibleFoods" :key="food.id">
-            <div class="dashboard-food-item" :data-food-id="food.id" :class="{ active: props.activeStepperId === `food-${food.id}`, dragging: view.draggedFoodId === food.id, 'drag-over': view.draggedOverFoodId === food.id }"
+            <div class="dashboard-food-item" :data-food-id="food.id" :class="{ active: props.activeStepperId === `food-${food.id}`, dragging: view.draggedFoodId === food.id, 'drag-over': isSameGroupFoodTarget(food.id) }"
               @pointerdown="startPointerDrag($event, 'food', food.id)">
               <FoodQuantityStepper
                 :name="food.name"
@@ -305,24 +311,68 @@ onUnmounted(() => {
 }
 
 .chip-group.drag-over .chip-group-header::after {
-  content: '⇄';
+  content: 'Move here';
   position: absolute;
   top: 50%;
   right: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
   z-index: 2;
-  border: 2px solid var(--green);
-  border-radius: 50%;
+  padding: 4px 8px;
+  border: 1px solid var(--green);
+  border-radius: 999px;
   background: var(--surface);
   color: var(--green);
-  font-size: 16px;
+  font-size: 10px;
+  font-weight: 700;
   line-height: 1;
   transform: translateY(-50%);
-  box-shadow: 0 2px 8px rgba(var(--shadow-rgb), 0.55);
+  box-shadow: 0 2px 8px rgba(var(--shadow-rgb), 0.45);
+  pointer-events: none;
+}
+
+.dashboard-food-item.drag-over::after {
+  content: 'Swap here';
+  position: absolute;
+  top: -24px;
+  right: -5px;
+  z-index: 2;
+  padding: 4px 7px;
+  border: 1px solid var(--green);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 2px 8px rgba(var(--shadow-rgb), 0.45);
+  pointer-events: none;
+}
+
+.chip-group.food-move-over {
+  outline: 2px dashed var(--green);
+  outline-offset: 4px;
+  background: color-mix(in srgb, var(--green-soft) 32%, transparent);
+}
+
+.chip-group.food-move-over .chip-group-header {
+  color: var(--green-strong);
+}
+
+.chip-group.food-move-over .chip-group-header::after {
+  content: 'Move here';
+  position: absolute;
+  top: 50%;
+  right: 0;
+  z-index: 2;
+  padding: 4px 8px;
+  border: 1px solid var(--green);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  transform: translateY(-50%);
+  box-shadow: 0 2px 8px rgba(var(--shadow-rgb), 0.45);
   pointer-events: none;
 }
 
@@ -337,27 +387,6 @@ onUnmounted(() => {
   background: color-mix(in srgb, var(--green-soft) 70%, transparent);
   box-shadow: 0 0 10px color-mix(in srgb, var(--green) 28%, transparent);
   cursor: grabbing;
-}
-
-.dashboard-food-item.drag-over::after {
-  content: '⇄';
-  position: absolute;
-  top: -24px;
-  right: -5px;
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--green);
-  border-radius: 50%;
-  background: var(--surface);
-  color: var(--green);
-  font-size: 14px;
-  line-height: 1;
-  box-shadow: 0 2px 8px rgba(var(--shadow-rgb), 0.55);
-  pointer-events: none;
 }
 
 .chip-group-header-name {
