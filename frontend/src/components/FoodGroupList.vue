@@ -203,7 +203,28 @@ onUnmounted(() => {
             :title="`Add food to ${group.name}`"
             @pointerdown.stop
             @click.stop="openModal(Modals.FOOD_EDITOR, { groupId: group.id })"
-          >+</button>
+          >
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M8 3v10M3 8h10" />
+            </svg>
+          </button>
+          <button
+            v-if="!locked"
+            type="button"
+            class="group-edit-foods-button"
+            :aria-label="`Edit foods in ${group.name}`"
+            :title="`Edit foods in ${group.name}`"
+            @pointerdown.stop
+            @click.stop="openModal(Modals.FOOD_MANAGER, { groupId: group.id })"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="5" cy="6" r="1" fill="currentColor" />
+              <circle cx="5" cy="12" r="1" fill="currentColor" />
+              <circle cx="5" cy="18" r="1" fill="currentColor" />
+              <path d="M9 6h10M9 12h10M9 18h10" />
+            </svg>
+          </button>
         </span>
       </div>
       <div v-if="!collapsed" class="quick-picks-viewport">
@@ -311,7 +332,7 @@ onUnmounted(() => {
 }
 
 .chip-group.drag-over .chip-group-header::after {
-  content: 'Move here';
+  content: 'Swap group here';
   position: absolute;
   top: 50%;
   right: 0;
@@ -330,7 +351,7 @@ onUnmounted(() => {
 }
 
 .dashboard-food-item.drag-over::after {
-  content: 'Swap here';
+  content: 'Swap with';
   position: absolute;
   top: -24px;
   right: -5px;
@@ -349,7 +370,7 @@ onUnmounted(() => {
 
 .chip-group.food-move-over {
   outline: 2px dashed var(--green);
-  outline-offset: 4px;
+  outline-offset: 0;
   background: color-mix(in srgb, var(--green-soft) 32%, transparent);
 }
 
@@ -358,7 +379,7 @@ onUnmounted(() => {
 }
 
 .chip-group.food-move-over .chip-group-header::after {
-  content: 'Move here';
+  content: 'Move to this group';
   position: absolute;
   top: 50%;
   right: 0;
@@ -420,22 +441,57 @@ onUnmounted(() => {
 }
 
 .group-add-food-button {
+  display: inline-flex;
   width: 22px;
   height: 22px;
+  align-items: center;
+  justify-content: center;
   padding: 0;
   border: 0;
   border-radius: 5px;
   background: transparent;
   color: var(--ink-muted);
-  font-size: 18px;
-  font-weight: 400;
-  line-height: 1;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
 
+.group-add-food-button svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
 .group-add-food-button:hover,
 .group-add-food-button:focus-visible {
+  background: var(--surface-alt);
+  color: var(--green-strong);
+}
+
+.group-edit-foods-button {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ink-muted);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.group-edit-foods-button svg {
+  width: 14px;
+  height: 14px;
+}
+
+.group-edit-foods-button:hover,
+.group-edit-foods-button:focus-visible {
   background: var(--surface-alt);
   color: var(--green-strong);
 }
