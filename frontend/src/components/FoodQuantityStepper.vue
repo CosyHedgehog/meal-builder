@@ -12,6 +12,7 @@ const props = defineProps({
   oneClickMode: { type: Boolean, default: false },
   locked: { type: Boolean, default: false },
   adjusted: { type: Boolean, default: false },
+  editable: { type: Boolean, default: false },
   adjustable: { type: Boolean, default: false },
 })
 
@@ -20,10 +21,12 @@ const popoverPlacement = ref('center')
 const popoverVerticalPlacement = ref('down')
 const popoverLeft = ref('50%')
 
-const emit = defineEmits(['decrement', 'increment', 'set-quantity', 'toggle', 'adjust'])
+const emit = defineEmits(['decrement', 'increment', 'set-quantity', 'toggle', 'edit', 'adjust'])
 
 function setQuantity(event) {
-  emit('set-quantity', Number(event.target.value))
+  const quantity = Number(event.target.value)
+  if (quantity === 0) closePopover()
+  emit('set-quantity', quantity)
 }
 
 function openQuantityPopover(event, addOne = false) {
@@ -38,7 +41,7 @@ function updatePopoverPlacement() {
   if (!rect) return
   const scrollPane = stepperWrap.value.closest('.day-scroll')
   const paneRect = scrollPane?.getBoundingClientRect()
-  const panelWidth = 112
+  const panelWidth = 108
   const panelHeight = 42
   const viewportPadding = 8
   const mobileActionSheetHeight = window.matchMedia('(max-width: 600px)').matches ? 28 : 0
@@ -64,10 +67,10 @@ function closePopover() {
   emit('toggle', false)
 }
 
-async function openAdjustModal() {
+async function openModalAction(action) {
   closePopover()
   await nextTick()
-  emit('adjust')
+  emit(action)
 }
 
 function handleDocumentClick(event) {
@@ -109,19 +112,33 @@ defineExpose({ closePopover })
     </button>
     <button v-if="quantity > 0" type="button" class="food-stepper-quantity" :aria-label="`Customize ${name} quantity`"
       @click="openQuantityPopover">{{ quantity }}</button>
-    <div v-if="open && !locked && adjustable" class="food-adjust-popover"
+    <div v-if="open && !locked && (editable || adjustable)" class="food-adjust-popover"
       :class="[`placement-${popoverPlacement}`, `placement-${popoverVerticalPlacement}`]"
       :style="{ '--popover-left': popoverLeft }">
       <button type="button" class="food-stepper-adjust"
-        :aria-label="`${adjusted ? 'Edit' : 'Customize'} today's quantities`"
-        :title="`${adjusted ? 'Edit' : 'Customize'} today's quantities`"
-        @click.stop="openAdjustModal">
+        aria-label="Edit food"
+        title="Edit food"
+        @click.stop="openModalAction('edit')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
           stroke-linejoin="round" aria-hidden="true">
           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
           <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
         </svg>
-        <span>{{ adjusted ? 'Edit' : 'Customize' }}</span>
+      </button>
+      <span class="food-stepper-action-divider" aria-hidden="true"></span>
+      <button type="button" class="food-stepper-adjust"
+        :class="{ 'is-disabled': !adjustable }"
+        :disabled="!adjustable"
+        aria-label="Adjust today's quantities"
+        title="Adjust today's quantities"
+        @click.stop="openModalAction('adjust')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 6h16M4 12h16M4 18h16" />
+          <circle cx="9" cy="6" r="2" fill="var(--surface-alt)" />
+          <circle cx="15" cy="12" r="2" fill="var(--surface-alt)" />
+          <circle cx="10" cy="18" r="2" fill="var(--surface-alt)" />
+        </svg>
       </button>
     </div>
     <div v-if="open && !locked" class="food-quantity-popover"
@@ -131,7 +148,7 @@ defineExpose({ closePopover })
       <div class="food-quantity-controls">
         <button type="button" class="food-stepper-control" :disabled="quantity <= 0" :aria-label="`Remove one ${name}`"
           @click.stop="quantity === 1 && closePopover(); $emit('decrement')">−</button>
-        <input class="food-stepper-quantity-input" type="number" min="1" step="any" :value="quantity"
+        <input class="food-stepper-quantity-input" type="number" min="0" step="any" :value="quantity"
           :aria-label="`${name} quantity`" @click.stop @change="setQuantity" @keydown.enter.prevent="setQuantity" />
         <button type="button" class="food-stepper-control" :aria-label="`Add one ${name}`"
           @click.stop="$emit('increment')">＋</button>

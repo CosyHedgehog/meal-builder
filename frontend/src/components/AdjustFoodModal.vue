@@ -41,7 +41,7 @@ function saveVariant() {
 </script>
 
 <template>
-  <BaseModal :title="food ? `Adjust ${food.name}` : 'Adjust meal'" subtitle="Changes apply to this logged meal only."
+  <BaseModal :title="food ? `Adjust ${food.name}` : 'Adjust meal'" subtitle="Changes apply to the logged meal for this date only."
     panel-class="adjust-food-modal" @close="emit('close')">
     <div class="adjust-food-content">
       <div class="adjust-food-header">

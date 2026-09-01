@@ -294,12 +294,14 @@
 
 .food-stepper-adjust {
   display: flex;
+  min-width: 0;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 2px;
+  box-sizing: border-box;
   width: 100%;
   min-height: 26px;
-  padding: 2px 4px;
+  padding: 2px;
   border-radius: 6px;
   background: transparent;
   color: inherit;
@@ -310,6 +312,11 @@
 
 .food-adjust-popover {
   position: absolute;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+  align-items: center;
+  gap: 2px;
   z-index: 4;
   bottom: calc(100% + 3px);
   left: 50%;
@@ -321,6 +328,13 @@
   background: var(--surface-alt);
   box-shadow: 0 5px 14px rgba(var(--backdrop-rgb), 0.28);
   transform: none;
+}
+
+.food-stepper-action-divider {
+  flex: none;
+  width: 1px;
+  height: 100%;
+  background: var(--line);
 }
 
 .food-stepper-adjust svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
@@ -361,6 +375,12 @@
 .food-stepper-adjust:focus-visible {
   background: var(--surface);
   outline: none;
+}
+
+.food-stepper-adjust.is-disabled {
+  opacity: 0.35;
+  cursor: default;
+  pointer-events: none;
 }
 
 .food-quantity-popover.placement-start {

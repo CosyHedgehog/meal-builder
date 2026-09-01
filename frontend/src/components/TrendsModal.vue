@@ -114,7 +114,7 @@ function toggleWeek(week) {
               Math.max(loggedDays, 1)).toFixed(2) }}
             </strong>
             <strong v-else>Maintenance</strong>
-            <span>{{ store.weightUnit }} {{ windowTotalDeficit >= 0 ? 'loss' : 'lain' }} / day</span>
+            <span>{{ store.weightUnit }} {{ windowTotalDeficit >= 0 ? 'loss' : 'gain' }} / day</span>
           </div>
           <div class="trends-summary-stats-item" :class="{ surplus: windowProjectedKgPerWeek < 0 }">
             <strong v-if="projectedWeightDisplay >= 0.05">{{ projectedWeightDisplay.toFixed(1) }}</strong>

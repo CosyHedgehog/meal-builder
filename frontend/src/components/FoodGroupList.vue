@@ -32,10 +32,10 @@ function entryFor(foodId) {
   return entries.value.find((entry) => entry.foodId === foodId)
 }
 function setFoodQuantity(food, quantity) {
-  if (props.locked || !Number.isFinite(quantity) || quantity <= 0) return
+  if (props.locked || !Number.isFinite(quantity) || quantity < 0) return
   const entry = entryFor(food.id)
   if (entry) setLogEntryQty(view.logDate, entry.id, quantity)
-  else addLogFood(view.logDate, props.group.id, food.id, quantity)
+  else if (quantity > 0) addLogFood(view.logDate, props.group.id, food.id, quantity)
 }
 function decrement(entry) {
   if (props.locked) return
@@ -229,10 +229,12 @@ onUnmounted(() => {
                 :adjustable="food.mode !== 'simple' && !!entryFor(food.id)"
                 :locked="locked"
                 :one-click-mode="store.oneClickMode"
+                editable
                 :open="props.activeStepperId === `food-${food.id}`"
                 @decrement="entryFor(food.id) && decrement(entryFor(food.id))"
                 @increment="!locked && addLogFood(view.logDate, group.id, food.id)"
                 @set-quantity="setFoodQuantity(food, $event)"
+                @edit="openModal(Modals.FOOD_EDITOR, { foodId: food.id })"
                 @adjust="openModal(Modals.ADJUST_FOOD, { entryId: entryFor(food.id).id })"
                 @toggle="(isOpen) => toggleStepper(`food-${food.id}`, isOpen)"
               />

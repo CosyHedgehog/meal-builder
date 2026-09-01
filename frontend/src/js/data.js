@@ -318,16 +318,12 @@ export function foodItemsForEntry(entry) {
   const food = entry?.foodId ? getFood(entry.foodId) : null
   if (!food || food.mode === 'simple') return []
   const overrides = entry.overrides && typeof entry.overrides === 'object' ? entry.overrides : {}
-  const baseIds = new Set((food.items || []).map((item) => item.ingredientId))
   const items = (food.items || []).map((item) => ({
     ...item,
     amount: Object.prototype.hasOwnProperty.call(overrides, item.ingredientId)
       ? Number(overrides[item.ingredientId]) || 0
       : item.amount,
   }))
-  Object.entries(overrides).forEach(([ingredientId, amount]) => {
-    if (!baseIds.has(ingredientId) && Number(amount) > 0) items.push({ ingredientId, amount: Number(amount) })
-  })
   return items
 }
 
@@ -540,6 +536,20 @@ export function updateFood(id, draft) {
   food.mode = draft.mode === 'simple' ? 'simple' : 'ingredients'
   food.kcal = Number.isFinite(draft.kcal) ? Math.round(draft.kcal) : 0
   food.note = String(draft.note || '').trim()
+  const ingredientIds = new Set(food.items.map((item) => item.ingredientId))
+  Object.values(state.logs).forEach((log) => {
+    logEntries(log).forEach((entry) => {
+      if (entry.foodId !== id || !entry.overrides || typeof entry.overrides !== 'object') return
+      const overrides = Object.fromEntries(Object.entries(entry.overrides)
+        .filter(([ingredientId, amount]) => ingredientIds.has(ingredientId)
+          && getIngredient(ingredientId)
+          && Number.isFinite(Number(amount))
+          && Number(amount) >= 0)
+        .map(([ingredientId, amount]) => [ingredientId, Number(amount)]))
+      if (Object.keys(overrides).length) entry.overrides = overrides
+      else delete entry.overrides
+    })
+  })
   if (draft.groupId) food.groupId = draft.groupId
   if (food.groupId !== previousGroupId) {
     Object.values(state.logs).forEach((log) => {
@@ -618,7 +628,12 @@ export function setLogEntryQty(dateStr, entryId, qty) {
   const log = ensureLog(dateStr)
   const entry = log.entries.find((e) => e.id === entryId)
   if (!entry) return
-  if (!Number.isFinite(qty) || qty <= 0) return
+  if (!Number.isFinite(qty) || qty < 0) return
+  if (qty === 0) {
+    log.entries = log.entries.filter((e) => e.id !== entryId)
+    save()
+    return
+  }
   entry.qty = qty
   save()
 }
