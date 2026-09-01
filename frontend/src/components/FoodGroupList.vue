@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import FoodQuantityStepper from './FoodQuantityStepper.vue'
-import { state as store, addLogFood, bumpLogEntry, setLogEntryQty, logEntries, foodsInGroup, foodKcal, entryFoodKcal, reorderFoodWithinGroup, reorderGroups } from '../js/data.js'
+import { state as store, addLogFood, bumpLogEntry, setLogEntryQty, logEntries, foodsInGroup, foodKcal, entryFoodKcal, reorderFoodWithinGroup, moveFoodToGroupEnd, reorderGroups } from '../js/data.js'
 import { view, getCollapseState, setCollapseState, clearDragState } from '../js/ui.js'
 import { Modals, openModal } from '../js/modals.js'
 
@@ -91,6 +91,7 @@ function handlePointerMove(event) {
     view.draggedOverGroupId = target?.closest('[data-group-id]')?.dataset.groupId || ''
   } else {
     view.draggedOverFoodId = target?.closest('[data-food-id]')?.dataset.foodId || ''
+    view.draggedOverGroupId = target?.closest('[data-group-id]')?.dataset.groupId || ''
   }
 }
 
@@ -101,7 +102,14 @@ function handlePointerUp(event) {
   if (pendingDrag.active) {
     const targetId = pendingDrag.type === 'group' ? view.draggedOverGroupId : view.draggedOverFoodId
     if (pendingDrag.type === 'group') reorderGroups(pendingDrag.id, targetId)
-    else reorderFoodWithinGroup(pendingDrag.id, targetId)
+    else {
+      const food = store.foods.find((item) => item.id === pendingDrag.id)
+      if (food && view.draggedOverGroupId && food.groupId !== view.draggedOverGroupId) {
+        moveFoodToGroupEnd(pendingDrag.id, view.draggedOverGroupId)
+      } else {
+        reorderFoodWithinGroup(pendingDrag.id, targetId)
+      }
+    }
     suppressClickCleanup?.()
     const suppressClick = (clickEvent) => {
       const dashboardTarget = clickEvent.target.closest?.('.dashboard-food-item, .group-header-main')
