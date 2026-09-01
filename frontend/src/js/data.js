@@ -641,28 +641,6 @@ export function removeLogEntry(dateStr, entryId) {
   save()
 }
 
-export function addCustomLogEntry(dateStr, groupId, name, kcal, qty = 1) {
-  const log = ensureLog(dateStr)
-  log.entries.push({
-    id: uid('entry'),
-    groupId,
-    foodId: null,
-    name: (name || 'Custom').trim() || 'Custom',
-    kcal: !Number.isFinite(kcal) || kcal < 0 ? 0 : kcal,
-    qty: !Number.isFinite(qty) || qty <= 0 ? 1 : qty,
-  })
-  save()
-}
-
-export function updateCustomLogEntry(dateStr, entryId, name, kcal) {
-  const log = ensureLog(dateStr)
-  const entry = log.entries.find((item) => item.id === entryId && !item.foodId)
-  if (!entry) return
-  entry.name = (name || 'Custom').trim() || 'Custom'
-  entry.kcal = !Number.isFinite(kcal) || kcal < 0 ? 0 : kcal
-  save()
-}
-
 export function updateLogEntryVariant(dateStr, entryId, overrides) {
   const log = ensureLog(dateStr)
   const entry = log.entries.find((item) => item.id === entryId && item.foodId)

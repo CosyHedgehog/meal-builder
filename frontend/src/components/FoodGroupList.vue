@@ -237,10 +237,6 @@ onUnmounted(() => {
               + Add
             </button>
           </div>
-          <button v-else-if="!locked" type="button" class="today-chip chip-add"
-            @click="openModal(Modals.CUSTOM_ENTRY, { groupId: group.id })">
-            + Custom
-          </button>
           <button v-if="hasMore" type="button" class="chip-more" @click="showAll = true">More…</button>
         </div>
       </div>

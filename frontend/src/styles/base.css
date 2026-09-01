@@ -209,11 +209,6 @@ textarea::placeholder {
   margin-top: 2px;
 }
 
-.custom-snack-save-row {
-  margin-top: 14px;
-  cursor: pointer;
-}
-
 .section-label {
   font-size: 11px;
   text-transform: uppercase;

@@ -13,7 +13,6 @@ import FoodManagerModal from './FoodManagerModal.vue'
 import GroupManagerModal from './GroupManagerModal.vue'
 import IngredientModal from './IngredientModal.vue'
 import IngredientFoodsModal from './IngredientFoodsModal.vue'
-import CustomEntryModal from './CustomEntryModal.vue'
 import AdjustFoodModal from './AdjustFoodModal.vue'
 import TrendsModal from './TrendsModal.vue'
 import ActivityModal from './ActivityModal.vue'
@@ -31,7 +30,6 @@ const registry = {
   [Modals.GROUP_MANAGER]: GroupManagerModal,
   [Modals.INGREDIENT_MANAGER]: IngredientModal,
   [Modals.INGREDIENT_FOODS]: IngredientFoodsModal,
-  [Modals.CUSTOM_ENTRY]: CustomEntryModal,
   [Modals.ADJUST_FOOD]: AdjustFoodModal,
   [Modals.TRENDS]: TrendsModal,
   [Modals.ACTIVITY]: ActivityModal,
