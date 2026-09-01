@@ -8,6 +8,19 @@ const props = defineProps({
 
 const mobileActionsOpen = ref(false)
 const mobileActionStartY = ref(null)
+const mobileActionDragOffset = ref(0)
+const mobileActionDragging = ref(false)
+const suppressMobileActionClick = ref(false)
+const mobileActionSheet = ref(null)
+const mobileActionGestureOnHandle = ref(false)
+
+function closedSheetOffset() {
+  return Math.max(0, (mobileActionSheet.value?.offsetHeight ?? 0) - 28)
+}
+
+function mobileActionStyle() {
+  return { '--mobile-action-drag-offset': `${mobileActionDragOffset.value}px` }
+}
 
 function openMobileActions() {
   if (mobileActionsOpen.value) return
@@ -20,19 +33,54 @@ function closeMobileActions() {
 }
 
 function toggleMobileActions() {
+  if (suppressMobileActionClick.value) {
+    suppressMobileActionClick.value = false
+    return
+  }
   if (mobileActionsOpen.value) closeMobileActions()
   else openMobileActions()
 }
 
 function startMobileActionSwipe(event) {
+  mobileActionGestureOnHandle.value = Boolean(event.target.closest('.mobile-action-handle'))
+  if (!mobileActionGestureOnHandle.value) return
   mobileActionStartY.value = event.changedTouches[0]?.clientY ?? null
+  mobileActionDragOffset.value = 0
+  mobileActionDragging.value = true
+}
+
+function moveMobileActionSwipe(event) {
+  if (!mobileActionGestureOnHandle.value || mobileActionStartY.value === null) return
+  const currentY = event.changedTouches[0]?.clientY ?? mobileActionStartY.value
+  const closedOffset = closedSheetOffset()
+  const deltaY = currentY - mobileActionStartY.value
+  const baseOffset = mobileActionsOpen.value ? 0 : closedOffset
+  mobileActionDragOffset.value = Math.max(-baseOffset, Math.min(closedOffset - baseOffset, deltaY))
+  if (Math.abs(deltaY) > 8) suppressMobileActionClick.value = true
 }
 
 function endMobileActionSwipe(event) {
-  if (mobileActionStartY.value === null) return
+  if (!mobileActionGestureOnHandle.value || mobileActionStartY.value === null) return
   const endY = event.changedTouches[0]?.clientY ?? mobileActionStartY.value
   const deltaY = endY - mobileActionStartY.value
+  const wasDragging = Math.abs(deltaY) > 8
+  const closedOffset = closedSheetOffset()
+  const baseOffset = mobileActionsOpen.value ? 0 : closedOffset
+  const currentOffset = baseOffset + mobileActionDragOffset.value
   mobileActionStartY.value = null
+  mobileActionGestureOnHandle.value = false
+  mobileActionDragging.value = false
+  mobileActionDragOffset.value = 0
+  if (wasDragging) {
+    mobileActionsOpen.value = currentOffset < closedOffset / 2
+    if (mobileActionsOpen.value && !history.state?.mealBuilderActions) {
+      history.pushState({ mealBuilderActions: true }, '')
+    }
+    if (!mobileActionsOpen.value && history.state?.mealBuilderActions) {
+      history.replaceState(null, '', location.href)
+    }
+    return
+  }
   if (Math.abs(deltaY) < 40) return
   if (deltaY < 0) openMobileActions()
   else if (mobileActionsOpen.value) closeMobileActions()
@@ -56,8 +104,9 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
 <template>
   <div v-if="mobileActionsOpen && !props.hasOpenModal" class="mobile-actions-backdrop" @click="closeMobileActions"
     @touchmove.prevent></div>
-  <section v-show="!props.hasOpenModal" class="mobile-action-sheet" :class="{ open: mobileActionsOpen }"
-    aria-label="Dashboard actions" @touchstart="startMobileActionSwipe" @touchmove.prevent
+  <section v-show="!props.hasOpenModal" ref="mobileActionSheet" class="mobile-action-sheet"
+    :class="{ open: mobileActionsOpen, dragging: mobileActionDragging }" :style="mobileActionStyle()"
+    aria-label="Dashboard actions" @touchstart="startMobileActionSwipe" @touchmove.prevent="moveMobileActionSwipe"
     @touchend="endMobileActionSwipe">
     <button class="mobile-action-handle" type="button" aria-label="Show dashboard actions" @click="toggleMobileActions">
     </button>
@@ -140,13 +189,19 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
   border-bottom: 0;
   border-radius: 14px 14px 0 0;
   background: var(--surface);
-  transform: translateY(calc(100% - 48px));
-  transition: transform 0.2s ease;
+  will-change: transform;
+  --mobile-action-drag-offset: 0px;
+  transform: translateY(calc(100% - 48px + var(--mobile-action-drag-offset)));
+  transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
   z-index: 25;
 }
 
 .mobile-action-sheet.open {
-  transform: translateY(0);
+  transform: translateY(var(--mobile-action-drag-offset));
+}
+
+.mobile-action-sheet.dragging {
+  transition: none;
 }
 
 .mobile-action-handle {
@@ -258,7 +313,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
     left: 18px;
     padding: 0 8px env(safe-area-inset-bottom);
     border-radius: 12px 12px 0 0;
-    transform: translateY(calc(100% - 28px));
+    transform: translateY(calc(100% - 28px + var(--mobile-action-drag-offset)));
   }
 
   .mobile-action-list {

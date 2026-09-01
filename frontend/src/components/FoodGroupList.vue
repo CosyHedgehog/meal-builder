@@ -296,8 +296,8 @@ onUnmounted(() => {
   -webkit-user-select: none;
 }
 
-.group-header-main.dashboard-draggable:active,
-.dashboard-food-item:active {
+.chip-group.dragging .group-header-main,
+.dashboard-food-item.dragging {
   cursor: grabbing;
 }
 
