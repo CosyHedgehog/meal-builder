@@ -14,6 +14,9 @@ const isDropdownOpen = ref(false)
 const highlightedIndex = ref(-1)
 const searchInputRef = ref(null)
 const comboboxRef = ref(null)
+const draggedIngredientId = ref(null)
+const draggedOverIngredientId = ref(null)
+const ingredientDrag = { id: null, pointerId: null, active: false, startX: 0, startY: 0 }
 
 const usedIds = computed(() => new Set(props.draft.items.map((item) => item.ingredientId)))
 const ingredientRows = computed(() => props.draft.items.map((item) => ({
@@ -125,15 +128,68 @@ function handleClickOutside(event) {
 
 onMounted(() => {
     document.addEventListener('pointerdown', handleClickOutside)
+    document.addEventListener('pointermove', handleIngredientPointerMove, { passive: false })
+    document.addEventListener('pointerup', finishIngredientDrag)
+    document.addEventListener('pointercancel', cancelIngredientDrag)
 })
 
 onUnmounted(() => {
     document.removeEventListener('pointerdown', handleClickOutside)
+    document.removeEventListener('pointermove', handleIngredientPointerMove)
+    document.removeEventListener('pointerup', finishIngredientDrag)
+    document.removeEventListener('pointercancel', cancelIngredientDrag)
 })
 
 function setIngredientQuantityInput(ingredientId, element) {
     if (element) ingredientQuantityInputs.set(ingredientId, element)
     else ingredientQuantityInputs.delete(ingredientId)
+}
+
+function startIngredientDrag(event, ingredientId) {
+    if (event.button !== 0) return
+    event.preventDefault()
+    event.stopPropagation()
+    ingredientDrag.id = ingredientId
+    ingredientDrag.pointerId = event.pointerId
+    ingredientDrag.active = false
+    ingredientDrag.startX = event.clientX
+    ingredientDrag.startY = event.clientY
+}
+
+function handleIngredientPointerMove(event) {
+    if (event.pointerId !== ingredientDrag.pointerId || !ingredientDrag.id) return
+    const distance = Math.hypot(event.clientX - ingredientDrag.startX, event.clientY - ingredientDrag.startY)
+    if (!ingredientDrag.active && distance < 6) return
+    if (!ingredientDrag.active) {
+        ingredientDrag.active = true
+        draggedIngredientId.value = ingredientDrag.id
+    }
+    event.preventDefault()
+    draggedOverIngredientId.value = event.target?.closest('.ingredient-row')?.dataset.ingredientId || ''
+}
+
+function finishIngredientDrag(event) {
+    if (event.pointerId !== ingredientDrag.pointerId) return
+    if (ingredientDrag.active && draggedOverIngredientId.value && draggedOverIngredientId.value !== ingredientDrag.id) {
+        const fromIndex = props.draft.items.findIndex((item) => item.ingredientId === ingredientDrag.id)
+        const targetIndex = props.draft.items.findIndex((item) => item.ingredientId === draggedOverIngredientId.value)
+        if (fromIndex !== -1 && targetIndex !== -1) {
+            const items = [...props.draft.items]
+            const moved = items[fromIndex]
+            items[fromIndex] = items[targetIndex]
+            items[targetIndex] = moved
+            props.draft.items = items
+        }
+    }
+    cancelIngredientDrag()
+}
+
+function cancelIngredientDrag() {
+    ingredientDrag.id = null
+    ingredientDrag.pointerId = null
+    ingredientDrag.active = false
+    draggedIngredientId.value = null
+    draggedOverIngredientId.value = null
 }
 
 async function removeRow(ingredientId) {
@@ -164,7 +220,23 @@ async function removeRow(ingredientId) {
                 <span>Search or type an ingredient below to add it.</span>
             </div>
             <div class="ingredient-list">
-                <div v-for="row in ingredientRows" :key="row.item.ingredientId" class="ingredient-row">
+                <div v-for="row in ingredientRows" :key="row.item.ingredientId" class="ingredient-row"
+                    :data-ingredient-id="row.item.ingredientId"
+                    :class="{ dragging: draggedIngredientId === row.item.ingredientId, 'drag-over': draggedOverIngredientId === row.item.ingredientId && draggedIngredientId !== row.item.ingredientId }">
+                    <button type="button" class="ingredient-drag-handle"
+                        :aria-label="`Reorder ${row.ingredient?.name || 'ingredient'}`"
+                        title="Drag to reorder"
+                        @pointerdown="startIngredientDrag($event, row.item.ingredientId)"
+                        @click.stop>
+                        <svg viewBox="0 0 12 18" aria-hidden="true">
+                            <rect x="1" y="1" width="3" height="3" rx="0.5" />
+                            <rect x="8" y="1" width="3" height="3" rx="0.5" />
+                            <rect x="1" y="7.5" width="3" height="3" rx="0.5" />
+                            <rect x="8" y="7.5" width="3" height="3" rx="0.5" />
+                            <rect x="1" y="14" width="3" height="3" rx="0.5" />
+                            <rect x="8" y="14" width="3" height="3" rx="0.5" />
+                        </svg>
+                    </button>
                     <div class="ingredient-row-main">
                         <div class="ingredient-name-wrap">
                             <button type="button" class="item-name"
@@ -378,11 +450,55 @@ async function removeRow(ingredientId) {
 
 .ingredient-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: 22px minmax(0, 1fr) auto;
     align-items: center;
     gap: 8px;
     min-height: 40px;
     padding: 5px 6px;
+}
+
+.ingredient-row.dragging {
+    opacity: 0.45;
+}
+
+.ingredient-row.drag-over {
+    outline: 2px dashed var(--green);
+    outline-offset: -2px;
+    background: color-mix(in srgb, var(--green-soft) 45%, var(--surface));
+}
+
+.ingredient-drag-handle {
+    display: inline-flex;
+    width: 20px;
+    height: 24px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: color-mix(in srgb, var(--ink-muted) 72%, transparent);
+    opacity: 0.8;
+    line-height: 1;
+    cursor: grab;
+    touch-action: none;
+}
+
+.ingredient-drag-handle svg {
+    width: 10px;
+    height: 15px;
+    fill: currentColor;
+}
+
+.ingredient-drag-handle:hover,
+.ingredient-drag-handle:focus-visible {
+    background: var(--surface-alt);
+    color: var(--green-strong);
+    opacity: 1;
+}
+
+.ingredient-drag-handle:active {
+    cursor: grabbing;
 }
 
 .ingredient-row+.ingredient-row {
@@ -843,13 +959,13 @@ async function removeRow(ingredientId) {
 
 @media (max-width: 600px) {
     .ingredient-row {
-        grid-template-columns: minmax(0, 1fr) 56px 22px;
+        grid-template-columns: 22px minmax(0, 1fr) 22px;
     }
 
     .ingredient-row-main {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
-        grid-column: 1 / span 2;
+        grid-column: 2;
     }
 
     .ingredient-name-wrap {
