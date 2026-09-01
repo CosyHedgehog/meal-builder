@@ -15,6 +15,7 @@ export async function initAuth() {
   auth.ready = true
 }
 
+
 export async function signIn(mode, username, password) {
   const result = mode === 'signup'
     ? await authApi.signup(username, password)
