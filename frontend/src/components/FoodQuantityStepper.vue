@@ -64,8 +64,9 @@ function closePopover() {
   emit('toggle', false)
 }
 
-function openAdjustModal() {
+async function openAdjustModal() {
   closePopover()
+  await nextTick()
   emit('adjust')
 }
 
