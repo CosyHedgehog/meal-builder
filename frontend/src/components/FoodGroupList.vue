@@ -252,6 +252,7 @@ onUnmounted(() => {
                 :name="food.name"
                 :quantity="entryFor(food.id)?.qty || 0"
                 :kcal="entryFor(food.id)?.overrides ? entryFoodKcal(entryFor(food.id)) : foodKcal(food)"
+                :kcal-adjustment="entryFor(food.id)?.overrides ? entryFoodKcal(entryFor(food.id)) - foodKcal(food) : 0"
                 :adjusted="!!entryFor(food.id)?.overrides"
                 :adjustable="food.mode !== 'simple' && !!entryFor(food.id)"
                 :locked="locked"

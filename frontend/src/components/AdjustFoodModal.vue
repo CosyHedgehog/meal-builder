@@ -17,7 +17,9 @@ const rows = ref((food.value?.items || []).map((item) => ({
 })))
 
 const baseAmounts = computed(() => new Map((food.value?.items || []).map((item) => [item.ingredientId, Number(item.amount)])))
+const baseKcal = computed(() => food.value ? Math.round((food.value.items || []).reduce((sum, item) => sum + itemKcal(item), 0)) : 0)
 const totalKcal = computed(() => Math.round(rows.value.reduce((sum, row) => sum + itemKcal(row), 0)))
+const kcalAdjustment = computed(() => totalKcal.value - baseKcal.value)
 const hasAdjustment = computed(() => (
   Object.keys(sourceEntry?.overrides || {}).length > 0
   || rows.value.some((row) => Number(row.amount) !== baseAmounts.value.get(row.ingredientId))
@@ -46,7 +48,7 @@ function saveVariant() {
     <div class="adjust-food-content">
       <div class="adjust-food-header">
         <div class="adjust-food-total"><span>Adjusted calories</span><strong>{{ totalKcal.toLocaleString() }}
-            kcal</strong></div>
+          kcal<span v-if="kcalAdjustment" class="adjust-food-kcal-adjustment"> ({{ kcalAdjustment > 0 ? '+' : '' }}{{ kcalAdjustment.toLocaleString() }})</span></strong></div>
       </div>
       <div class="adjust-food-list">
         <div v-for="row in rows" :key="row.ingredientId" class="adjust-food-row"
@@ -104,6 +106,10 @@ function saveVariant() {
   color: var(--green-strong);
   font-family: 'IBM Plex Mono', monospace;
   font-size: 14px;
+}
+
+.adjust-food-kcal-adjustment {
+  font-size: 12px;
 }
 
 .adjust-food-list {

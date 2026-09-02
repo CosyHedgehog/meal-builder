@@ -5,6 +5,7 @@ const props = defineProps({
   name: { type: String, required: true },
   quantity: { type: Number, required: true },
   kcal: { type: Number, required: true },
+  kcalAdjustment: { type: Number, default: 0 },
   initialOpen: { type: Boolean, default: false },
   open: { type: Boolean, default: false },
   colorIndex: { type: Number, default: 0 },
@@ -108,7 +109,7 @@ defineExpose({ closePopover })
       :aria-label="`${name}, quantity ${quantity}`" @click="openQuantityPopover($event, true)">
       <span class="food-stepper-name">{{ name }}<span v-if="oneOff" class="one-off-badge">1-off</span><span
           v-if="adjusted" class="one-off-badge">ADJ</span></span>
-      <span class="food-stepper-kcal">{{ Math.round(kcal * (quantity || 1)).toLocaleString() }} kcal</span>
+      <span class="food-stepper-kcal">{{ Math.round(kcal * (quantity || 1)).toLocaleString() }} kcal<span v-if="kcalAdjustment" class="food-stepper-kcal-adjustment"> ({{ kcalAdjustment > 0 ? '+' : '' }}{{ kcalAdjustment.toLocaleString() }})</span></span>
     </button>
     <button v-if="quantity > 0" type="button" class="food-stepper-quantity" :aria-label="`Customize ${name} quantity`"
       @click="openQuantityPopover">{{ quantity }}</button>
@@ -156,3 +157,10 @@ defineExpose({ closePopover })
     </div>
   </div>
 </template>
+
+<style scoped>
+.food-stepper-kcal-adjustment {
+  color: var(--green-strong);
+  font-weight: 600;
+}
+</style>
