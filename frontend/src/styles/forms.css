@@ -38,3 +38,12 @@
   background-size: 5px 5px, 5px 5px;
 }
 
+.input-field select option {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+[data-theme='dark'] .input-field select {
+  color-scheme: dark;
+}
+
