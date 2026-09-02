@@ -18,7 +18,7 @@ const sortOptions = [
 ]
 const sortMenuOpen = ref(false)
 const archiveMenuOpen = ref(false)
-const showArchived = ref(false)
+const archiveFilter = ref('all')
 const groups = computed(() => store.groups)
 const groupNames = computed(() => new Map(groups.value.map((group) => [group.id, group.name])))
 const sortLabel = computed(() => sortOptions.find((option) => option.value === sortKey.value)?.label || 'calories')
@@ -29,7 +29,10 @@ const archivedFoods = computed(() => {
     : store.foods.filter((f) => f.archived)
   return base
 })
-const sourceFoods = computed(() => showArchived.value ? archivedFoods.value : activeFoods.value)
+const allFoods = computed(() => [...activeFoods.value, ...archivedFoods.value])
+const sourceFoods = computed(() => archiveFilter.value === 'all'
+  ? allFoods.value
+  : archiveFilter.value === 'archived' ? archivedFoods.value : activeFoods.value)
 const filteredFoods = computed(() => {
   const value = query.value.trim().toLowerCase()
   const matchingFoods = value ? sourceFoods.value.filter((food) => food.name.toLowerCase().includes(value)) : sourceFoods.value
@@ -90,7 +93,7 @@ function toggleArchiveMenu() {
   archiveMenuOpen.value = !archiveMenuOpen.value
 }
 function chooseArchive(value) {
-  showArchived.value = value === 'archived'
+  archiveFilter.value = value
   archiveMenuOpen.value = false
 }
 function closeFoodOptions(event) {
@@ -170,33 +173,16 @@ async function removeFood(food) {
               aria-label="Filter foods by status"
               @click.stop="toggleArchiveMenu"
             >
-              <svg v-if="!showArchived" class="food-status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <circle cx="12" cy="12" r="9" />
-                <path d="m8 12 2.5 2.5L16 9" />
-              </svg>
-              <svg v-else class="food-status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M3 6h18" />
-                <path d="M5 6v14h14V6" />
-                <path d="M8 6V4h8v2" />
-                <path d="M9 10h6" />
-              </svg>
-              <span>{{ showArchived ? 'Archived' : 'Active' }}</span>
+              <span>{{ archiveFilter === 'all' ? 'All' : archiveFilter === 'archived' ? 'Archived' : 'Active' }}</span>
             </button>
             <div v-if="archiveMenuOpen" class="food-sort-menu" role="listbox" aria-label="Filter foods by status">
-              <button type="button" role="option" :aria-selected="!showArchived" @click.stop="chooseArchive('active')">
-                <svg class="food-status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <circle cx="12" cy="12" r="9" />
-                  <path d="m8 12 2.5 2.5L16 9" />
-                </svg>
+              <button type="button" role="option" :aria-selected="archiveFilter === 'all'" @click.stop="chooseArchive('all')">
+                All
+              </button>
+              <button type="button" role="option" :aria-selected="archiveFilter === 'active'" @click.stop="chooseArchive('active')">
                 Active
               </button>
-              <button type="button" role="option" :aria-selected="showArchived" @click.stop="chooseArchive('archived')">
-                <svg class="food-status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M3 6h18" />
-                  <path d="M5 6v14h14V6" />
-                  <path d="M8 6V4h8v2" />
-                  <path d="M9 10h6" />
-                </svg>
+              <button type="button" role="option" :aria-selected="archiveFilter === 'archived'" @click.stop="chooseArchive('archived')">
                 Archived
               </button>
             </div>
@@ -259,8 +245,15 @@ async function removeFood(food) {
                   <span v-if="item.archived" class="food-archived-chip">Archived</span>
                 </strong>
                 <small>
-                  {{ foodKcal(item).toLocaleString() }} kcal · {{ item.items.length ? `${item.items.length} ingredient${item.items.length === 1 ? '' : 's'}` : 'simple food' }}
-                  · {{ foodLogCount(item.id) }} log{{ foodLogCount(item.id) === 1 ? '' : 's' }}
+                  {{ foodKcal(item).toLocaleString() }} kcal ·
+                  {{ item.items.length ? `${item.items.length} ingredient${item.items.length === 1 ? '' : 's'}` : 'simple food' }}
+                  · <span class="food-stat">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <rect x="4" y="5" width="16" height="15" rx="2" />
+                      <path d="M8 3v4M16 3v4M4 10h16" />
+                    </svg>
+                    {{ foodLogCount(item.id) }} log{{ foodLogCount(item.id) === 1 ? '' : 's' }}
+                  </span>
                 </small>
               </span>
             </button>
@@ -488,6 +481,10 @@ async function removeFood(food) {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
 }
 
+.food-archive-control .food-sort-menu {
+  min-width: 100px;
+}
+
 .food-sort-menu button {
   display: inline-flex;
   align-items: center;
@@ -584,6 +581,18 @@ async function removeFood(food) {
 .food-manager-content :deep(.manager-item small) {
   margin-top: 3px;
   font-size: 12px;
+}
+
+.food-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.food-stat svg {
+  width: 12px;
+  height: 12px;
+  flex: none;
 }
 
 .food-item-title {
