@@ -418,9 +418,9 @@ async function removeFood(food) {
                   </button>
                   <button class="archive-option" type="button" role="menuitem" @click.stop="doArchiveFood(item)">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <polyline points="21 8 21 21 3 21 3 8" />
-                      <rect x="1" y="3" width="22" height="5" />
-                      <line x1="10" y1="12" x2="14" y2="12" />
+                      <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" />
+                      <circle cx="12" cy="12" r="2.5" />
+                      <line x1="4" y1="4" x2="20" y2="20" />
                     </svg>
                     Hide
                   </button>
@@ -429,8 +429,8 @@ async function removeFood(food) {
                 <template v-else>
                   <button type="button" role="menuitem" @click.stop="doRestoreFood(item)">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <polyline points="1 4 1 10 7 10" />
-                      <path d="M3.51 15a9 9 0 1 0 .49-3.5" />
+                      <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" />
+                      <circle cx="12" cy="12" r="2.5" />
                     </svg>
                     Unhide
                   </button>
