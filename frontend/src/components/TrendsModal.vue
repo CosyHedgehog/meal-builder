@@ -20,6 +20,20 @@ const projectedWeightDisplay = computed(() => (totalWeightChangeDisplay.value / 
 const activeTab = ref('daily')
 const expandedWeek = ref(null)
 const swipeStart = ref(null)
+const weeklyTotals = computed(() => {
+  const weeks = weeklyBreakdown.value
+  const totalLoggedDays = weeks.reduce((sum, week) => sum + week.loggedDays, 0)
+  const totalDays = weeks.reduce((sum, week) => sum + week.totalDays, 0)
+  const totalKcal = weeks.reduce((sum, week) => sum + week.averageKcal * week.loggedDays, 0)
+  const totalDeficit = weeks.reduce((sum, week) => sum + week.totalDeficit, 0)
+  return {
+    averageKcal: totalLoggedDays ? Math.round(totalKcal / totalLoggedDays) : 0,
+    averageDeficit: totalLoggedDays ? Math.round(totalDeficit / totalLoggedDays) : 0,
+    weightChange: displayWeightChange(totalDeficit),
+    loggedDays: totalLoggedDays,
+    totalDays,
+  }
+})
 
 function startSwipe(event) {
   const touch = event.touches[0]
@@ -170,6 +184,14 @@ function toggleWeek(week) {
             </div>
           </div>
         </template>
+        <div v-if="weeklyBreakdown.length" class="trends-week-total-row">
+          <strong>Total</strong>
+          <strong>{{ weeklyTotals.averageKcal.toLocaleString() }}</strong>
+          <strong :class="{ surplus: weeklyTotals.averageDeficit < 0 }">{{ formatKcalDifference(weeklyTotals.averageDeficit) }}</strong>
+          <strong :class="{ surplus: weeklyTotals.weightChange < 0 }">{{ formatWeightChange(weeklyTotals.weightChange) }}</strong>
+          <strong>{{ weeklyTotals.loggedDays }}/{{ weeklyTotals.totalDays }}</strong>
+          <span aria-hidden="true"></span>
+        </div>
         </div>
       </section>
     </div>
@@ -266,6 +288,32 @@ function toggleWeek(week) {
   flex: 1;
   flex-direction: column;
   margin-top: 0;
+}
+
+.trends-week-total-row {
+  display: grid;
+  grid-template-columns: minmax(110px, 1.3fr) repeat(2, minmax(68px, .8fr)) repeat(2, minmax(52px, .6fr)) 18px;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  text-align: center;
+}
+
+.trends-week-total-row strong:first-child {
+  text-align: left;
+}
+
+.trends-week-total-row strong {
+  font-weight: 700;
+}
+
+.trends-week-total-row .surplus {
+  color: var(--red);
 }
 
 .trends-tracking {
