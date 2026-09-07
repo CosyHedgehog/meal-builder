@@ -41,6 +41,7 @@ const variantSearchRef = ref(null)
 const modeSwipeStart = ref(null)
 const { isDirty, confirmDiscard: confirmDraftDiscard } = useDiscardChanges(draft)
 const isDraftCopy = computed(() => props.duplicate && !isNew)
+const canChangeFoodType = isNew || isDraftCopy.value
 
 const groups = computed(() => store.groups)
 const assignedVariantIds = computed(() => new Set(store.foods
@@ -62,6 +63,7 @@ const selectedVariants = computed(() => selectedVariantIds.value
 const validationMessage = ref('')
 
 function setFoodMode(mode) {
+  if (!canChangeFoodType) return
   foodPurpose.value = mode === 'variant' ? 'variant' : 'simple'
   if (mode !== 'variant') {
     foodMode.value = mode
@@ -222,7 +224,7 @@ onUnmounted(() => document.removeEventListener('pointerdown', handleVariantClick
         </div>
       </div>
 
-      <FoodModeSelector :model-value="foodPurpose === 'variant' ? 'variant' : foodMode" @update:model-value="setFoodMode" />
+        <FoodModeSelector v-if="canChangeFoodType" :model-value="foodPurpose === 'variant' ? 'variant' : foodMode" @update:model-value="setFoodMode" />
 
       <div v-if="foodPurpose === 'variant'" class="variant-food-panel">
         <div class="variant-section-heading">

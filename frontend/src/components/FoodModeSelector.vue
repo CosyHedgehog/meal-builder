@@ -1,6 +1,7 @@
 <script setup>
 defineProps({
   modelValue: { type: String, required: true },
+  disabled: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -9,13 +10,13 @@ const emit = defineEmits(['update:modelValue'])
 <template>
   <div class="food-mode-control">
     <div class="food-mode-tabs" role="group" aria-label="Food type">
-      <button type="button" :class="{ active: modelValue === 'ingredients' }" @click="emit('update:modelValue', 'ingredients')">
+      <button type="button" :disabled="disabled" :class="{ active: modelValue === 'ingredients' }" @click="emit('update:modelValue', 'ingredients')">
         Ingredients
       </button>
-      <button type="button" :class="{ active: modelValue === 'simple' }" @click="emit('update:modelValue', 'simple')">
+      <button type="button" :disabled="disabled" :class="{ active: modelValue === 'simple' }" @click="emit('update:modelValue', 'simple')">
         Simple food
       </button>
-      <button type="button" :class="{ active: modelValue === 'variant' }" @click="emit('update:modelValue', 'variant')">
+      <button type="button" :disabled="disabled" :class="{ active: modelValue === 'variant' }" @click="emit('update:modelValue', 'variant')">
         Variants
       </button>
     </div>
@@ -50,5 +51,10 @@ const emit = defineEmits(['update:modelValue'])
   background: var(--surface);
   color: var(--ink);
   font-weight: 700;
+}
+
+.food-mode-tabs button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 </style>
