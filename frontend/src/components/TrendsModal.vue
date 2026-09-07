@@ -188,7 +188,7 @@ function toggleWeek(week) {
           <strong>Total</strong>
           <strong>{{ weeklyTotals.averageKcal.toLocaleString() }}</strong>
           <strong :class="{ surplus: weeklyTotals.averageDeficit < 0 }">{{ formatKcalDifference(weeklyTotals.averageDeficit) }}</strong>
-          <strong :class="{ surplus: weeklyTotals.weightChange < 0 }">{{ formatWeightChange(weeklyTotals.weightChange) }}</strong>
+          <strong>{{ formatWeightChange(weeklyTotals.weightChange) }}</strong>
           <strong>{{ weeklyTotals.loggedDays }}/{{ weeklyTotals.totalDays }}</strong>
           <span aria-hidden="true"></span>
         </div>
