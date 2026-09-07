@@ -38,6 +38,9 @@ const selectedVariantIds = computed({
 const variantQuery = ref('')
 const isVariantDropdownOpen = ref(false)
 const variantSearchRef = ref(null)
+const draggedVariantId = ref(null)
+const draggedOverVariantId = ref(null)
+const variantDrag = { id: null, pointerId: null, active: false, startX: 0, startY: 0 }
 const modeSwipeStart = ref(null)
 const { isDirty, confirmDiscard: confirmDraftDiscard } = useDiscardChanges(draft)
 const isDraftCopy = computed(() => props.duplicate && !isNew)
@@ -83,6 +86,55 @@ function selectVariant(foodId) {
 function removeVariant(foodId) {
   selectedVariantIds.value = selectedVariantIds.value.filter((id) => id !== foodId)
   validationMessage.value = ''
+}
+
+function startVariantDrag(event, foodId) {
+  if (event.button !== 0) return
+  event.preventDefault()
+  event.stopPropagation()
+  event.currentTarget?.setPointerCapture?.(event.pointerId)
+  variantDrag.id = foodId
+  variantDrag.pointerId = event.pointerId
+  variantDrag.active = false
+  variantDrag.startX = event.clientX
+  variantDrag.startY = event.clientY
+}
+
+function handleVariantPointerMove(event) {
+  if (event.pointerId !== variantDrag.pointerId || !variantDrag.id) return
+  const distance = Math.hypot(event.clientX - variantDrag.startX, event.clientY - variantDrag.startY)
+  if (!variantDrag.active && distance < 6) return
+  if (!variantDrag.active) {
+    variantDrag.active = true
+    draggedVariantId.value = variantDrag.id
+  }
+  event.preventDefault()
+  draggedOverVariantId.value = document.elementFromPoint(event.clientX, event.clientY)
+    ?.closest('.selected-variant-row')?.dataset.variantFoodId || ''
+}
+
+function finishVariantDrag(event) {
+  if (event.pointerId !== variantDrag.pointerId) return
+  if (variantDrag.active && draggedOverVariantId.value && draggedOverVariantId.value !== variantDrag.id) {
+    const fromIndex = selectedVariantIds.value.indexOf(variantDrag.id)
+    const targetIndex = selectedVariantIds.value.indexOf(draggedOverVariantId.value)
+    if (fromIndex !== -1 && targetIndex !== -1) {
+      const ids = [...selectedVariantIds.value]
+      const moved = ids[fromIndex]
+      ids[fromIndex] = ids[targetIndex]
+      ids[targetIndex] = moved
+      selectedVariantIds.value = ids
+    }
+  }
+  cancelVariantDrag()
+}
+
+function cancelVariantDrag() {
+  variantDrag.id = null
+  variantDrag.pointerId = null
+  variantDrag.active = false
+  draggedVariantId.value = null
+  draggedOverVariantId.value = null
 }
 
 function openVariantEditor(foodId) {
@@ -197,8 +249,18 @@ async function closeEditor() {
 
 defineExpose({ requestClose: closeEditor })
 
-onMounted(() => document.addEventListener('pointerdown', handleVariantClickOutside))
-onUnmounted(() => document.removeEventListener('pointerdown', handleVariantClickOutside))
+onMounted(() => {
+  document.addEventListener('pointerdown', handleVariantClickOutside)
+  document.addEventListener('pointermove', handleVariantPointerMove, { passive: false })
+  document.addEventListener('pointerup', finishVariantDrag)
+  document.addEventListener('pointercancel', cancelVariantDrag)
+})
+onUnmounted(() => {
+  document.removeEventListener('pointerdown', handleVariantClickOutside)
+  document.removeEventListener('pointermove', handleVariantPointerMove)
+  document.removeEventListener('pointerup', finishVariantDrag)
+  document.removeEventListener('pointercancel', cancelVariantDrag)
+})
 
 </script>
 
@@ -231,7 +293,23 @@ onUnmounted(() => document.removeEventListener('pointerdown', handleVariantClick
           <span>{{ selectedVariants.length }} selected</span>
         </div>
         <div v-if="selectedVariants.length" class="selected-variant-list">
-          <div v-for="food in selectedVariants" :key="food.id" class="selected-variant-row">
+          <div v-for="food in selectedVariants" :key="food.id" class="selected-variant-row"
+            :data-variant-food-id="food.id"
+            :class="{ dragging: draggedVariantId === food.id, 'drag-over': draggedOverVariantId === food.id && draggedVariantId !== food.id }">
+            <button type="button" class="variant-drag-handle"
+              :aria-label="`Reorder ${food.name}`"
+              title="Drag to reorder"
+              @pointerdown="startVariantDrag($event, food.id)"
+              @click.stop>
+              <svg viewBox="0 0 12 18" aria-hidden="true">
+                <rect x="1" y="1" width="3" height="3" rx="0.5" />
+                <rect x="8" y="1" width="3" height="3" rx="0.5" />
+                <rect x="1" y="7.5" width="3" height="3" rx="0.5" />
+                <rect x="8" y="7.5" width="3" height="3" rx="0.5" />
+                <rect x="1" y="14" width="3" height="3" rx="0.5" />
+                <rect x="8" y="14" width="3" height="3" rx="0.5" />
+              </svg>
+            </button>
             <span class="selected-variant-copy">
               <button type="button" class="selected-variant-name" @click="openVariantEditor(food.id)">{{ food.name }}</button>
               <small>{{ foodKcal(food).toLocaleString() }} kcal · {{ food.mode === 'simple' ? 'simple food' : 'ingredients' }}<span v-if="food.archived"> · currently hidden</span></small>
@@ -380,12 +458,57 @@ onUnmounted(() => document.removeEventListener('pointerdown', handleVariantClick
 }
 
 .selected-variant-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
   padding: 9px 10px;
   border-bottom: 1px solid var(--line);
+}
+
+.selected-variant-row.dragging {
+  opacity: 0.45;
+}
+
+.selected-variant-row.drag-over {
+  outline: 2px dashed var(--green);
+  outline-offset: -2px;
+  background: color-mix(in srgb, var(--green-soft) 45%, var(--surface));
+}
+
+.variant-drag-handle {
+  display: inline-flex;
+  width: 20px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: color-mix(in srgb, var(--ink-muted) 72%, transparent);
+  opacity: 0.8;
+  line-height: 1;
+  cursor: grab;
+  touch-action: none;
+}
+
+.variant-drag-handle svg {
+  width: 10px;
+  height: 15px;
+  fill: currentColor;
+}
+
+.variant-drag-handle:hover,
+.variant-drag-handle:focus-visible {
+  background: var(--surface-alt);
+  color: var(--green-strong);
+  opacity: 1;
+}
+
+.variant-drag-handle:active {
+  cursor: grabbing;
 }
 
 .selected-variant-row:last-child {
