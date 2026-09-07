@@ -5,10 +5,29 @@ import { state as store, deleteFood, foodKcal, archiveFood, restoreFood, UNCATEG
 import { confirmAction } from '../js/confirm.js'
 import { openModal, replaceModal, Modals } from '../js/modals.js'
 
+const FOOD_FILTERS_STORAGE_KEY = 'meal-builder-food-filters'
+
+function loadRememberedFoodFilters() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(FOOD_FILTERS_STORAGE_KEY) || '{}')
+    return {
+      groupIds: Array.isArray(stored.groupIds) ? stored.groupIds : [],
+      types: Array.isArray(stored.types) ? stored.types : [],
+      statuses: Array.isArray(stored.statuses) ? stored.statuses : [],
+    }
+  } catch {
+    return { groupIds: [], types: [], statuses: [] }
+  }
+}
+
+const rememberedFoodFilters = loadRememberedFoodFilters()
+
 const props = defineProps({ groupId: { type: String, default: '' } })
 const emit = defineEmits(['close'])
 const query = ref('')
-const selectedGroupIds = ref(props.groupId ? [props.groupId] : [])
+const selectedGroupIds = ref(rememberedFoodFilters.groupIds.length
+  ? [...rememberedFoodFilters.groupIds]
+  : props.groupId ? [props.groupId] : [])
 const sortKey = ref('calories')
 const sortOptions = [
   { value: 'calories', label: 'calories' },
@@ -18,8 +37,8 @@ const sortOptions = [
 ]
 const sortMenuOpen = ref(false)
 const filterMenuOpen = ref(false)
-const selectedTypes = ref([])
-const selectedStatuses = ref([])
+const selectedTypes = ref([...rememberedFoodFilters.types])
+const selectedStatuses = ref([...rememberedFoodFilters.statuses])
 const groups = computed(() => store.groups.filter((group) => group.id !== UNCATEGORIZED_GROUP_ID))
 const groupNames = computed(() => new Map(groups.value.map((group) => [group.id, group.name])))
 const variantFoodIds = computed(() => new Set(store.foods
@@ -125,14 +144,26 @@ function toggleFilterValue(filterName, value) {
   filter.value = filter.value.includes(value)
     ? filter.value.filter((item) => item !== value)
     : [...filter.value, value]
+  rememberFoodFilters()
 }
 function clearFilters() {
   selectedGroupIds.value = []
   selectedTypes.value = []
   selectedStatuses.value = []
+  rememberFoodFilters()
 }
 function clearGroupFilter() {
   selectedGroupIds.value = []
+  rememberFoodFilters()
+}
+function rememberFoodFilters() {
+  rememberedFoodFilters.groupIds = [...selectedGroupIds.value]
+  rememberedFoodFilters.types = [...selectedTypes.value]
+  rememberedFoodFilters.statuses = [...selectedStatuses.value]
+  try {
+    localStorage.setItem(FOOD_FILTERS_STORAGE_KEY, JSON.stringify(rememberedFoodFilters))
+  } catch {
+  }
 }
 function closeFoodOptions(event) {
   if (event.target.closest('.food-options')) return
@@ -169,7 +200,10 @@ function openVariantInfo(food) {
   openModal(Modals.FOOD_VARIANT_INFO, { foodId: food.id })
 }
 onMounted(() => document.addEventListener('click', closeFoodOptions))
-onBeforeUnmount(() => document.removeEventListener('click', closeFoodOptions))
+onBeforeUnmount(() => {
+  rememberFoodFilters()
+  document.removeEventListener('click', closeFoodOptions)
+})
 async function doArchiveFood(food) {
   openOptionsFoodId.value = null
   foodMenuPlacement.value = 'down'
