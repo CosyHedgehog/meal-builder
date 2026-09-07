@@ -86,8 +86,16 @@ async function updateFoodMenuPlacement(foodId) {
   const scrollPane = menu?.closest('.manager-list')
   if (!menu || !scrollPane) return
   const menuRect = menu.getBoundingClientRect()
+  const anchorRect = menu.parentElement.getBoundingClientRect()
   const paneRect = scrollPane.getBoundingClientRect()
-  foodMenuPlacement.value = menuRect.bottom > paneRect.bottom - 6 ? 'up' : 'down'
+  const spaceBelow = paneRect.bottom - anchorRect.bottom
+  const spaceAbove = anchorRect.top - paneRect.top
+  const menuHeight = menuRect.height
+  if (spaceBelow < menuHeight + 6 && spaceAbove > spaceBelow) {
+    foodMenuPlacement.value = 'up'
+  } else {
+    foodMenuPlacement.value = 'down'
+  }
 }
 function toggleFoodOptions(foodId) {
   openOptionsFoodId.value = openOptionsFoodId.value === foodId ? null : foodId
@@ -146,21 +154,25 @@ function openFoodNotes(food) {
 }
 function openFoodStats(food) {
   openOptionsFoodId.value = null
+  foodMenuPlacement.value = 'down'
   openModal(Modals.FOOD_STATS, { foodId: food.id })
 }
 function openFoodFamily(food) {
   openOptionsFoodId.value = null
+  foodMenuPlacement.value = 'down'
   const family = store.foods.find((item) => item.mode === 'family' && (item.variantFoodIds || []).includes(food.id))
   if (family) openModal(Modals.FOOD_EDITOR, { foodId: family.id })
 }
 function openVariantInfo(food) {
   openOptionsFoodId.value = null
+  foodMenuPlacement.value = 'down'
   openModal(Modals.FOOD_VARIANT_INFO, { foodId: food.id })
 }
 onMounted(() => document.addEventListener('click', closeFoodOptions))
 onBeforeUnmount(() => document.removeEventListener('click', closeFoodOptions))
 async function doArchiveFood(food) {
   openOptionsFoodId.value = null
+  foodMenuPlacement.value = 'down'
   const ok = await confirmAction({
     title: 'Hide food?',
     message: `"${food.name}" will be removed from the active food list and be hidden from the dashboard unless it is already selected. Previous log entries will remain intact. Continue?`,
@@ -171,9 +183,12 @@ async function doArchiveFood(food) {
 }
 async function doRestoreFood(food) {
   openOptionsFoodId.value = null
+  foodMenuPlacement.value = 'down'
   restoreFood(food.id)
 }
 async function removeFood(food) {
+  openOptionsFoodId.value = null
+  foodMenuPlacement.value = 'down'
   const logCount = foodLogCount(food.id)
   const message = logCount
     ? `"${food.name}" is logged ${logCount} time${logCount === 1 ? '' : 's'}. Deleting it permanently will remove those log entries and change your calorie history. Continue?`
@@ -328,6 +343,7 @@ async function removeFood(food) {
               </button>
               <div
                 v-if="openOptionsFoodId === item.id"
+                :ref="(el) => setFoodMenuRef(item.id, el)"
                 class="food-options-menu"
                 :class="{ 'food-options-menu-up': foodMenuPlacement === 'up' }"
                 role="menu"
