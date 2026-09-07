@@ -56,7 +56,6 @@ async function selectIngredient(ingredientId) {
     if (!props.draft.items.some((item) => item.ingredientId === ingredientId)) {
         props.draft.items.push({ ingredientId, amount: 1 })
     }
-    searchQuery.value = ''
     highlightedIndex.value = -1
     await nextTick()
     ingredientQuantityInputs.get(ingredientId)?.focus()

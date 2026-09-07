@@ -76,7 +76,6 @@ function selectVariant(foodId) {
   if (!selectedVariantIds.value.includes(foodId)) {
     selectedVariantIds.value = [...selectedVariantIds.value, foodId]
   }
-  variantQuery.value = ''
   validationMessage.value = ''
   variantSearchRef.value?.focus()
 }
