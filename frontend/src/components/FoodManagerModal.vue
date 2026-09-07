@@ -25,9 +25,7 @@ const rememberedFoodFilters = loadRememberedFoodFilters()
 const props = defineProps({ groupId: { type: String, default: '' } })
 const emit = defineEmits(['close'])
 const query = ref('')
-const selectedGroupIds = ref(rememberedFoodFilters.groupIds.length
-  ? [...rememberedFoodFilters.groupIds]
-  : props.groupId ? [props.groupId] : [])
+const selectedGroupIds = ref(props.groupId ? [props.groupId] : [...rememberedFoodFilters.groupIds])
 const sortKey = ref('calories')
 const sortOptions = [
   { value: 'calories', label: 'calories' },
