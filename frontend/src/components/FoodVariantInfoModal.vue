@@ -18,7 +18,7 @@ function viewFamily() {
 <template>
   <BaseModal v-if="food" :title="food.name" subtitle="Family variant" panel-class="food-variant-info-modal" @close="closeModal">
     <div class="variant-info-content">
-      <span class="food-variant-info-chip">VARIANT</span>
+      <span class="food-variant-info-chip">VARIANT OPTION</span>
       <p>This food is part of <strong>{{ family?.name || 'a food family' }}</strong>, so it is hidden from the dashboard food list. Choose it from the family chip instead.</p>
     </div>
     <button v-if="family" class="btn btn-primary btn-full" type="button" @click="viewFamily">View family</button>

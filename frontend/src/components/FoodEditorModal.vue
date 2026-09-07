@@ -53,7 +53,7 @@ const assignedVariantIds = computed(() => new Set(store.foods
 const availableVariants = computed(() => {
   const query = variantQuery.value.trim().toLowerCase()
   return store.foods
-    .filter((food) => food.id !== source?.id && food.mode !== 'family' && !food.archived)
+    .filter((food) => food.id !== source?.id && food.mode !== 'family')
     .filter((food) => !selectedVariantIds.value.includes(food.id))
     .filter((food) => !query || food.name.toLowerCase().includes(query))
 })
@@ -204,7 +204,7 @@ onUnmounted(() => document.removeEventListener('pointerdown', handleVariantClick
 
 <template>
   <BaseModal :title="isNew ? 'New food' : `Edit ${draft.name}`"
-    subtitle="Create or update a food using fixed calories, ingredients, or a food family variant."
+    subtitle="Create or update a food using fixed calories, ingredients, or a variant group."
     panel-class="food-editor-modal"
     :on-touch-start="startModeSwipe"
     :on-touch-end="endModeSwipe"
@@ -227,23 +227,23 @@ onUnmounted(() => document.removeEventListener('pointerdown', handleVariantClick
 
       <div v-if="foodPurpose === 'variant'" class="variant-food-panel">
         <div class="variant-section-heading">
-          <div class="variant-nutrition-heading">Selected variants</div>
+          <div class="variant-nutrition-heading">Selected variant options</div>
           <span>{{ selectedVariants.length }} selected</span>
         </div>
         <div v-if="selectedVariants.length" class="selected-variant-list">
           <div v-for="food in selectedVariants" :key="food.id" class="selected-variant-row">
             <span class="selected-variant-copy">
               <button type="button" class="selected-variant-name" @click="openVariantEditor(food.id)">{{ food.name }}</button>
-              <small>{{ foodKcal(food).toLocaleString() }} kcal · {{ food.mode === 'simple' ? 'simple food' : 'ingredients' }}</small>
+              <small>{{ foodKcal(food).toLocaleString() }} kcal · {{ food.mode === 'simple' ? 'simple food' : 'ingredients' }}<span v-if="food.archived"> · currently hidden</span></small>
             </span>
             <button type="button" class="variant-remove-button" :aria-label="`Remove ${food.name}`" :title="`Remove ${food.name}`" @click="removeVariant(food.id)">
               <span aria-hidden="true">×</span>
             </button>
           </div>
         </div>
-        <div v-else class="variant-empty-state">No variants selected yet.</div>
+        <div v-else class="variant-empty-state">No variant options selected yet.</div>
         <div class="variant-add-heading">
-          <div class="variant-nutrition-heading">Add variant</div>
+          <div class="variant-nutrition-heading">Add variant option</div>
           <span>Search your foods</span>
         </div>
         <div ref="variantSearchRef" class="family-search">
@@ -256,7 +256,7 @@ onUnmounted(() => document.removeEventListener('pointerdown', handleVariantClick
             <button v-for="food in availableVariants" :key="food.id" type="button" class="family-food-option" @click="selectVariant(food.id)">
               <span>
                 <strong>{{ food.name }}</strong>
-                <small>{{ foodKcal(food).toLocaleString() }} kcal · {{ food.mode === 'simple' ? 'simple food' : 'ingredients' }}</small>
+                <small>{{ foodKcal(food).toLocaleString() }} kcal · {{ food.mode === 'simple' ? 'simple food' : 'ingredients' }}<span v-if="food.archived"> · currently hidden</span></small>
               </span>
               <span class="variant-add-button" aria-hidden="true">+</span>
             </button>
@@ -276,7 +276,7 @@ onUnmounted(() => document.removeEventListener('pointerdown', handleVariantClick
 
       <div v-if="validationMessage" class="food-validation">{{ validationMessage }}</div>
       <div class="food-actions">
-        <button class="btn btn-primary primary-wide" type="button" @click="saveFood">{{ isDraftCopy ? 'Create copy' : (isNew ? (foodPurpose === 'variant' ? 'Create variant' : 'Create food') : 'Save food') }}</button>
+        <button class="btn btn-primary primary-wide" type="button" @click="saveFood">{{ isDraftCopy ? 'Create copy' : (isNew ? (foodPurpose === 'variant' ? 'Create variant group' : 'Create food') : 'Save food') }}</button>
       </div>
     </div>
   </BaseModal>

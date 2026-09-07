@@ -276,7 +276,7 @@ async function removeFood(food) {
               </div>
               <div class="food-filter-section">
                 <strong>Food type</strong>
-                <label v-for="option in [{ value: 'simple', label: 'Simple foods' }, { value: 'ingredients', label: 'Ingredient foods' }, { value: 'family', label: 'Variant groups' }, { value: 'variant', label: 'Family variants' }]" :key="option.value" class="food-filter-option">
+                <label v-for="option in [{ value: 'simple', label: 'Simple foods' }, { value: 'ingredients', label: 'Ingredient foods' }, { value: 'family', label: 'Variant groups' }, { value: 'variant', label: 'Variant options' }]" :key="option.value" class="food-filter-option">
                   <input type="checkbox" :checked="selectedTypes.includes(option.value)" @change="toggleFilterValue('types', option.value)" />
                   <span>{{ option.label }}</span>
                 </label>
@@ -346,12 +346,31 @@ async function removeFood(food) {
                   <span v-if="!selectedGroupIds.length" class="food-group-chip">
                     {{ groupNames.get(item.groupId) || 'Uncategorized' }}
                   </span>
-                    <span v-if="variantFoodIds.has(item.id)" class="food-variant-chip" role="button" tabindex="0" @click.stop="openVariantInfo(item)" @keydown.enter.prevent.stop="openVariantInfo(item)" @keydown.space.prevent.stop="openVariantInfo(item)">Variant</span>
-                  <span v-if="item.archived" class="food-archived-chip">Hidden</span>
+                  <span v-if="item.mode === 'family'" class="food-variant-chip">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="m12 2 9 5-9 5-9-5 9-5Z" />
+                      <path d="m3 12 9 5 9-5M3 17l9 5 9-5" />
+                    </svg>
+                    Variant group
+                  </span>
+                  <span v-if="variantFoodIds.has(item.id)" class="food-variant-chip" role="button" tabindex="0" @click.stop="openVariantInfo(item)" @keydown.enter.prevent.stop="openVariantInfo(item)" @keydown.space.prevent.stop="openVariantInfo(item)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M20 12.6V20h-7.4L4 11.4V4h7.4L20 12.6Z" />
+                      <circle cx="8" cy="8" r="1.2" />
+                    </svg>
+                    Variant option
+                  </span>
+                  <span v-if="item.archived" class="food-archived-icon" role="img" aria-label="Hidden" title="Hidden">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" />
+                      <circle cx="12" cy="12" r="2.5" />
+                      <line x1="4" y1="4" x2="20" y2="20" />
+                    </svg>
+                  </span>
                 </strong>
                 <small>
                   {{ item.mode === 'family'
-                    ? `Variable kcal · ${item.variantFoodIds?.length || 0} variant${item.variantFoodIds?.length === 1 ? '' : 's'}`
+                    ? `Variant group · ${item.variantFoodIds?.length || 0} option${item.variantFoodIds?.length === 1 ? '' : 's'}`
                     : `${foodKcal(item).toLocaleString()} kcal · ${item.items.length
                       ? `${item.items.length} ingredient${item.items.length === 1 ? '' : 's'}`
                       : 'simple food'}` }}
@@ -821,20 +840,25 @@ async function removeFood(food) {
   text-transform: uppercase;
 }
 
-.food-archived-chip {
+.food-archived-icon {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  align-items: center;
+  justify-content: center;
   flex: none;
-  padding: 3px 6px;
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--ink-muted) 14%, transparent);
   color: var(--ink-muted);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  line-height: 1;
-  text-transform: uppercase;
+}
+
+.food-archived-icon svg {
+  width: 14px;
+  height: 14px;
 }
 
 .food-variant-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   flex: none;
   border: 0;
   padding: 3px 6px;
@@ -847,6 +871,11 @@ async function removeFood(food) {
   line-height: 1;
   text-transform: uppercase;
   cursor: pointer;
+}
+
+.food-variant-chip svg {
+  width: 12px;
+  height: 12px;
 }
 
 .food-variant-chip:hover,
