@@ -15,6 +15,9 @@ const emit = defineEmits(['update:modelValue'])
       <button type="button" :class="{ active: modelValue === 'simple' }" @click="emit('update:modelValue', 'simple')">
         Simple food
       </button>
+      <button type="button" :class="{ active: modelValue === 'variant' }" @click="emit('update:modelValue', 'variant')">
+        Variants
+      </button>
     </div>
   </div>
 </template>

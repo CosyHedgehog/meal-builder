@@ -1,9 +1,9 @@
 <script setup>
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import BaseModal from './BaseModal.vue'
 import FoodModeSelector from './FoodModeSelector.vue'
-import { state as store, createFood, updateFood } from '../js/data.js'
-import { Modals } from '../js/modals.js'
+import { state as store, createFood, updateFood, addFoodToFamily, foodKcal } from '../js/data.js'
+import { Modals, openModal } from '../js/modals.js'
 import { confirmAction } from '../js/confirm.js'
 import { useDiscardChanges } from '../js/useDiscardChanges.js'
 import FoodIngredientsEditor from './FoodIngredientsEditor.vue'
@@ -11,6 +11,7 @@ import FoodIngredientsEditor from './FoodIngredientsEditor.vue'
 const props = defineProps({
   foodId: { type: String, default: null },
   groupId: { type: String, default: '' },
+  familyId: { type: String, default: null },
   duplicate: { type: Boolean, default: false },
 })
 const emit = defineEmits(['close'])
@@ -23,17 +24,84 @@ const draft = reactive({
   items: source ? source.items.map((item) => ({ ...item })) : [],
   kcal: source ? String(source.kcal || '') : '',
   note: source?.note || '',
+  variantFoodIds: source?.variantFoodIds ? [...source.variantFoodIds] : [],
 })
+const sourceFamily = computed(() => source && store.foodFamilies.find((family) => family.variantFoodIds?.includes(source.id)))
 const foodMode = ref(source?.mode || (source && source.items.length ? 'ingredients' : 'simple'))
+const foodPurpose = ref(source?.mode === 'family' || props.familyId || sourceFamily.value ? 'variant' : 'simple')
+const nutritionMode = ref(source?.mode || (source && source.items.length ? 'ingredients' : 'simple'))
+const selectedFamilyId = ref(props.familyId || sourceFamily.value?.id || '')
+const selectedVariantIds = ref(draft.variantFoodIds)
+const variantQuery = ref('')
+const isVariantDropdownOpen = ref(false)
+const variantSearchRef = ref(null)
 const modeSwipeStart = ref(null)
 const { isDirty, confirmDiscard: confirmDraftDiscard } = useDiscardChanges(draft)
 const isDraftCopy = computed(() => props.duplicate && !isNew)
 
-const totalKcal = computed(() => Math.round(Number(draft.kcal) || 0))
 const groups = computed(() => store.groups)
+const assignedVariantIds = computed(() => new Set(store.foods
+  .filter((food) => food.mode === 'family' && (!source?.id || props.duplicate || food.id !== source.id))
+  .flatMap((food) => food.variantFoodIds || [])
+  .concat(store.foodFamilies
+    .filter((family) => !source?.id || props.duplicate || family.id !== source.id)
+    .flatMap((family) => family.variantFoodIds || []))))
+const availableVariants = computed(() => {
+  const query = variantQuery.value.trim().toLowerCase()
+  return store.foods
+    .filter((food) => food.id !== source?.id && food.mode !== 'family' && !food.archived)
+    .filter((food) => !selectedVariantIds.value.includes(food.id))
+    .filter((food) => !query || food.name.toLowerCase().includes(query))
+})
+const selectedVariants = computed(() => selectedVariantIds.value
+  .map((id) => store.foods.find((food) => food.id === id))
+  .filter(Boolean))
 const validationMessage = ref('')
 
 function setFoodMode(mode) {
+  foodPurpose.value = mode === 'variant' ? 'variant' : 'simple'
+  if (mode !== 'variant') {
+    foodMode.value = mode
+    nutritionMode.value = mode
+  }
+  validationMessage.value = ''
+}
+
+function selectVariant(foodId) {
+  if (!selectedVariantIds.value.includes(foodId)) {
+    selectedVariantIds.value = [...selectedVariantIds.value, foodId]
+  }
+  variantQuery.value = ''
+  isVariantDropdownOpen.value = false
+  validationMessage.value = ''
+  variantSearchRef.value?.focus()
+}
+
+function removeVariant(foodId) {
+  selectedVariantIds.value = selectedVariantIds.value.filter((id) => id !== foodId)
+  validationMessage.value = ''
+}
+
+function openVariantEditor(foodId) {
+  openModal(Modals.FOOD_EDITOR, { foodId })
+}
+
+function handleVariantSearchFocus() {
+  isVariantDropdownOpen.value = true
+}
+
+function handleVariantSearchInput() {
+  isVariantDropdownOpen.value = true
+}
+
+function handleVariantClickOutside(event) {
+  if (variantSearchRef.value && !variantSearchRef.value.contains(event.target)) {
+    isVariantDropdownOpen.value = false
+  }
+}
+
+function setNutritionMode(mode) {
+  nutritionMode.value = mode
   foodMode.value = mode
   validationMessage.value = ''
 }
@@ -59,21 +127,33 @@ async function saveFood() {
     return
   }
   const fixedKcal = parseFloat(draft.kcal)
-  if (foodMode.value === 'ingredients' && !draft.items.length) {
+  if (foodPurpose.value === 'variant' && !selectedVariantIds.value.length) {
+    validationMessage.value = 'Select at least one food for this variant list.'
+    return
+  }
+  if (foodPurpose.value === 'variant' && selectedVariantIds.value.some((id) => assignedVariantIds.value.has(id))) {
+    validationMessage.value = 'A food can only belong to one variant family.'
+    return
+  }
+  if (foodPurpose.value !== 'variant' && nutritionMode.value === 'ingredients' && !draft.items.length) {
     validationMessage.value = 'Add at least one ingredient before saving.'
     return
   }
-  if (foodMode.value === 'simple' && (!Number.isFinite(fixedKcal) || fixedKcal <= 0)) {
+  if (foodPurpose.value !== 'variant' && nutritionMode.value === 'simple' && (!Number.isFinite(fixedKcal) || fixedKcal <= 0)) {
     validationMessage.value = 'Enter calories per serving before saving.'
     return
   }
   const payload = {
     ...draft,
     items: draft.items,
-    mode: foodMode.value,
-    kcal: foodMode.value === 'simple' ? fixedKcal : 0,
+    mode: foodPurpose.value === 'variant' ? 'family' : nutritionMode.value,
+    kcal: foodPurpose.value === 'variant' ? 0 : nutritionMode.value === 'simple' ? fixedKcal : 0,
+    variantFoodIds: foodPurpose.value === 'variant' ? selectedVariantIds.value : [],
   }
-  if (isNew || isDraftCopy.value) createFood(payload)
+  if (isNew || isDraftCopy.value) {
+    const createdFoodId = createFood(payload)
+    if (foodPurpose.value === 'variant' && props.familyId) addFoodToFamily(props.familyId, createdFoodId)
+  }
   else {
     const hasChanges = source.name !== payload.name?.trim()
       || source.groupId !== payload.groupId
@@ -114,11 +194,14 @@ async function closeEditor() {
 
 defineExpose({ requestClose: closeEditor })
 
+onMounted(() => document.addEventListener('pointerdown', handleVariantClickOutside))
+onUnmounted(() => document.removeEventListener('pointerdown', handleVariantClickOutside))
+
 </script>
 
 <template>
   <BaseModal :title="isNew ? 'New food' : `Edit ${draft.name}`"
-    subtitle="Create or update a food using ingredients or fixed calories."
+    subtitle="Create or update a food using fixed calories, ingredients, or a food family variant."
     panel-class="food-editor-modal"
     :on-touch-start="startModeSwipe"
     :on-touch-end="endModeSwipe"
@@ -137,11 +220,51 @@ defineExpose({ requestClose: closeEditor })
         </div>
       </div>
 
-      <FoodModeSelector :model-value="foodMode" @update:model-value="setFoodMode" />
+      <FoodModeSelector :model-value="foodPurpose === 'variant' ? 'variant' : foodMode" @update:model-value="setFoodMode" />
 
-      <FoodIngredientsEditor v-if="foodMode === 'ingredients'" :draft="draft" />
+      <div v-if="foodPurpose === 'variant'" class="variant-food-panel">
+        <div class="variant-section-heading">
+          <div class="variant-nutrition-heading">Selected variants</div>
+          <span>{{ selectedVariants.length }} selected</span>
+        </div>
+        <div v-if="selectedVariants.length" class="selected-variant-list">
+          <div v-for="food in selectedVariants" :key="food.id" class="selected-variant-row">
+            <span class="selected-variant-copy">
+              <button type="button" class="selected-variant-name" @click="openVariantEditor(food.id)">{{ food.name }}</button>
+              <small>{{ foodKcal(food).toLocaleString() }} kcal · {{ food.mode === 'simple' ? 'simple food' : 'ingredients' }}</small>
+            </span>
+            <button type="button" class="variant-remove-button" :aria-label="`Remove ${food.name}`" :title="`Remove ${food.name}`" @click="removeVariant(food.id)">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+        </div>
+        <div v-else class="variant-empty-state">No variants selected yet.</div>
+        <div class="variant-add-heading">
+          <div class="variant-nutrition-heading">Add variant</div>
+          <span>Search your foods</span>
+        </div>
+        <div ref="variantSearchRef" class="family-search">
+          <div class="variant-search-input-wrap">
+            <span class="variant-search-icon" aria-hidden="true">⌕</span>
+            <input v-model="variantQuery" type="search" aria-label="Search foods to add" placeholder="Search foods to add" @focus="handleVariantSearchFocus" @input="handleVariantSearchInput" />
+            <button v-if="variantQuery" type="button" class="variant-search-clear" aria-label="Clear search" @click="variantQuery = ''; variantSearchRef?.querySelector('input')?.focus()">×</button>
+          </div>
+          <div v-if="isVariantDropdownOpen" class="family-food-list">
+            <button v-for="food in availableVariants" :key="food.id" type="button" class="family-food-option" @click="selectVariant(food.id)">
+              <span>
+                <strong>{{ food.name }}</strong>
+                <small>{{ foodKcal(food).toLocaleString() }} kcal · {{ food.mode === 'simple' ? 'simple food' : 'ingredients' }}</small>
+              </span>
+              <span class="variant-add-button" aria-hidden="true">+</span>
+            </button>
+            <p v-if="!availableVariants.length" class="variant-search-empty">No foods match this search.</p>
+          </div>
+        </div>
+      </div>
 
-      <div v-else class="simple-food-panel">
+      <FoodIngredientsEditor v-if="foodPurpose !== 'variant' && nutritionMode === 'ingredients'" :draft="draft" />
+
+      <div v-else-if="foodPurpose !== 'variant' && nutritionMode === 'simple'" class="simple-food-panel">
         <div class="input-field simple-food-field">
           <label for="foodKcal">Calories per serving</label>
           <input id="foodKcal" v-model="draft.kcal" type="number" min="1" step="1" placeholder="e.g. 95" @keydown.enter.prevent="saveFood" />
@@ -150,7 +273,7 @@ defineExpose({ requestClose: closeEditor })
 
       <div v-if="validationMessage" class="food-validation">{{ validationMessage }}</div>
       <div class="food-actions">
-        <button class="btn btn-primary primary-wide" type="button" @click="saveFood">{{ isDraftCopy ? 'Create copy' : (isNew ? 'Create food' : 'Save food') }}</button>
+        <button class="btn btn-primary primary-wide" type="button" @click="saveFood">{{ isDraftCopy ? 'Create copy' : (isNew ? (foodPurpose === 'variant' ? 'Create variant' : 'Create food') : 'Save food') }}</button>
       </div>
     </div>
   </BaseModal>
@@ -214,6 +337,303 @@ defineExpose({ requestClose: closeEditor })
 
 .simple-food-panel {
   padding: 4px 0 0;
+}
+
+.variant-food-panel {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0 0;
+}
+
+.variant-section-heading,
+.variant-add-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.variant-section-heading > span,
+.variant-add-heading > span {
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
+.variant-add-heading {
+  margin-top: auto;
+}
+
+.selected-variant-list {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.selected-variant-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.selected-variant-row:last-child {
+  border-bottom: 0;
+}
+
+.selected-variant-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.selected-variant-copy strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.selected-variant-name {
+  width: fit-content;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.selected-variant-name:hover,
+.selected-variant-name:focus-visible {
+  color: var(--green-strong);
+  text-decoration: underline;
+  outline: none;
+}
+
+.selected-variant-copy small {
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
+.variant-remove-button,
+.variant-add-button {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.variant-remove-button:hover,
+.variant-remove-button:focus-visible {
+  color: var(--red);
+  outline: none;
+}
+
+.variant-empty-state {
+  padding: 10px;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  color: var(--ink-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.variant-food-panel > .variant-empty-state {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+}
+
+.family-search input {
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface-alt);
+  color: var(--ink);
+}
+
+.family-search {
+  position: relative;
+}
+
+.variant-search-input-wrap {
+  position: relative;
+}
+
+.variant-search-input-wrap input {
+  padding-right: 34px;
+  padding-left: 32px;
+}
+
+.variant-search-icon {
+  position: absolute;
+  top: 50%;
+  left: 11px;
+  z-index: 1;
+  color: var(--ink-muted);
+  font-size: 20px;
+  line-height: 1;
+  pointer-events: none;
+  transform: translateY(-52%);
+}
+
+.variant-search-clear {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 18px;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+
+.variant-search-clear:hover,
+.variant-search-clear:focus-visible {
+  background: var(--surface-alt);
+  color: var(--ink);
+  outline: none;
+}
+
+.family-food-list {
+  position: absolute;
+  z-index: 3;
+  bottom: calc(100% + 5px);
+  right: 0;
+  left: 0;
+  display: flex;
+  max-height: 190px;
+  flex-direction: column;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-alt);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 22%);
+}
+
+.family-food-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+
+.family-food-option:last-child {
+  border-bottom: 0;
+}
+
+.family-food-option span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.family-food-option strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.family-food-option small {
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
+.family-food-option:hover,
+.family-food-option:focus-visible {
+  background: color-mix(in srgb, var(--surface-alt) 82%, var(--line));
+  outline: none;
+}
+
+.variant-add-button {
+  background: var(--surface-alt);
+  color: var(--green-strong);
+  font-size: 18px;
+}
+
+.variant-search-empty {
+  margin: 0;
+  padding: 13px 10px;
+  color: var(--ink-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.variant-nutrition-heading {
+  color: var(--ink-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.food-family-select {
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface-alt);
+  color: var(--ink);
+}
+
+.variant-nutrition-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 9px;
+  background: var(--surface-alt);
+}
+
+.variant-nutrition-tabs button {
+  flex: 1;
+  min-height: 29px;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.variant-nutrition-tabs button.active {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 700;
 }
 
 .simple-food-panel .input-field {

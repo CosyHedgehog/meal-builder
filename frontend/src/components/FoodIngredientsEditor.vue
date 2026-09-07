@@ -221,7 +221,7 @@ async function removeRow(ingredientId) {
                 <strong>No ingredients added</strong>
                 <span>Search or type an ingredient below to add it.</span>
             </div>
-            <div class="ingredient-list">
+            <div v-if="ingredientRows.length" class="ingredient-list">
                 <div v-for="row in ingredientRows" :key="row.item.ingredientId" class="ingredient-row"
                     :data-ingredient-id="row.item.ingredientId"
                     :class="{ dragging: draggedIngredientId === row.item.ingredientId, 'drag-over': draggedOverIngredientId === row.item.ingredientId && draggedIngredientId !== row.item.ingredientId }">
@@ -260,9 +260,13 @@ async function removeRow(ingredientId) {
             </div>
         </div>
 
+        <div class="ingredient-search-heading">
+            <span>Add ingredients</span>
+            <small>Search your ingredients</small>
+        </div>
         <div ref="comboboxRef" class="ingredient-combobox">
             <div class="combobox-input-wrap">
-                <span class="combobox-search-icon" aria-hidden="true">🔍</span>
+                <span class="combobox-search-icon" aria-hidden="true">⌕</span>
                 <input
                     ref="searchInputRef"
                     v-model="searchQuery"
@@ -298,8 +302,11 @@ async function removeRow(ingredientId) {
                         @click="handleOptionSelect(opt)"
                         @mouseenter="highlightedIndex = idx"
                     >
-                        <span class="option-name">{{ opt.item.name }}</span>
-                        <span class="option-meta">{{ opt.item.kcal }} kcal {{ opt.item.unit === 'g' ? '/ 100g' : '/ item' }}</span>
+                        <span class="combobox-option-copy">
+                            <span class="option-name">{{ opt.item.name }}</span>
+                            <span class="option-meta">{{ opt.item.kcal }} kcal {{ opt.item.unit === 'g' ? '/ 100g' : '/ item' }}</span>
+                        </span>
+                        <span class="combobox-add-button" aria-hidden="true">+</span>
                     </button>
 
                     <button
@@ -361,10 +368,7 @@ async function removeRow(ingredientId) {
     gap: 7px;
     min-height: 0;
     max-height: 194px;
-    padding: 5px;
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    background: color-mix(in srgb, var(--surface) 92%, var(--surface-alt));
+    padding: 0;
     overflow: hidden;
 }
 
@@ -372,6 +376,10 @@ async function removeRow(ingredientId) {
     min-height: 82px;
     align-items: center;
     justify-content: center;
+    padding: 5px;
+    border: 1px dashed var(--line);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--surface) 92%, var(--surface-alt));
 }
 
 .food-ingredients-empty {
@@ -446,7 +454,8 @@ async function removeRow(ingredientId) {
 
 .ingredient-list {
     overflow: hidden;
-    border-radius: 8px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
     background: var(--surface);
 }
 
@@ -695,24 +704,31 @@ async function removeRow(ingredientId) {
     overflow: visible;
 }
 
+.food-ingredients-list-container.empty {
+    padding: 5px;
+    border: 1px dashed var(--line);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--surface) 92%, var(--surface-alt));
+}
+
 .ingredient-list {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    border-radius: 0;
-    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
 }
 
 .ingredient-row {
     min-height: 50px;
     padding: 7px 4px;
-    border-top: 0;
-    border-radius: 10px;
+    border-radius: 0;
     background: transparent;
 }
 
 .ingredient-row + .ingredient-row {
-    border-top: 0;
+    border-top: 1px solid var(--line);
 }
 
 .ingredient-row:hover {
@@ -776,7 +792,28 @@ async function removeRow(ingredientId) {
 .ingredient-combobox {
     position: relative;
     width: 100%;
-    margin-top: 4px;
+    margin-top: 0;
+}
+
+.ingredient-search-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0 2px;
+}
+
+.ingredient-search-heading span {
+    color: var(--ink-muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.ingredient-search-heading small {
+    color: var(--ink-muted);
+    font-size: 11px;
 }
 
 .combobox-input-wrap {
@@ -788,30 +825,29 @@ async function removeRow(ingredientId) {
 
 .combobox-search-icon {
     position: absolute;
+    top: 50%;
     left: 12px;
-    font-size: 13px;
-    opacity: 0.6;
+    color: var(--ink-muted);
+    font-size: 20px;
+    line-height: 1;
     pointer-events: none;
+    transform: translateY(-52%);
 }
 
 .combobox-input {
     width: 100%;
     min-height: 40px;
     padding: 9px 34px 9px 34px;
-    border: 1px dashed var(--line);
+    border: 1px solid var(--line);
     border-radius: 10px;
-    background: var(--surface);
+    background: var(--surface-alt);
     color: var(--ink);
     font-size: 13px;
-    transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .combobox-input:focus {
-    border-style: solid;
-    border-color: var(--green-light);
-    background: var(--surface-alt);
+    border-color: var(--line);
     outline: none;
-    box-shadow: 0 0 0 2px rgba(var(--green-rgb, 76, 175, 80), 0.15);
 }
 
 .combobox-clear-btn {
@@ -824,17 +860,17 @@ async function removeRow(ingredientId) {
     height: 20px;
     padding: 0;
     border: 0;
-    border-radius: 50%;
-    background: var(--surface-alt);
+    border-radius: 0;
+    background: transparent;
     color: var(--ink-muted);
-    font-size: 14px;
+    font-size: 18px;
     line-height: 1;
     cursor: pointer;
 }
 
 .combobox-clear-btn:hover {
-    color: var(--ink);
-    background: var(--line);
+    color: var(--red);
+    background: transparent;
 }
 
 .combobox-dropdown {
@@ -843,12 +879,12 @@ async function removeRow(ingredientId) {
     left: 0;
     right: 0;
     z-index: 20;
-    max-height: 220px;
+    max-height: 190px;
     overflow-y: auto;
     border: 1px solid var(--line);
     border-radius: 10px;
-    background: var(--surface);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    background: var(--surface-alt);
+    box-shadow: 0 10px 24px rgb(0 0 0 / 22%);
     display: flex;
     flex-direction: column;
 }
@@ -866,15 +902,13 @@ async function removeRow(ingredientId) {
     justify-content: space-between;
     gap: 8px;
     width: 100%;
-    padding: 9px 12px;
+    padding: 9px 4px 9px 10px;
     border: 0;
     border-bottom: 1px solid var(--line);
     background: transparent;
     color: var(--ink);
-    font-size: 12px;
     text-align: left;
     cursor: pointer;
-    transition: background-color 0.1s ease;
 }
 
 .combobox-option:last-of-type {
@@ -883,22 +917,42 @@ async function removeRow(ingredientId) {
 
 .combobox-option:hover,
 .combobox-option.is-highlighted {
-    background: var(--surface-alt);
-    color: var(--green-strong);
+    background: color-mix(in srgb, var(--surface-alt) 82%, var(--line));
 }
 
 .combobox-option .option-name {
-    flex: 1;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.combobox-option-copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
 }
 
 .combobox-option .option-meta {
-    flex: none;
     color: var(--ink-muted);
     font-size: 11px;
+}
+
+.combobox-add-button {
+    display: inline-flex;
+    width: 30px;
+    height: 30px;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    border-radius: 50%;
+    background: var(--surface-alt);
+    color: var(--green-strong);
+    font-size: 20px;
+    line-height: 1;
 }
 
 .combobox-create-option {
@@ -921,9 +975,9 @@ async function removeRow(ingredientId) {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 6px;
-    background: var(--surface);
+    background: var(--surface-alt);
     border-top: 1px solid var(--line);
-    padding: 6px;
+    padding: 6px 4px 4px 6px;
     z-index: 2;
 }
 
@@ -934,9 +988,9 @@ async function removeRow(ingredientId) {
     gap: 5px;
     width: 100%;
     padding: 6px 8px;
-    border: 0;
-    border-radius: 6px;
-    background: var(--surface-alt);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: transparent;
     color: var(--ink-muted);
     font-size: 11px;
     cursor: pointer;

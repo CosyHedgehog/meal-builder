@@ -34,9 +34,30 @@ function ensureUncategorizedGroup(groups) {
     : [...groups, { id: UNCATEGORIZED_GROUP_ID, name: 'Uncategorized', visible: false }]
 }
 
+function migrateFoodFamilies() {
+  if (!state.foodFamilies.length) return
+  const existingIds = new Set(state.foods.map((food) => food.id))
+  state.foodFamilies.forEach((family) => {
+    if (existingIds.has(family.id)) return
+    state.foods.push({
+      id: family.id,
+      name: family.name || 'Untitled food',
+      items: [],
+      mode: 'family',
+      kcal: 0,
+      note: '',
+      groupId: family.groupId || UNCATEGORIZED_GROUP_ID,
+      variantFoodIds: [...new Set(family.variantFoodIds || [])],
+      showStandalone: family.showStandalone === true,
+    })
+  })
+  state.foodFamilies = []
+}
+
 export const state = reactive({
   ingredients: [],
   foods: [],
+  foodFamilies: [],
   groups: [],
   logs: {}, // 'YYYY-MM-DD' -> { entries: [...] }
   maintenanceCal: DEFAULT_MAINTENANCE,
@@ -161,6 +182,7 @@ function migrateLegacyPayload(parsed) {
   return {
     ingredients,
     foods,
+    foodFamilies: [],
     groups: defaultGroups(),
     logs,
     maintenanceCal: parsed.maintenanceCal || DEFAULT_MAINTENANCE,
@@ -178,6 +200,7 @@ export function snapshot() {
   return {
     ingredients: state.ingredients,
     foods: state.foods,
+    foodFamilies: state.foodFamilies,
     groups: state.groups,
     logs: state.logs,
     maintenanceCal: state.maintenanceCal,
@@ -192,6 +215,7 @@ export function snapshot() {
 function applyDefaults() {
   state.ingredients = []
   state.foods = []
+  state.foodFamilies = []
   state.groups = defaultGroups()
   state.logs = {}
   state.maintenanceCal = DEFAULT_MAINTENANCE
@@ -210,6 +234,8 @@ export async function loadData() {
 
     state.ingredients = Array.isArray(normalized.ingredients) ? normalized.ingredients : []
     state.foods = Array.isArray(normalized.foods) ? normalized.foods : []
+    state.foodFamilies = Array.isArray(normalized.foodFamilies) ? normalized.foodFamilies : []
+    migrateFoodFamilies()
     state.groups = ensureUncategorizedGroup(
       Array.isArray(normalized.groups) && normalized.groups.length
         ? normalized.groups
@@ -244,6 +270,8 @@ export async function importData(payload) {
   const normalized = hasRecoverableLegacyData(payload) ? migrateLegacyPayload(payload) : payload
   state.ingredients = Array.isArray(normalized.ingredients) ? normalized.ingredients : []
   state.foods = Array.isArray(normalized.foods) ? normalized.foods : []
+  state.foodFamilies = Array.isArray(normalized.foodFamilies) ? normalized.foodFamilies : []
+  migrateFoodFamilies()
   state.groups = ensureUncategorizedGroup(
     Array.isArray(normalized.groups) && normalized.groups.length ? normalized.groups : defaultGroups(),
   )
@@ -307,8 +335,20 @@ export function getFood(id) {
   return state.foods.find((f) => f.id === id)
 }
 
+export function getFoodFamily(id) {
+  return state.foods.find((food) => food.id === id && food.mode === 'family')
+    || state.foodFamilies.find((family) => family.id === id)
+}
+
+export function foodFamiliesInGroup(groupId) {
+  const foodFamilies = state.foods.filter((food) => food.groupId === groupId && food.mode === 'family' && !food.archived)
+  const legacyFamilies = state.foodFamilies.filter((family) => family.groupId === groupId && !family.archived)
+  return [...foodFamilies, ...legacyFamilies]
+}
+
 export function foodKcal(food) {
   if (!food) return 0
+  if (food.mode === 'family') return 0
   if (food.mode === 'simple') return Math.round(Number(food.kcal) || 0)
   if (!(food.items || []).length) return Math.round(Number(food.kcal) || 0)
   return Math.round((food.items || []).reduce((sum, it) => sum + itemKcal(it), 0))
@@ -339,7 +379,12 @@ export function visibleGroups() {
 }
 
 export function foodsInGroup(groupId) {
-  return state.foods.filter((f) => f.groupId === groupId && !f.archived)
+  const families = [
+    ...state.foods.filter((food) => food.mode === 'family' && food.groupId === groupId),
+    ...state.foodFamilies.filter((family) => family.groupId === groupId && family.showStandalone !== true),
+  ]
+  const hiddenVariantIds = new Set(families.flatMap((family) => family.variantFoodIds || []))
+  return state.foods.filter((f) => f.groupId === groupId && f.mode !== 'family' && !f.archived && !hiddenVariantIds.has(f.id))
 }
 
 export function reorderGroups(groupId, targetGroupId) {
@@ -517,10 +562,11 @@ export function createFood(draft) {
     id: uid('food'),
     name: draft.name?.trim() || 'Untitled food',
     items: (draft.items || []).map((it) => ({ ...it })),
-    mode: draft.mode === 'simple' ? 'simple' : 'ingredients',
+    mode: draft.mode === 'family' ? 'family' : draft.mode === 'simple' ? 'simple' : 'ingredients',
     kcal: Number.isFinite(draft.kcal) ? Math.round(draft.kcal) : 0,
     note: String(draft.note || '').trim(),
     groupId: draft.groupId || UNCATEGORIZED_GROUP_ID,
+    variantFoodIds: draft.mode === 'family' ? [...new Set(draft.variantFoodIds || [])] : undefined,
   }
   state.foods.push(food)
   save()
@@ -533,9 +579,11 @@ export function updateFood(id, draft) {
   const previousGroupId = food.groupId
   food.name = draft.name?.trim() || 'Untitled food'
   food.items = (draft.items || []).map((it) => ({ ...it }))
-  food.mode = draft.mode === 'simple' ? 'simple' : 'ingredients'
+  food.mode = draft.mode === 'family' ? 'family' : draft.mode === 'simple' ? 'simple' : 'ingredients'
   food.kcal = Number.isFinite(draft.kcal) ? Math.round(draft.kcal) : 0
   food.note = String(draft.note || '').trim()
+  if (food.mode === 'family') food.variantFoodIds = [...new Set(draft.variantFoodIds || [])]
+  else delete food.variantFoodIds
   const ingredientIds = new Set(food.items.map((item) => item.ingredientId))
   Object.values(state.logs).forEach((log) => {
     logEntries(log).forEach((entry) => {
@@ -570,10 +618,47 @@ export function updateFoodNote(id, note) {
 
 export function deleteFood(id) {
   state.foods = state.foods.filter((f) => f.id !== id)
+  state.foods.forEach((food) => {
+    if (food.mode === 'family') {
+      food.variantFoodIds = (food.variantFoodIds || []).filter((foodId) => foodId !== id)
+    }
+  })
+  state.foodFamilies.forEach((family) => {
+    family.variantFoodIds = (family.variantFoodIds || []).filter((foodId) => foodId !== id)
+    if (family.defaultVariantId === id) family.defaultVariantId = family.variantFoodIds[0] || null
+  })
   // Also drop it from any logged day so totals stay honest.
   Object.values(state.logs).forEach((log) => {
     log.entries = logEntries(log).filter((e) => e.foodId !== id)
   })
+  save()
+}
+
+export function createFoodFamily({ name, groupId, variantFoodIds = [], showStandalone = false }) {
+  const family = {
+    id: uid('family'),
+    name: String(name || '').trim() || 'Untitled family',
+    groupId: groupId || UNCATEGORIZED_GROUP_ID,
+    variantFoodIds: [...new Set(variantFoodIds)].filter((foodId) => !!getFood(foodId)),
+    defaultVariantId: variantFoodIds[0] || null,
+    showStandalone: showStandalone === true,
+  }
+  state.foodFamilies.push(family)
+  save()
+  return family.id
+}
+
+export function addFoodToFamily(familyId, foodId) {
+  const family = getFoodFamily(familyId)
+  if (!family || !getFood(foodId)) return
+  family.variantFoodIds ||= []
+  if (!family.variantFoodIds.includes(foodId)) family.variantFoodIds.push(foodId)
+  if (!family.defaultVariantId) family.defaultVariantId = foodId
+  save()
+}
+
+export function deleteFoodFamily(id) {
+  state.foodFamilies = state.foodFamilies.filter((family) => family.id !== id)
   save()
 }
 
@@ -621,6 +706,29 @@ export function addLogFood(dateStr, groupId, foodId, qty = 1) {
   const existing = log.entries.find((e) => e.groupId === groupId && e.foodId === foodId)
   if (existing) existing.qty += q
   else log.entries.push({ id: uid('entry'), groupId, foodId, qty: q })
+  save()
+}
+
+export function selectFoodFamilyVariant(dateStr, familyId, foodId) {
+  const family = getFoodFamily(familyId)
+  const variantIds = new Set(family?.variantFoodIds || [])
+  if (!family || !variantIds.has(foodId)) return
+  const log = ensureLog(dateStr)
+  const matchingEntries = log.entries.filter((entry) => variantIds.has(entry.foodId))
+  if (matchingEntries.length === 1 && matchingEntries[0].foodId === foodId) return
+  log.entries = log.entries.filter((entry) => !variantIds.has(entry.foodId))
+  log.entries.push({ id: uid('entry'), groupId: family.groupId, foodId, qty: 1 })
+  save()
+}
+
+export function clearFoodFamilyVariant(dateStr, familyId) {
+  const family = getFoodFamily(familyId)
+  const variantIds = new Set(family?.variantFoodIds || [])
+  if (!family || !variantIds.size) return
+  const log = ensureLog(dateStr)
+  const nextEntries = log.entries.filter((entry) => !variantIds.has(entry.foodId))
+  if (nextEntries.length === log.entries.length) return
+  log.entries = nextEntries
   save()
 }
 

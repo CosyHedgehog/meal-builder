@@ -8,8 +8,11 @@ import ImportDataModal from './ImportDataModal.vue'
 import FoodEditorModal from './FoodEditorModal.vue'
 import FoodNotesModal from './FoodNotesModal.vue'
 import FoodStatsModal from './FoodStatsModal.vue'
+import FoodVariantInfoModal from './FoodVariantInfoModal.vue'
 import IngredientEditorModal from './IngredientEditorModal.vue'
 import FoodManagerModal from './FoodManagerModal.vue'
+import FoodFamilyModal from './FoodFamilyModal.vue'
+import FoodFamilyPickerModal from './FoodFamilyPickerModal.vue'
 import GroupManagerModal from './GroupManagerModal.vue'
 import IngredientModal from './IngredientModal.vue'
 import IngredientFoodsModal from './IngredientFoodsModal.vue'
@@ -25,8 +28,11 @@ const registry = {
   [Modals.FOOD_EDITOR]: FoodEditorModal,
   [Modals.FOOD_NOTES]: FoodNotesModal,
   [Modals.FOOD_STATS]: FoodStatsModal,
+  [Modals.FOOD_VARIANT_INFO]: FoodVariantInfoModal,
   [Modals.INGREDIENT_EDITOR]: IngredientEditorModal,
   [Modals.FOOD_MANAGER]: FoodManagerModal,
+  [Modals.FOOD_FAMILIES]: FoodFamilyModal,
+  [Modals.FOOD_FAMILY_PICKER]: FoodFamilyPickerModal,
   [Modals.GROUP_MANAGER]: GroupManagerModal,
   [Modals.INGREDIENT_MANAGER]: IngredientModal,
   [Modals.INGREDIENT_FOODS]: IngredientFoodsModal,

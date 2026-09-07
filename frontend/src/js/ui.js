@@ -2,7 +2,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { todayStr } from './date.js'
 
 /* ---- selected log date ---- */
-export const view = reactive({ logDate: todayStr(), draggedFoodId: '', draggedOverFoodId: '', draggedGroupId: '', draggedOverGroupId: '', draggedEntryId: '', draggedOverEntryId: '', dragType: '', dragConsumedSwipe: false })
+export const view = reactive({ logDate: todayStr(), selectedFamilyVariants: {}, openFoodStepperId: '', draggedFoodId: '', draggedOverFoodId: '', draggedGroupId: '', draggedOverGroupId: '', draggedEntryId: '', draggedOverEntryId: '', dragType: '', dragConsumedSwipe: false })
 
 const COLLAPSE_STATE_KEY = 'meal-builder-collapse-state'
 
@@ -55,6 +55,8 @@ export function triggerDateBoundaryBounce() {
 export function setLogDate(dateStr) {
   if (dateStr && dateStr !== view.logDate) {
     dateNavDirection.value = dateStr > view.logDate ? 'next' : 'prev'
+    view.selectedFamilyVariants = {}
+    view.openFoodStepperId = ''
     view.logDate = dateStr
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
   }

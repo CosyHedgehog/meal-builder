@@ -1,14 +1,14 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import BaseModal from './BaseModal.vue'
-import { state as store, deleteFood, foodKcal, foodsInGroup, archiveFood, restoreFood } from '../js/data.js'
+import { state as store, deleteFood, foodKcal, archiveFood, restoreFood, UNCATEGORIZED_GROUP_ID } from '../js/data.js'
 import { confirmAction } from '../js/confirm.js'
 import { openModal, replaceModal, Modals } from '../js/modals.js'
 
 const props = defineProps({ groupId: { type: String, default: '' } })
 const emit = defineEmits(['close'])
 const query = ref('')
-const selectedGroupId = ref(props.groupId)
+const selectedGroupIds = ref(props.groupId ? [props.groupId] : [])
 const sortKey = ref('calories')
 const sortOptions = [
   { value: 'calories', label: 'calories' },
@@ -17,25 +17,35 @@ const sortOptions = [
   { value: 'logs', label: 'logs' },
 ]
 const sortMenuOpen = ref(false)
-const archiveMenuOpen = ref(false)
-const archiveFilter = ref('all')
-const groups = computed(() => store.groups)
+const filterMenuOpen = ref(false)
+const selectedTypes = ref([])
+const selectedStatuses = ref([])
+const groups = computed(() => store.groups.filter((group) => group.id !== UNCATEGORIZED_GROUP_ID))
 const groupNames = computed(() => new Map(groups.value.map((group) => [group.id, group.name])))
+const variantFoodIds = computed(() => new Set(store.foods
+  .filter((food) => food.mode === 'family')
+  .flatMap((food) => food.variantFoodIds || [])))
 const sortLabel = computed(() => sortOptions.find((option) => option.value === sortKey.value)?.label || 'calories')
-const activeFoods = computed(() => selectedGroupId.value ? foodsInGroup(selectedGroupId.value) : store.foods.filter((f) => !f.archived))
-const archivedFoods = computed(() => {
-  const base = selectedGroupId.value
-    ? store.foods.filter((f) => f.groupId === selectedGroupId.value && f.archived)
-    : store.foods.filter((f) => f.archived)
-  return base
+const filterSummary = computed(() => {
+  const count = selectedGroupIds.value.length + selectedTypes.value.length + selectedStatuses.value.length
+  return count ? `${count} filter${count === 1 ? '' : 's'}` : 'Filter'
 })
-const allFoods = computed(() => [...activeFoods.value, ...archivedFoods.value])
-const sourceFoods = computed(() => archiveFilter.value === 'all'
-  ? allFoods.value
-  : archiveFilter.value === 'archived' ? archivedFoods.value : activeFoods.value)
+const filterFoods = computed(() => {
+  const groupsMatch = !selectedGroupIds.value.length || selectedGroupIds.value.includes('uncategorized')
+    ? (food) => !selectedGroupIds.value.length || selectedGroupIds.value.includes(food.groupId || 'uncategorized')
+    : (food) => selectedGroupIds.value.includes(food.groupId)
+  return store.foods.filter((food) => {
+    const statusMatch = !selectedStatuses.value.length
+      || selectedStatuses.value.includes(food.archived ? 'archived' : 'active')
+    const typeMatch = !selectedTypes.value.length
+      || selectedTypes.value.includes(food.mode)
+      || (selectedTypes.value.includes('variant') && variantFoodIds.value.has(food.id))
+    return groupsMatch(food) && statusMatch && typeMatch
+  })
+})
 const filteredFoods = computed(() => {
   const value = query.value.trim().toLowerCase()
-  const matchingFoods = value ? sourceFoods.value.filter((food) => food.name.toLowerCase().includes(value)) : sourceFoods.value
+  const matchingFoods = value ? filterFoods.value.filter((food) => food.name.toLowerCase().includes(value)) : filterFoods.value
   return [...matchingFoods].sort((first, second) => {
     if (sortKey.value === 'name') return first.name.localeCompare(second.name)
     if (sortKey.value === 'ingredients') return second.items.length - first.items.length
@@ -45,7 +55,7 @@ const filteredFoods = computed(() => {
 })
 const foodCountLabel = computed(() => {
   const visibleCount = filteredFoods.value.length
-  const totalCount = sourceFoods.value.length
+  const totalCount = filterFoods.value.length
   const foodLabel = totalCount === 1 ? 'food' : 'foods'
   return visibleCount === totalCount
     ? `Showing ${visibleCount} ${foodLabel}`
@@ -55,12 +65,16 @@ const openOptionsFoodId = ref(null)
 const foodMenuPlacement = ref('down')
 const foodMenuRefs = new Map()
 function foodLogCount(foodId) {
+  const food = store.foods.find((item) => item.id === foodId)
+  const loggedFoodIds = food?.mode === 'family'
+    ? new Set([foodId, ...(food.variantFoodIds || [])])
+    : new Set([foodId])
   return Object.values(store.logs).reduce((count, log) => count + (log.entries || [])
-    .filter((entry) => entry.foodId === foodId)
+    .filter((entry) => loggedFoodIds.has(entry.foodId))
     .reduce((total, entry) => total + (Number(entry.qty) || 0), 0), 0)
 }
 function openEditor(food = null) {
-  openModal(Modals.FOOD_EDITOR, food ? { foodId: food.id } : { groupId: selectedGroupId.value })
+  openModal(Modals.FOOD_EDITOR, food ? { foodId: food.id } : { groupId: selectedGroupIds.value.length === 1 ? selectedGroupIds.value[0] : '' })
 }
 function setFoodMenuRef(foodId, element) {
   if (element) foodMenuRefs.set(foodId, element)
@@ -81,28 +95,43 @@ function toggleFoodOptions(foodId) {
   if (openOptionsFoodId.value === foodId) updateFoodMenuPlacement(foodId)
 }
 function toggleSortMenu() {
-  archiveMenuOpen.value = false
+  filterMenuOpen.value = false
   sortMenuOpen.value = !sortMenuOpen.value
 }
 function chooseSort(value) {
   sortKey.value = value
   sortMenuOpen.value = false
 }
-function toggleArchiveMenu() {
+function toggleFilterMenu() {
   sortMenuOpen.value = false
-  archiveMenuOpen.value = !archiveMenuOpen.value
+  filterMenuOpen.value = !filterMenuOpen.value
 }
-function chooseArchive(value) {
-  archiveFilter.value = value
-  archiveMenuOpen.value = false
+function toggleFilterValue(filterName, value) {
+  const filters = {
+    groups: selectedGroupIds,
+    types: selectedTypes,
+    statuses: selectedStatuses,
+  }
+  const filter = filters[filterName]
+  if (!filter) return
+  filter.value = filter.value.includes(value)
+    ? filter.value.filter((item) => item !== value)
+    : [...filter.value, value]
+}
+function clearFilters() {
+  selectedGroupIds.value = []
+  selectedTypes.value = []
+  selectedStatuses.value = []
+}
+function clearGroupFilter() {
+  selectedGroupIds.value = []
 }
 function closeFoodOptions(event) {
   if (event.target.closest('.food-options')) return
   if (event.target.closest('.food-sort-control')) return
-  if (event.target.closest('.food-archive-control')) return
   openOptionsFoodId.value = null
   sortMenuOpen.value = false
-  archiveMenuOpen.value = false
+  filterMenuOpen.value = false
   foodMenuPlacement.value = 'down'
 }
 function duplicateFood(food) {
@@ -119,14 +148,23 @@ function openFoodStats(food) {
   openOptionsFoodId.value = null
   openModal(Modals.FOOD_STATS, { foodId: food.id })
 }
+function openFoodFamily(food) {
+  openOptionsFoodId.value = null
+  const family = store.foods.find((item) => item.mode === 'family' && (item.variantFoodIds || []).includes(food.id))
+  if (family) openModal(Modals.FOOD_EDITOR, { foodId: family.id })
+}
+function openVariantInfo(food) {
+  openOptionsFoodId.value = null
+  openModal(Modals.FOOD_VARIANT_INFO, { foodId: food.id })
+}
 onMounted(() => document.addEventListener('click', closeFoodOptions))
 onBeforeUnmount(() => document.removeEventListener('click', closeFoodOptions))
 async function doArchiveFood(food) {
   openOptionsFoodId.value = null
   const ok = await confirmAction({
-    title: 'Archive food?',
+    title: 'Hide food?',
     message: `"${food.name}" will be removed from the active food list and be hidden from the dashboard unless it is already selected. Previous log entries will remain intact. Continue?`,
-    okLabel: 'Archive',
+    okLabel: 'Hide',
     okClass: 'btn-primary',
   })
   if (ok) archiveFood(food.id)
@@ -146,45 +184,62 @@ async function removeFood(food) {
 </script>
 
 <template>
-  <BaseModal title="Foods" subtitle="Manage reusable foods shown in the dashboard." panel-class="food-manager-modal" @close="emit('close')" @back="selectedGroupId ? replaceModal(Modals.GROUP_MANAGER) : replaceModal(Modals.INGREDIENT_MANAGER)">
+  <BaseModal title="Foods" subtitle="Manage reusable foods shown in the dashboard." panel-class="food-manager-modal" @close="emit('close')" @back="selectedGroupIds.length ? replaceModal(Modals.GROUP_MANAGER) : replaceModal(Modals.INGREDIENT_MANAGER)">
     <div class="manager-group food-manager-content">
       <div class="food-filters">
         <label class="food-filter-field">
           <span class="sr-only">Search foods</span>
           <input v-model="query" class="manager-search" type="search" placeholder="Search foods" />
         </label>
-        <label class="food-filter-field">
-          <span class="sr-only">Filter foods by group</span>
-          <select v-model="selectedGroupId" class="manager-filter" aria-label="Filter foods by group">
-            <option value="">All groups</option>
-            <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
-          </select>
-        </label>
       </div>
       <div class="food-list-meta">
         <span class="food-list-count" aria-live="polite">{{ foodCountLabel }}</span>
         <div class="food-list-controls">
-          <div class="food-sort-control food-archive-control">
+          <div class="food-sort-control food-filter-control">
             <button
               class="food-sort-label"
               type="button"
               aria-haspopup="listbox"
-              :aria-expanded="archiveMenuOpen"
-              aria-label="Filter foods by status"
-              @click.stop="toggleArchiveMenu"
+              :aria-expanded="filterMenuOpen"
+              aria-label="Filter foods"
+              @click.stop="toggleFilterMenu"
             >
-              <span>{{ archiveFilter === 'all' ? 'All' : archiveFilter === 'archived' ? 'Archived' : 'Active' }}</span>
+              <svg class="food-filter-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 5h16l-6 7v5l-4 2v-7L4 5Z" />
+              </svg>
+              <span>{{ filterSummary }}</span>
             </button>
-            <div v-if="archiveMenuOpen" class="food-sort-menu" role="listbox" aria-label="Filter foods by status">
-              <button type="button" role="option" :aria-selected="archiveFilter === 'all'" @click.stop="chooseArchive('all')">
-                All
-              </button>
-              <button type="button" role="option" :aria-selected="archiveFilter === 'active'" @click.stop="chooseArchive('active')">
-                Active
-              </button>
-              <button type="button" role="option" :aria-selected="archiveFilter === 'archived'" @click.stop="chooseArchive('archived')">
-                Archived
-              </button>
+            <div v-if="filterMenuOpen" class="food-filter-menu" role="dialog" aria-label="Filter foods">
+              <div class="food-filter-section">
+                <strong>Groups</strong>
+                <label class="food-filter-option">
+                  <input type="checkbox" :checked="!selectedGroupIds.length" @change="clearGroupFilter" />
+                  <span>All groups</span>
+                </label>
+                <label v-for="group in groups" :key="group.id" class="food-filter-option">
+                  <input type="checkbox" :checked="selectedGroupIds.includes(group.id)" @change="toggleFilterValue('groups', group.id)" />
+                  <span>{{ group.name }}</span>
+                </label>
+                <label class="food-filter-option">
+                  <input type="checkbox" :checked="selectedGroupIds.includes('uncategorized')" @change="toggleFilterValue('groups', 'uncategorized')" />
+                  <span>Uncategorized</span>
+                </label>
+              </div>
+              <div class="food-filter-section">
+                <strong>Food type</strong>
+                <label v-for="option in [{ value: 'simple', label: 'Simple foods' }, { value: 'ingredients', label: 'Ingredient foods' }, { value: 'family', label: 'Variant groups' }, { value: 'variant', label: 'Family variants' }]" :key="option.value" class="food-filter-option">
+                  <input type="checkbox" :checked="selectedTypes.includes(option.value)" @change="toggleFilterValue('types', option.value)" />
+                  <span>{{ option.label }}</span>
+                </label>
+              </div>
+              <div class="food-filter-section">
+                <strong>Status</strong>
+                <label v-for="option in [{ value: 'active', label: 'Visible' }, { value: 'archived', label: 'Hidden' }]" :key="option.value" class="food-filter-option">
+                  <input type="checkbox" :checked="selectedStatuses.includes(option.value)" @change="toggleFilterValue('statuses', option.value)" />
+                  <span>{{ option.label }}</span>
+                </label>
+              </div>
+              <button class="food-filter-clear" type="button" :disabled="!selectedGroupIds.length && !selectedTypes.length && !selectedStatuses.length" @click.stop="clearFilters">Clear filters</button>
             </div>
           </div>
           <div class="food-sort-control">
@@ -239,14 +294,18 @@ async function removeFood(food) {
                       <path d="M8 9h8M8 12h5" />
                     </svg>
                   </span>
-                  <span v-if="!selectedGroupId" class="food-group-chip">
+                  <span v-if="!selectedGroupIds.length" class="food-group-chip">
                     {{ groupNames.get(item.groupId) || 'Uncategorized' }}
                   </span>
-                  <span v-if="item.archived" class="food-archived-chip">Archived</span>
+                    <span v-if="variantFoodIds.has(item.id)" class="food-variant-chip" role="button" tabindex="0" @click.stop="openVariantInfo(item)" @keydown.enter.prevent.stop="openVariantInfo(item)" @keydown.space.prevent.stop="openVariantInfo(item)">Variant</span>
+                  <span v-if="item.archived" class="food-archived-chip">Hidden</span>
                 </strong>
                 <small>
-                  {{ foodKcal(item).toLocaleString() }} kcal ·
-                  {{ item.items.length ? `${item.items.length} ingredient${item.items.length === 1 ? '' : 's'}` : 'simple food' }}
+                  {{ item.mode === 'family'
+                    ? `Variable kcal · ${item.variantFoodIds?.length || 0} variant${item.variantFoodIds?.length === 1 ? '' : 's'}`
+                    : `${foodKcal(item).toLocaleString()} kcal · ${item.items.length
+                      ? `${item.items.length} ingredient${item.items.length === 1 ? '' : 's'}`
+                      : 'simple food'}` }}
                   · <span class="food-stat">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <rect x="4" y="5" width="16" height="15" rx="2" />
@@ -269,13 +328,21 @@ async function removeFood(food) {
               </button>
               <div
                 v-if="openOptionsFoodId === item.id"
-                :ref="(element) => setFoodMenuRef(item.id, element)"
                 class="food-options-menu"
                 :class="{ 'food-options-menu-up': foodMenuPlacement === 'up' }"
                 role="menu"
               >
                 <!-- Active food actions -->
                 <template v-if="!item.archived">
+                  <button v-if="variantFoodIds.has(item.id)" type="button" role="menuitem" @click.stop="openFoodFamily(item)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <rect x="3" y="4" width="7" height="7" rx="1" />
+                      <rect x="14" y="4" width="7" height="7" rx="1" />
+                      <rect x="3" y="13" width="7" height="7" rx="1" />
+                      <rect x="14" y="13" width="7" height="7" rx="1" />
+                    </svg>
+                    View family
+                  </button>
                   <button type="button" role="menuitem" @click.stop="openFoodStats(item)">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -305,7 +372,7 @@ async function removeFood(food) {
                       <rect x="1" y="3" width="22" height="5" />
                       <line x1="10" y1="12" x2="14" y2="12" />
                     </svg>
-                    Archive
+                    Hide
                   </button>
                 </template>
                 <!-- Archived food actions -->
@@ -315,24 +382,24 @@ async function removeFood(food) {
                       <polyline points="1 4 1 10 7 10" />
                       <path d="M3.51 15a9 9 0 1 0 .49-3.5" />
                     </svg>
-                    Restore
-                  </button>
-                  <button class="delete-option" type="button" role="menuitem" @click.stop="openOptionsFoodId = null; removeFood(item)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                      <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
-                    </svg>
-                    Delete
+                    Unhide
                   </button>
                 </template>
+                <button class="delete-option" type="button" role="menuitem" @click.stop="openOptionsFoodId = null; removeFood(item)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+                  </svg>
+                  Delete
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
       <div v-else class="empty-note">
-        {{ showArchived ? 'No archived foods.' : 'No foods match that search.' }}
+        {{ selectedStatuses.includes('archived') && !selectedStatuses.includes('active') ? 'No hidden foods.' : 'No foods match that search.' }}
       </div>
-      <div v-if="!showArchived" class="food-manager-actions">
+      <div class="food-manager-actions">
         <button class="btn btn-primary btn-full" type="button" @click="openEditor()">＋ New food</button>
       </div>
     </div>
@@ -435,6 +502,12 @@ async function removeFood(food) {
   color: var(--green);
 }
 
+.food-filter-svg {
+  width: 14px;
+  height: 14px;
+  color: var(--green);
+}
+
 .food-sort-control {
   position: relative;
 }
@@ -479,6 +552,85 @@ async function removeFood(food) {
   border-radius: 10px;
   background: var(--surface);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
+}
+
+.food-filter-menu {
+  position: absolute;
+  z-index: 3;
+  top: calc(100% + 6px);
+  right: 0;
+  width: min(280px, 75vw);
+  max-height: min(390px, 60vh);
+  overflow-y: auto;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
+}
+
+.food-filter-section {
+  display: grid;
+  gap: 2px;
+  padding: 4px 0 8px;
+}
+
+.food-filter-section + .food-filter-section {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.food-filter-section strong {
+  padding: 2px 8px 5px;
+  color: var(--ink-muted);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.food-filter-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 5px 8px;
+  border-radius: 7px;
+  color: var(--ink);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.food-filter-option:hover {
+  background: var(--surface-alt);
+}
+
+.food-filter-option input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--green);
+}
+
+.food-filter-clear {
+  width: 100%;
+  margin-top: 4px;
+  padding: 7px 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.food-filter-clear:not(:disabled):hover,
+.food-filter-clear:not(:disabled):focus-visible {
+  background: var(--surface-alt);
+  color: var(--ink);
+}
+
+.food-filter-clear:disabled {
+  cursor: default;
+  opacity: 0.5;
 }
 
 .food-archive-control .food-sort-menu {
@@ -632,6 +784,28 @@ async function removeFood(food) {
   text-transform: uppercase;
 }
 
+.food-variant-chip {
+  flex: none;
+  border: 0;
+  padding: 3px 6px;
+  border-radius: 6px;
+  background: var(--chip-bg);
+  color: var(--ink-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.food-variant-chip:hover,
+.food-variant-chip:focus-visible {
+  background: var(--chip-bg-hover);
+  color: var(--ink);
+  outline: none;
+}
+
 .manager-item.is-archived {
   opacity: 0.6;
   cursor: default;
@@ -770,6 +944,13 @@ async function removeFood(food) {
   .food-filters {
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 7px;
+  }
+
+  .food-filter-menu {
+    right: auto;
+    left: 50%;
+    width: min(280px, calc(100vw - 32px));
+    transform: translateX(-50%);
   }
 
   .food-list-meta {

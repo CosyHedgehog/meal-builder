@@ -1,7 +1,7 @@
 ﻿<script setup>
 import { computed, ref } from 'vue'
 import BaseModal from './BaseModal.vue'
-import { state as store, foodKcal } from '../js/data.js'
+import { state as store, entryKcal } from '../js/data.js'
 import { prettyDate, shiftDateStr, todayStr } from '../js/date.js'
 import { setLogDate } from '../js/ui.js'
 import { closeAllModals } from '../js/modals.js'
@@ -19,7 +19,10 @@ const rangeOptions = [
   { value: 'all', label: 'All time' },
 ]
 
-const foodKcalValue = computed(() => foodKcal(food.value))
+const loggedFoodIds = computed(() => new Set([
+  props.foodId,
+  ...(food.value?.mode === 'family' ? food.value.variantFoodIds || [] : []),
+]))
 
 const usage = computed(() => {
   const today = todayStr()
@@ -27,12 +30,22 @@ const usage = computed(() => {
   return Object.entries(store.logs)
     .filter(([date]) => (!start || date >= start) && date <= today)
     .map(([date, log]) => {
-      const matchingEntries = (log.entries || []).filter((entry) => entry.foodId === props.foodId)
+      const matchingEntries = (log.entries || []).filter((entry) => loggedFoodIds.value.has(entry.foodId))
       const servings = matchingEntries.reduce((sum, entry) => sum + (Number(entry.qty) > 0 ? Number(entry.qty) : 1), 0)
+      const kcal = matchingEntries.reduce((sum, entry) => sum + entryKcal(entry), 0)
+      const variantBreakdown = [...matchingEntries.reduce((breakdown, entry) => {
+        const variant = store.foods.find((item) => item.id === entry.foodId)
+        if (!variant) return breakdown
+        const current = breakdown.get(variant.id) || { name: variant.name, servings: 0 }
+        current.servings += Number(entry.qty) > 0 ? Number(entry.qty) : 1
+        breakdown.set(variant.id, current)
+        return breakdown
+      }, new Map()).values()]
       return {
         date,
         servings,
-        kcal: Math.round(servings * foodKcalValue.value),
+        kcal,
+        variantBreakdown,
         entryCount: matchingEntries.length,
       }
     })
@@ -93,6 +106,9 @@ function navigateToLog(dateStr) {
               <small class="food-log-servings">
                 {{ formatServings(day.servings) }} serving{{ day.servings === 1 ? '' : 's' }}
                 &bull; Click to open log
+              </small>
+              <small v-if="food?.mode === 'family'" class="food-log-variants">
+                {{ day.variantBreakdown.map((variant) => `${variant.name} × ${formatServings(variant.servings)}`).join(', ') }}
               </small>
             </div>
             <div class="food-log-right">
@@ -220,6 +236,13 @@ function navigateToLog(dateStr) {
   margin-top: 3px;
   color: var(--ink-muted);
   font-size: 11px;
+}
+
+.food-log-variants {
+  margin-top: 4px;
+  color: var(--green-strong);
+  font-size: 11px;
+  line-height: 1.3;
 }
 
 .food-log-right {
