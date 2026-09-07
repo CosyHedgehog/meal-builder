@@ -31,7 +31,10 @@ const foodMode = ref(source?.mode || (source && source.items.length ? 'ingredien
 const foodPurpose = ref(source?.mode === 'family' || props.familyId || sourceFamily.value ? 'variant' : 'simple')
 const nutritionMode = ref(source?.mode || (source && source.items.length ? 'ingredients' : 'simple'))
 const selectedFamilyId = ref(props.familyId || sourceFamily.value?.id || '')
-const selectedVariantIds = ref(draft.variantFoodIds)
+const selectedVariantIds = computed({
+  get: () => draft.variantFoodIds,
+  set: (value) => { draft.variantFoodIds = value },
+})
 const variantQuery = ref('')
 const isVariantDropdownOpen = ref(false)
 const variantSearchRef = ref(null)
@@ -72,7 +75,6 @@ function selectVariant(foodId) {
     selectedVariantIds.value = [...selectedVariantIds.value, foodId]
   }
   variantQuery.value = ''
-  isVariantDropdownOpen.value = false
   validationMessage.value = ''
   variantSearchRef.value?.focus()
 }

@@ -57,7 +57,6 @@ async function selectIngredient(ingredientId) {
         props.draft.items.push({ ingredientId, amount: 1 })
     }
     searchQuery.value = ''
-    isDropdownOpen.value = false
     highlightedIndex.value = -1
     await nextTick()
     ingredientQuantityInputs.get(ingredientId)?.focus()
