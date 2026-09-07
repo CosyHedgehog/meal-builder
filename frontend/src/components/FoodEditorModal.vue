@@ -312,7 +312,13 @@ onUnmounted(() => {
             </button>
             <span class="selected-variant-copy">
               <button type="button" class="selected-variant-name" @click="openVariantEditor(food.id)">{{ food.name }}</button>
-              <small>{{ foodKcal(food).toLocaleString() }} kcal · {{ food.mode === 'simple' ? 'simple food' : 'ingredients' }}<span v-if="food.archived"> · currently hidden</span></small>
+              <small>{{ foodKcal(food).toLocaleString() }} kcal · {{ food.mode === 'simple' ? 'simple food' : 'ingredients' }}<span v-if="food.archived" class="variant-hidden-status" title="Currently hidden"> · Hidden <span class="variant-hidden-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" />
+                  <circle cx="12" cy="12" r="2.5" />
+                  <line x1="4" y1="4" x2="20" y2="20" />
+                </svg>
+              </span></span></small>
             </span>
             <button type="button" class="variant-remove-button" :aria-label="`Remove ${food.name}`" :title="`Remove ${food.name}`" @click="removeVariant(food.id)">
               <span aria-hidden="true">×</span>
@@ -334,7 +340,13 @@ onUnmounted(() => {
             <button v-for="food in availableVariants" :key="food.id" type="button" class="family-food-option" @click="selectVariant(food.id)">
               <span>
                 <strong>{{ food.name }}</strong>
-                <small>{{ foodKcal(food).toLocaleString() }} kcal · {{ food.mode === 'simple' ? 'simple food' : 'ingredients' }}<span v-if="food.archived"> · currently hidden</span></small>
+                <small>{{ foodKcal(food).toLocaleString() }} kcal · {{ food.mode === 'simple' ? 'simple food' : 'ingredients' }}<span v-if="food.archived" class="variant-hidden-status" title="Currently hidden"> · Hidden <span class="variant-hidden-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" />
+                    <circle cx="12" cy="12" r="2.5" />
+                    <line x1="4" y1="4" x2="20" y2="20" />
+                  </svg>
+                </span></span></small>
               </span>
               <span class="variant-add-button" aria-hidden="true">+</span>
             </button>
@@ -549,6 +561,34 @@ onUnmounted(() => {
 .selected-variant-copy small {
   color: var(--ink-muted);
   font-size: 11px;
+}
+
+.variant-hidden-icon {
+  display: inline-flex;
+  width: 13px;
+  height: 13px;
+  margin-left: 4px;
+  align-items: center;
+  vertical-align: -2px;
+  color: var(--ink-muted);
+}
+
+.variant-hidden-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  flex-direction: row;
+  white-space: nowrap;
+}
+
+.family-food-option .variant-hidden-status {
+  display: inline-flex;
+  flex-direction: row;
+}
+
+.variant-hidden-icon svg {
+  width: 13px;
+  height: 13px;
 }
 
 .variant-remove-button,
