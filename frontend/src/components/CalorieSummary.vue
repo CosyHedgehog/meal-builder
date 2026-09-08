@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { state as store, logGroupKcal, logTotalKcal } from '../js/data.js'
 
 const props = defineProps({ log: { type: Object, required: true } })
@@ -25,13 +25,78 @@ const groupSegments = computed(() => {
       return segment
     })
 })
+
+const animatedTotalK = ref(0)
+const animatedDeficit = ref(0)
+const animatedGroupKcal = ref({})
+const animationFrames = new Map()
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+
+function animateValue(key, target, update) {
+  const previousFrame = animationFrames.get(key)
+  if (previousFrame) cancelAnimationFrame(previousFrame)
+
+  const start = update.current
+  if (reduceMotion.matches || start === target) {
+    update.current = target
+    return
+  }
+
+  const startedAt = performance.now()
+  const duration = 520
+  const tick = (now) => {
+    const progress = Math.min(1, (now - startedAt) / duration)
+    const eased = 1 - Math.pow(1 - progress, 3)
+    update.current = start + (target - start) * eased
+    if (progress < 1) {
+      animationFrames.set(key, requestAnimationFrame(tick))
+    } else {
+      animationFrames.delete(key)
+    }
+  }
+
+  animationFrames.set(key, requestAnimationFrame(tick))
+}
+
+watch(
+  () => ({
+    total: totalK.value,
+    deficit: deficit.value,
+    groups: groupSegments.value.map(({ id, kcal }) => ({ id, kcal })),
+  }),
+  (targets) => {
+    animateValue('total', targets.total, {
+      get current() { return animatedTotalK.value },
+      set current(value) { animatedTotalK.value = value },
+    })
+    animateValue('deficit', targets.deficit, {
+      get current() { return animatedDeficit.value },
+      set current(value) { animatedDeficit.value = value },
+    })
+
+    const nextGroups = { ...animatedGroupKcal.value }
+    for (const { id, kcal } of targets.groups) {
+      if (!(id in nextGroups)) nextGroups[id] = 0
+      animateValue(`group:${id}`, kcal, {
+        get current() { return nextGroups[id] },
+        set current(value) { nextGroups[id] = value },
+      })
+    }
+    animatedGroupKcal.value = nextGroups
+  },
+  { immediate: true },
+)
+
+onBeforeUnmount(() => {
+  for (const frame of animationFrames.values()) cancelAnimationFrame(frame)
+})
 </script>
 
 <template>
   <div class="today-top">
     <div class="today-kcal">
       <strong>
-        {{ totalK.toLocaleString() }}
+        {{ Math.round(animatedTotalK).toLocaleString() }}
         <span class="goal-kcal">/ {{ store.maintenanceCal.toLocaleString() }} kcal</span>
       </strong>
     </div>
@@ -48,11 +113,11 @@ const groupSegments = computed(() => {
       <div v-for="segment in groupSegments" :key="segment.id" class="status-pill"
         :class="{ 'summary-zero': segment.kcal <= 0 }">
         <span>{{ segment.name }}</span>
-        <strong>{{ segment.kcal.toLocaleString() }}</strong>
+        <strong>{{ Math.round(animatedGroupKcal[segment.id] || 0).toLocaleString() }}</strong>
       </div>
       <div class="status-pill" :class="deficit >= 0 ? 'deficit' : 'surplus'">
         <span>{{ deficit >= 0 ? 'Deficit' : 'Surplus' }}</span>
-        <strong>{{ Math.abs(deficit).toLocaleString() }}</strong>
+        <strong>{{ Math.round(Math.abs(animatedDeficit)).toLocaleString() }}</strong>
       </div>
     </div>
   </div>
