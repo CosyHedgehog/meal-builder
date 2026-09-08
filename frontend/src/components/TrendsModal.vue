@@ -96,14 +96,14 @@ function toggleWeek(week) {
 <template>
   <BaseModal title="Trends" subtitle="Insights into your calorie data" panel-class="trends-modal"
     :on-touch-start="startSwipe" :on-touch-end="endSwipe" @close="emit('close')">
-    <div class="trends-tabs" role="tablist" aria-label="Trends views">
-      <button type="button" role="tab" :aria-selected="activeTab === 'daily'" :class="{ active: activeTab === 'daily' }"
-        @click="activeTab = 'daily'">At a glance</button>
-      <button type="button" role="tab" :aria-selected="activeTab === 'weekly'"
-        :class="{ active: activeTab === 'weekly' }" @click="activeTab = 'weekly'">Weekly breakdown</button>
-    </div>
-
     <div class="trends-modal-content">
+      <div class="trends-tabs" role="tablist" aria-label="Trends views">
+        <button type="button" role="tab" :aria-selected="activeTab === 'daily'" :class="{ active: activeTab === 'daily' }"
+          @click="activeTab = 'daily'">At a glance</button>
+        <button type="button" role="tab" :aria-selected="activeTab === 'weekly'"
+          :class="{ active: activeTab === 'weekly' }" @click="activeTab = 'weekly'">Weekly breakdown</button>
+      </div>
+
       <template v-if="activeTab === 'daily'">
       <div class="trends-range-selector" role="tablist" aria-label="Daily trends range">
         <button v-for="range in dailyRangeOptions" :key="range" type="button" role="tab"
@@ -248,7 +248,7 @@ function toggleWeek(week) {
 .trends-tabs {
   display: flex;
   gap: 4px;
-  margin: 2px 0 10px;
+  margin: 10px 0 10px;
   padding: 2px;
   border: 0;
   border-radius: 8px;
@@ -257,6 +257,7 @@ function toggleWeek(week) {
 
 .trends-tabs button {
   flex: 1;
+  min-height: 30px;
   padding: 6px 8px;
   border: 0;
   border-radius: 6px;
