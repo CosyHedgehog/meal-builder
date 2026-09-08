@@ -409,17 +409,6 @@ onUnmounted(() => {
     min-height: 38px;
     padding: 6px 8px;
   }
-
-  .family-selected-food :deep(.food-stepper) {
-    min-height: 34px;
-    padding: 5px 8px;
-    font-size: 12px;
-  }
-
-  .family-selected-food :deep(.food-stepper-kcal) {
-    margin-top: 2px;
-    font-size: 10px;
-  }
 }
 
 .group-header-main {
