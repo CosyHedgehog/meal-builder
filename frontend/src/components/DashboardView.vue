@@ -8,6 +8,7 @@ import DateNav from './DateNav.vue'
 import CalorieSummary from './CalorieSummary.vue'
 import FoodGroupList from './FoodGroupList.vue'
 import MobileActionSheet from './MobileActionSheet.vue'
+import LockedDayPopover from './LockedDayPopover.vue'
 
 const log = computed(() => getLog(view.logDate))
 const groups = computed(() => store.groups.filter((group) => group.visible !== false))
@@ -87,6 +88,7 @@ function setActiveStepper(stepperId) {
       <div :key="view.logDate" class="day-flow" :class="{ 'boundary-bounce': boundaryBounce }">
         <section class="today-card">
           <CalorieSummary :log="log" />
+          <LockedDayPopover v-if="dayLocked" />
         </section>
 
         <div class="day-scroll">
@@ -95,12 +97,6 @@ function setActiveStepper(stepperId) {
             <span>Food logged in hidden group{{ hiddenLoggedGroups.length === 1 ? '' : 's' }}: {{
               hiddenLoggedGroups.map((group) => group.name).join(', ')}}. <button type="button"
                 @click="openModal(Modals.GROUP_MANAGER)">Manage groups</button></span>
-          </div>
-
-          <div v-if="dayLocked" class="locked-day-note">
-            <span aria-hidden="true">🔒</span>
-            <span>Past day foods can't be selected. <button type="button" @click="openModal(Modals.SETTINGS)">Edit in
-                Settings</button></span>
           </div>
 
           <section v-for="group in groups" :key="group.id" class="today-group-card">
@@ -209,6 +205,7 @@ function setActiveStepper(stepperId) {
 }
 
 .today-card {
+  position: relative;
   background: transparent;
   border: 0;
   border-radius: 18px;
