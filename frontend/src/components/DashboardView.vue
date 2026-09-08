@@ -383,7 +383,7 @@ function setActiveStepper(stepperId) {
     overscroll-behavior: contain;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    padding-bottom: 10px;
+    padding-bottom: 30px;
   }
 
   .day-scroll::-webkit-scrollbar {
