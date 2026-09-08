@@ -13,9 +13,14 @@ const mobileActionDragging = ref(false)
 const suppressMobileActionClick = ref(false)
 const mobileActionSheet = ref(null)
 const mobileActionGestureOnHandle = ref(false)
+const mobileActionStartTime = ref(null)
+
+const SHEET_PEEK_HEIGHT = 44
+const SWIPE_DISTANCE = 6
+const SWIPE_VELOCITY = 0.45
 
 function closedSheetOffset() {
-  return Math.max(0, (mobileActionSheet.value?.offsetHeight ?? 0) - 28)
+  return Math.max(0, (mobileActionSheet.value?.offsetHeight ?? 0) - SHEET_PEEK_HEIGHT)
 }
 
 function mobileActionStyle() {
@@ -44,6 +49,7 @@ function toggleMobileActions() {
 function startMobileActionSwipe(event) {
   mobileActionGestureOnHandle.value = true
   mobileActionStartY.value = event.changedTouches[0]?.clientY ?? null
+  mobileActionStartTime.value = performance.now()
   mobileActionDragOffset.value = 0
   mobileActionDragging.value = true
 }
@@ -55,23 +61,28 @@ function moveMobileActionSwipe(event) {
   const deltaY = currentY - mobileActionStartY.value
   const baseOffset = mobileActionsOpen.value ? 0 : closedOffset
   mobileActionDragOffset.value = Math.max(-baseOffset, Math.min(closedOffset - baseOffset, deltaY))
-  if (Math.abs(deltaY) > 6) suppressMobileActionClick.value = true
+  if (Math.abs(deltaY) > SWIPE_DISTANCE) suppressMobileActionClick.value = true
 }
 
 function endMobileActionSwipe(event) {
   if (!mobileActionGestureOnHandle.value || mobileActionStartY.value === null) return
   const endY = event.changedTouches[0]?.clientY ?? mobileActionStartY.value
   const deltaY = endY - mobileActionStartY.value
-  const wasDragging = Math.abs(deltaY) > 6
+  const elapsed = Math.max(performance.now() - (mobileActionStartTime.value ?? performance.now()), 1)
+  const velocity = deltaY / elapsed
+  const wasDragging = Math.abs(deltaY) > SWIPE_DISTANCE
   const closedOffset = closedSheetOffset()
   const baseOffset = mobileActionsOpen.value ? 0 : closedOffset
   const currentOffset = baseOffset + mobileActionDragOffset.value
   mobileActionStartY.value = null
+  mobileActionStartTime.value = null
   mobileActionGestureOnHandle.value = false
   mobileActionDragging.value = false
   mobileActionDragOffset.value = 0
   if (wasDragging) {
-    mobileActionsOpen.value = currentOffset < closedOffset * 0.75
+    const flickedOpen = velocity < -SWIPE_VELOCITY
+    const flickedClosed = velocity > SWIPE_VELOCITY
+    mobileActionsOpen.value = flickedOpen || (!flickedClosed && currentOffset < closedOffset * 0.75)
     if (mobileActionsOpen.value && !history.state?.mealBuilderActions) {
       history.pushState({ mealBuilderActions: true }, '')
     }
@@ -107,9 +118,10 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
     :class="{ open: mobileActionsOpen, dragging: mobileActionDragging }" :style="mobileActionStyle()"
     aria-label="Dashboard actions" @touchstart="startMobileActionSwipe" @touchmove.prevent="moveMobileActionSwipe"
     @touchend="endMobileActionSwipe">
-    <button class="mobile-action-handle" type="button" aria-label="Show dashboard actions" @click="toggleMobileActions">
+    <button class="mobile-action-handle" type="button" aria-label="Toggle dashboard actions"
+      aria-controls="mobile-action-list" :aria-expanded="mobileActionsOpen" @click="toggleMobileActions">
     </button>
-    <div class="mobile-action-list" :aria-hidden="!mobileActionsOpen">
+    <div id="mobile-action-list" class="mobile-action-list" :aria-hidden="!mobileActionsOpen">
       <button type="button" :tabindex="mobileActionsOpen ? 0 : -1" @click="openAction(Modals.FOOD_MANAGER)">
         <span class="mobile-action-icon-chip">
         <svg class="mobile-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -190,7 +202,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
   background: var(--surface);
   will-change: transform;
   --mobile-action-drag-offset: 0px;
-  transform: translateY(calc(100% - 48px + var(--mobile-action-drag-offset)));
+  transform: translateY(calc(100% - 44px + var(--mobile-action-drag-offset)));
   transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
   z-index: 25;
 }
@@ -208,8 +220,8 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 20px;
-  padding: 8px 0 4px;
+  height: 44px;
+  padding: 12px 0;
   border: 0;
   background: transparent;
   color: var(--ink);
@@ -296,8 +308,8 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
     align-items: center;
     justify-content: center;
     width: 100%;
-    height: 20px;
-    padding: 8px 0 4px;
+    height: 44px;
+    padding: 12px 0;
     margin: 0;
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.05);
@@ -312,7 +324,7 @@ onUnmounted(() => window.removeEventListener('popstate', onMobileActionsPopState
     left: 18px;
     padding: 0 8px env(safe-area-inset-bottom);
     border-radius: 12px 12px 0 0;
-    transform: translateY(calc(100% - 28px + var(--mobile-action-drag-offset)));
+    transform: translateY(calc(100% - 44px + var(--mobile-action-drag-offset)));
   }
 
   .mobile-action-list {
