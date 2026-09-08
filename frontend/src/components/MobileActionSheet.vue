@@ -42,8 +42,7 @@ function toggleMobileActions() {
 }
 
 function startMobileActionSwipe(event) {
-  mobileActionGestureOnHandle.value = Boolean(event.target.closest('.mobile-action-handle'))
-  if (!mobileActionGestureOnHandle.value) return
+  mobileActionGestureOnHandle.value = true
   mobileActionStartY.value = event.changedTouches[0]?.clientY ?? null
   mobileActionDragOffset.value = 0
   mobileActionDragging.value = true
@@ -56,14 +55,14 @@ function moveMobileActionSwipe(event) {
   const deltaY = currentY - mobileActionStartY.value
   const baseOffset = mobileActionsOpen.value ? 0 : closedOffset
   mobileActionDragOffset.value = Math.max(-baseOffset, Math.min(closedOffset - baseOffset, deltaY))
-  if (Math.abs(deltaY) > 8) suppressMobileActionClick.value = true
+  if (Math.abs(deltaY) > 6) suppressMobileActionClick.value = true
 }
 
 function endMobileActionSwipe(event) {
   if (!mobileActionGestureOnHandle.value || mobileActionStartY.value === null) return
   const endY = event.changedTouches[0]?.clientY ?? mobileActionStartY.value
   const deltaY = endY - mobileActionStartY.value
-  const wasDragging = Math.abs(deltaY) > 8
+  const wasDragging = Math.abs(deltaY) > 6
   const closedOffset = closedSheetOffset()
   const baseOffset = mobileActionsOpen.value ? 0 : closedOffset
   const currentOffset = baseOffset + mobileActionDragOffset.value
@@ -72,7 +71,7 @@ function endMobileActionSwipe(event) {
   mobileActionDragging.value = false
   mobileActionDragOffset.value = 0
   if (wasDragging) {
-    mobileActionsOpen.value = currentOffset < closedOffset / 2
+    mobileActionsOpen.value = currentOffset < closedOffset * 0.75
     if (mobileActionsOpen.value && !history.state?.mealBuilderActions) {
       history.pushState({ mealBuilderActions: true }, '')
     }

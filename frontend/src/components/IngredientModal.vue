@@ -3,7 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import BaseModal from './BaseModal.vue'
 import { state as store, deleteIngredient, ingredientUsage } from '../js/data.js'
 import { confirmAction } from '../js/confirm.js'
-import { openModal, replaceModal, Modals } from '../js/modals.js'
+import { openModal, Modals } from '../js/modals.js'
 
 const emit = defineEmits(['close'])
 const query = ref('')
@@ -15,7 +15,9 @@ const sortOptions = [
   { value: 'usage', label: 'usage' },
 ]
 const sortMenuOpen = ref(false)
+const usageMenuOpen = ref(false)
 const sortLabel = computed(() => sortOptions.find((option) => option.value === sortKey.value)?.label || 'name')
+const usageFilterLabel = computed(() => ({ all: 'All', 'in-use': 'In use', unused: 'Unused' }[usageFilter.value] || 'All'))
 
 const ingredientsWithMeta = computed(() => {
   return store.ingredients.map((ing) => {
@@ -79,6 +81,7 @@ function toggleIngredientOptions(id) {
 }
 
 function toggleSortMenu() {
+  usageMenuOpen.value = false
   sortMenuOpen.value = !sortMenuOpen.value
 }
 
@@ -87,11 +90,23 @@ function chooseSort(value) {
   sortMenuOpen.value = false
 }
 
+function toggleUsageMenu() {
+  sortMenuOpen.value = false
+  usageMenuOpen.value = !usageMenuOpen.value
+}
+
+function chooseUsageFilter(value) {
+  usageFilter.value = value
+  usageMenuOpen.value = false
+}
+
 function closeOptions(event) {
   if (event.target.closest('.ingredient-options')) return
   if (event.target.closest('.ingredient-sort-control')) return
+  if (event.target.closest('.ingredient-filter-control')) return
   openOptionsIngredientId.value = null
   sortMenuOpen.value = false
+  usageMenuOpen.value = false
   ingredientMenuPlacement.value = 'down'
 }
 
@@ -121,7 +136,6 @@ async function removeIngredient(item) {
     subtitle="Manage reusable ingredients and their calories."
     panel-class="ingredient-manager-modal"
     @close="emit('close')"
-    @back="replaceModal(Modals.FOOD_MANAGER)"
   >
     <div class="manager-group ingredient-manager-content">
       <div class="ingredient-filters">
@@ -129,21 +143,38 @@ async function removeIngredient(item) {
           <span class="sr-only">Search ingredients</span>
           <input v-model="query" class="manager-search" type="search" placeholder="Search ingredients" />
         </label>
-        <label class="ingredient-filter-field">
-          <span class="sr-only">Filter ingredients by usage</span>
-          <select v-model="usageFilter" class="manager-filter" aria-label="Filter ingredients by usage">
-            <option value="all">All</option>
-            <option value="in-use">In use</option>
-            <option value="unused">Unused</option>
-          </select>
-        </label>
       </div>
 
       <div class="ingredient-list-meta">
         <div class="ingredient-count">
           {{ filteredIngredients.length }} ingredient{{ filteredIngredients.length === 1 ? '' : 's' }}
         </div>
-        <div class="ingredient-sort-control">
+        <div class="ingredient-list-controls">
+          <div class="ingredient-sort-control ingredient-filter-control">
+            <button
+              class="ingredient-sort-label"
+              type="button"
+              aria-haspopup="dialog"
+              :aria-expanded="usageMenuOpen"
+              aria-label="Filter ingredients"
+              @click.stop="toggleUsageMenu"
+            >
+              <svg class="ingredient-sort-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 5h16l-6 7v5l-4 2v-7L4 5Z" />
+              </svg>
+              <span>{{ usageFilterLabel }}</span>
+            </button>
+            <div v-if="usageMenuOpen" class="ingredient-filter-menu" role="dialog" aria-label="Filter ingredients">
+              <strong>Usage</strong>
+              <button v-for="option in [{ value: 'all', label: 'All' }, { value: 'in-use', label: 'In use' }, { value: 'unused', label: 'Unused' }]"
+                :key="option.value" type="button" :aria-pressed="usageFilter === option.value"
+                @click.stop="chooseUsageFilter(option.value)">
+                <span>{{ option.label }}</span>
+                <span v-if="usageFilter === option.value" aria-hidden="true">✓</span>
+              </button>
+            </div>
+          </div>
+          <div class="ingredient-sort-control">
           <button
             class="ingredient-sort-label"
             type="button"
@@ -169,6 +200,7 @@ async function removeIngredient(item) {
               Sorted by {{ option.label }}
             </button>
           </div>
+        </div>
         </div>
       </div>
 
@@ -262,8 +294,8 @@ async function removeIngredient(item) {
 .manager-search {
   width: 100%;
   min-width: 0;
-  min-height: 42px;
-  padding: 10px 12px;
+  min-height: 38px;
+  padding: 7px 10px;
   border: 1px solid var(--line);
   border-radius: 12px;
   background-color: var(--surface-alt);
@@ -273,10 +305,7 @@ async function removeIngredient(item) {
 }
 
 .ingredient-filters {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px;
-  margin-top: 16px;
+  display: block;
 }
 
 .ingredient-filter-field {
@@ -319,6 +348,12 @@ async function removeIngredient(item) {
   margin: 11px -26px 4px;
   padding: 0 26px 10px;
   border-bottom: 1px solid var(--line);
+}
+
+.ingredient-list-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .ingredient-count {
@@ -378,6 +413,50 @@ async function removeIngredient(item) {
   border-radius: 10px;
   background: var(--surface);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
+}
+
+.ingredient-filter-menu {
+  position: absolute;
+  z-index: 3;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 150px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
+}
+
+.ingredient-filter-menu strong {
+  display: block;
+  padding: 2px 8px 6px;
+  color: var(--ink-muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ingredient-filter-menu button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+}
+
+.ingredient-filter-menu button:hover,
+.ingredient-filter-menu button[aria-pressed='true'] {
+  background: var(--surface-alt);
+  color: var(--green-strong);
 }
 
 .ingredient-sort-menu button {
@@ -651,14 +730,13 @@ async function removeIngredient(item) {
 
 @media (max-width: 480px) {
   .ingredient-filters {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 7px;
+    margin-top: 0;
   }
 
   .manager-filter,
   .manager-search {
-    min-height: 40px;
-    padding: 8px 10px;
+    min-height: 36px;
+    padding: 6px 10px;
   }
 
   .manager-filter {

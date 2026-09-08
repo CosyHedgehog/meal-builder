@@ -27,7 +27,7 @@ async function deleteAccount() {
 </script>
 
 <template>
-  <BaseModal title="Delete account" subtitle="This permanently deletes your account, nutrition data, follows, and activity. This cannot be undone." panel-class="delete-account-modal" @close="emit('close')">
+  <BaseModal title="Delete account" subtitle="This permanently deletes your account, nutrition data, follows, and activity. This cannot be undone." :mobile-help="false" panel-class="delete-account-modal" @close="emit('close')">
     <form class="delete-account-form" @submit.prevent="deleteAccount">
       <label for="deleteAccountPassword">Enter your password to confirm</label>
       <input id="deleteAccountPassword" v-model="password" type="password" autocomplete="current-password" autofocus />

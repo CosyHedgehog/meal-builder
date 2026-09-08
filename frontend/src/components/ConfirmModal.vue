@@ -17,6 +17,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
       v-if="confirmState.open"
       :title="confirmState.title"
       :subtitle="confirmState.message"
+      :mobile-help="false"
       panel-class="confirm-modal"
       backdrop-class="is-confirm"
       @close="settleConfirm(false)"

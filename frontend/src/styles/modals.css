@@ -38,14 +38,104 @@
   padding-right: 36px;
 }
 
-.modal-back {
-  display: block;
-  margin: -8px 0 10px;
+.modal-mobile-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  margin: -4px 0 14px;
+}
+
+.modal-mobile-header h2 {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
   padding: 0;
+  overflow: hidden;
+  font-size: 24px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal-mobile-back,
+.modal-mobile-help-toggle {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
   background: transparent;
-  color: var(--green);
-  font-size: 12px;
-  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.modal-mobile-back svg {
+  width: 22px;
+  height: 22px;
+}
+
+.modal-mobile-help-toggle svg {
+  width: 20px;
+  height: 20px;
+}
+
+.modal-mobile-back:hover,
+.modal-mobile-help-toggle:hover {
+  color: var(--ink);
+}
+
+.modal-mobile-help-toggle[aria-expanded='true'] {
+  background: var(--surface-alt);
+  color: var(--green-strong);
+}
+
+.modal-mobile-help-popover {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 8px);
+  right: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: min(300px, calc(100vw - 48px));
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 10px 24px rgba(var(--shadow-rgb), 0.28);
+  color: var(--ink-muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.modal-mobile-help-popover p {
+  flex: 1;
+  margin: 0;
+}
+
+.modal-mobile-help-popover button {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.modal > .modal-close,
+.modal > h2 {
+  display: none;
+}
+
+.modal > .mobile-help-subtitle {
+  display: none;
 }
 
 .modal>.subtitle {
@@ -130,6 +220,24 @@
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .modal::-webkit-scrollbar,
+  .modal *::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+
+  .modal,
+  .modal * {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none;
+  }
+
+  .modal-mobile-header h2 {
+    font-size: 22px;
   }
 
   .modal.confirm-modal,

@@ -231,7 +231,7 @@ async function removeFood(food) {
 </script>
 
 <template>
-  <BaseModal title="Foods" subtitle="Manage reusable foods shown in the dashboard." panel-class="food-manager-modal" @close="emit('close')" @back="selectedGroupIds.length ? replaceModal(Modals.GROUP_MANAGER) : replaceModal(Modals.INGREDIENT_MANAGER)">
+  <BaseModal title="Foods" :back-label="selectedGroupIds.length ? 'Groups' : undefined" subtitle="Manage reusable foods shown in the dashboard." panel-class="food-manager-modal" @close="emit('close')" @back="replaceModal(Modals.GROUP_MANAGER)">
     <div class="manager-group food-manager-content">
       <div class="food-filters">
         <label class="food-filter-field">
@@ -478,8 +478,8 @@ async function removeFood(food) {
 .manager-search {
   width: 100%;
   min-width: 0;
-  min-height: 42px;
-  padding: 10px 12px;
+  min-height: 38px;
+  padding: 7px 10px;
   border: 1px solid var(--line);
   border-radius: 12px;
   background-color: var(--surface-alt);
@@ -492,7 +492,6 @@ async function removeFood(food) {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px;
-  margin-top: 16px;
 }
 
 .food-filter-field {
@@ -1019,6 +1018,7 @@ async function removeFood(food) {
 
 @media (max-width: 480px) {
   .food-filters {
+    margin-top: 0;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 7px;
   }
@@ -1048,8 +1048,8 @@ async function removeFood(food) {
 
   .manager-filter,
   .manager-search {
-    min-height: 40px;
-    padding: 8px 10px;
+    min-height: 36px;
+    padding: 6px 10px;
   }
 
   .manager-filter {

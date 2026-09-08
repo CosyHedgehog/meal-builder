@@ -670,6 +670,12 @@ function toggleWeek(week) {
     padding: 8px;
   }
 
+  .trends-week-total-row {
+    grid-template-columns: minmax(82px, 1.25fr) repeat(2, minmax(58px, .8fr)) repeat(2, minmax(48px, .6fr)) 14px;
+    gap: 5px;
+    padding: 8px;
+  }
+
   .trends-week-detail-row {
     display: grid;
     grid-template-columns: minmax(82px, 1.25fr) repeat(2, minmax(58px, .8fr)) repeat(2, minmax(48px, .6fr)) 14px;

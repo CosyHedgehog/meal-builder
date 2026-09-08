@@ -384,8 +384,14 @@ function setActiveStepper(stepperId) {
     flex: 1;
     overflow-y: auto;
     overscroll-behavior: contain;
-    scrollbar-width: thin;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     padding-bottom: 10px;
+  }
+
+  .day-scroll::-webkit-scrollbar {
+    width: 0;
+    height: 0;
   }
 
   .home {
