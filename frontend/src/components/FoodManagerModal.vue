@@ -3,7 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import BaseModal from './BaseModal.vue'
 import { state as store, deleteFood, foodKcal, archiveFood, restoreFood, UNCATEGORIZED_GROUP_ID } from '../js/data.js'
 import { confirmAction } from '../js/confirm.js'
-import { openModal, replaceModal, Modals } from '../js/modals.js'
+import { openModal, Modals } from '../js/modals.js'
 
 const FOOD_FILTERS_STORAGE_KEY = 'meal-builder-food-filters'
 
@@ -231,7 +231,7 @@ async function removeFood(food) {
 </script>
 
 <template>
-  <BaseModal title="Foods" :back-label="selectedGroupIds.length ? 'Groups' : undefined" subtitle="Manage reusable foods shown in the dashboard." panel-class="food-manager-modal" @close="emit('close')" @back="replaceModal(Modals.GROUP_MANAGER)">
+  <BaseModal title="Foods" subtitle="Manage reusable foods shown in the dashboard." panel-class="food-manager-modal" @close="emit('close')">
     <div class="manager-group food-manager-content">
       <div class="food-filters">
         <label class="food-filter-field">
