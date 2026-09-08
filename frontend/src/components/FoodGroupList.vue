@@ -267,6 +267,7 @@ onUnmounted(() => {
                   :locked="locked"
                   :one-click-mode="store.oneClickMode"
                   :adjustable="selectedFamilyFood(family).mode !== 'simple' && !!entryFor(selectedFamilyFood(family).id)"
+                  family-changeable
                   editable
                   :open="props.activeStepperId === `food-${selectedFamilyFood(family).id}` || view.openFoodStepperId === selectedFamilyFood(family).id"
                   @decrement="entryFor(selectedFamilyFood(family).id) && decrement(entryFor(selectedFamilyFood(family).id))"
@@ -274,9 +275,9 @@ onUnmounted(() => {
                   @set-quantity="setFoodQuantity(selectedFamilyFood(family), $event)"
                   @edit="openModal(Modals.FOOD_EDITOR, { foodId: selectedFamilyFood(family).id })"
                   @adjust="openModal(Modals.ADJUST_FOOD, { entryId: entryFor(selectedFamilyFood(family).id)?.id })"
+                  @family-change="openModal(Modals.FOOD_FAMILY_PICKER, { familyId: family.id })"
                   @toggle="(isOpen) => toggleStepper(`food-${selectedFamilyFood(family).id}`, isOpen)"
                 />
-                <button v-if="!locked" type="button" class="family-change-button" :aria-label="`Change ${family.name} variant`" :title="`Change ${family.name} variant`" @click="openModal(Modals.FOOD_FAMILY_PICKER, { familyId: family.id })">↻</button>
               </div>
             </template>
             <button v-else type="button" class="family-chip" :disabled="locked" @click="!locked && openModal(Modals.FOOD_FAMILY_PICKER, { familyId: family.id })">
@@ -360,30 +361,6 @@ onUnmounted(() => {
 .family-selected-food {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-}
-
-.family-change-button {
-  display: inline-flex;
-  width: 22px;
-  height: 22px;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-  padding: 0;
-  border: 1px solid var(--line);
-  border-radius: 50%;
-  background: var(--surface-alt);
-  color: var(--ink-muted);
-  font-size: 14px;
-  line-height: 1;
-}
-
-.family-change-button:hover,
-.family-change-button:focus-visible {
-  border-color: var(--green);
-  color: var(--green-strong);
-  outline: none;
 }
 
 .family-chip:disabled {
@@ -425,6 +402,24 @@ onUnmounted(() => {
   color: color-mix(in srgb, var(--ink) 40%, transparent);
   font-size: 11px;
   line-height: 1;
+}
+
+@media (max-width: 600px) {
+  .family-chip {
+    min-height: 38px;
+    padding: 6px 8px;
+  }
+
+  .family-selected-food :deep(.food-stepper) {
+    min-height: 34px;
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+
+  .family-selected-food :deep(.food-stepper-kcal) {
+    margin-top: 2px;
+    font-size: 10px;
+  }
 }
 
 .group-header-main {

@@ -330,6 +330,10 @@
   transform: none;
 }
 
+.food-adjust-popover.has-family-change {
+  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr) 1px minmax(0, 1fr);
+}
+
 .food-stepper-action-divider {
   flex: none;
   width: 1px;

@@ -15,6 +15,7 @@ const props = defineProps({
   adjusted: { type: Boolean, default: false },
   editable: { type: Boolean, default: false },
   adjustable: { type: Boolean, default: false },
+  familyChangeable: { type: Boolean, default: false },
 })
 
 const stepperWrap = ref(null)
@@ -22,7 +23,7 @@ const popoverPlacement = ref('center')
 const popoverVerticalPlacement = ref('down')
 const popoverLeft = ref('50%')
 
-const emit = defineEmits(['decrement', 'increment', 'set-quantity', 'toggle', 'edit', 'adjust'])
+const emit = defineEmits(['decrement', 'increment', 'set-quantity', 'toggle', 'edit', 'adjust', 'family-change'])
 
 function setQuantity(event) {
   const quantity = Number(event.target.value)
@@ -113,9 +114,21 @@ defineExpose({ closePopover })
     </button>
     <button v-if="quantity > 0" type="button" class="food-stepper-quantity" :aria-label="`Customize ${name} quantity`"
       @click="openQuantityPopover">{{ quantity }}</button>
-    <div v-if="open && !locked && (editable || adjustable)" class="food-adjust-popover"
-      :class="[`placement-${popoverPlacement}`, `placement-${popoverVerticalPlacement}`]"
+    <div v-if="open && !locked && (editable || adjustable || familyChangeable)" class="food-adjust-popover"
+      :class="[{ 'has-family-change': familyChangeable }, `placement-${popoverPlacement}`, `placement-${popoverVerticalPlacement}`]"
       :style="{ '--popover-left': popoverLeft }">
+      <button v-if="familyChangeable" type="button" class="food-stepper-adjust"
+        aria-label="Change food variant"
+        title="Change food variant"
+        @click.stop="openModalAction('family-change')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m8 3-4 4 4 4" />
+          <path d="M4 7h16" />
+          <path d="m16 21 4-4-4-4" />
+          <path d="M20 17H4" />
+        </svg>
+      </button>
+      <span v-if="familyChangeable" class="food-stepper-action-divider" aria-hidden="true"></span>
       <button type="button" class="food-stepper-adjust"
         aria-label="Edit food"
         title="Edit food"
