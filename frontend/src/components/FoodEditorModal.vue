@@ -2,7 +2,7 @@
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import BaseModal from './BaseModal.vue'
 import FoodModeSelector from './FoodModeSelector.vue'
-import { state as store, createFood, updateFood, addFoodToFamily, foodKcal } from '../js/data.js'
+import { state as store, createFood, updateFood, addFoodToFamily, foodKcal, UNCATEGORIZED_GROUP_ID } from '../js/data.js'
 import { Modals, openModal } from '../js/modals.js'
 import { confirmAction } from '../js/confirm.js'
 import { useDiscardChanges } from '../js/useDiscardChanges.js'
@@ -20,7 +20,7 @@ const source = store.foods.find((food) => food.id === props.foodId)
 const isNew = !source
 const draft = reactive({
   name: source ? `${source.name}${props.duplicate ? ' copy' : ''}` : '',
-  groupId: source ? source.groupId : props.groupId,
+  groupId: source ? source.groupId : props.groupId || UNCATEGORIZED_GROUP_ID,
   items: source ? source.items.map((item) => ({ ...item })) : [],
   kcal: source ? String(source.kcal || '') : '',
   note: source?.note || '',
@@ -173,7 +173,12 @@ function endModeSwipe(event) {
   const deltaY = touch.clientY - modeSwipeStart.value.y
   modeSwipeStart.value = null
   if (Math.abs(deltaX) < 50 || Math.abs(deltaX) <= Math.abs(deltaY)) return
-  setFoodMode(deltaX < 0 ? 'simple' : 'ingredients')
+  const modes = ['ingredients', 'simple', 'variant']
+  const currentMode = foodPurpose.value === 'variant' ? 'variant' : foodMode.value
+  const currentIndex = modes.indexOf(currentMode)
+  const direction = deltaX < 0 ? 1 : -1
+  const nextIndex = (currentIndex + direction + modes.length) % modes.length
+  setFoodMode(modes[nextIndex])
 }
 
 async function saveFood() {
@@ -275,9 +280,11 @@ onUnmounted(() => {
       <div v-if="isDraftCopy" class="copy-food-badge">COPY OF EXISTING FOOD</div>
       <div class="food-details-row">
         <div class="input-field food-field">
+          <label for="foodName">Food name</label>
           <input id="foodName" v-model="draft.name" placeholder="New food" aria-label="Food name" />
         </div>
         <div class="input-field food-field">
+          <label for="foodGroup">Group</label>
           <select id="foodGroup" class="food-group-select" v-model="draft.groupId" aria-label="Food group">
             <option value="" disabled hidden>Select a group...</option>
             <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
@@ -325,7 +332,10 @@ onUnmounted(() => {
             </button>
           </div>
         </div>
-        <div v-else class="variant-empty-state">No variant options selected yet.</div>
+        <div v-else class="variant-empty-state">
+          <strong>No variants added</strong>
+          <span>Search or type a food below to add it.</span>
+        </div>
         <div class="variant-add-heading">
           <div class="variant-nutrition-heading">Add variant option</div>
           <span>Search your foods</span>
@@ -388,6 +398,7 @@ onUnmounted(() => {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 150px;
   gap: 10px;
+  margin-bottom: -6px;
 }
 
 .food-group-select {
@@ -614,12 +625,21 @@ onUnmounted(() => {
 }
 
 .variant-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
   padding: 10px;
   border: 1px dashed var(--line);
   border-radius: 10px;
   color: var(--ink-muted);
   font-size: 12px;
   text-align: center;
+}
+
+.variant-empty-state strong {
+  color: var(--ink);
+  font-size: 12px;
 }
 
 .variant-food-panel > .variant-empty-state {

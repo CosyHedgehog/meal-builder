@@ -14,10 +14,10 @@ const emit = defineEmits(['update:modelValue'])
         Ingredients
       </button>
       <button type="button" :disabled="disabled" :class="{ active: modelValue === 'simple' }" @click="emit('update:modelValue', 'simple')">
-        Simple food
+        Simple
       </button>
       <button type="button" :disabled="disabled" :class="{ active: modelValue === 'variant' }" @click="emit('update:modelValue', 'variant')">
-        Variant group
+        Variant
       </button>
     </div>
   </div>
