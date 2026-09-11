@@ -22,8 +22,11 @@ const displayFoods = computed(() => {
   )
   return [...active, ...archivedButLogged]
 })
-const visibleFoods = computed(() => showAll.value ? displayFoods.value : displayFoods.value.slice(0, 20))
-const hasMore = computed(() => !showAll.value && visibleFoods.value.length < displayFoods.value.length)
+const foodsToShow = computed(() => props.locked
+    ? displayFoods.value.filter((food) => (Number(entryFor(food.id)?.qty) || 0) > 0)
+    : displayFoods.value)
+const visibleFoods = computed(() => showAll.value ? foodsToShow.value : foodsToShow.value.slice(0, 20))
+const hasMore = computed(() => !showAll.value && visibleFoods.value.length < foodsToShow.value.length)
 const pendingDrag = { type: '', id: '', pointerId: null, startX: 0, startY: 0, active: false }
 const mobileDragDelay = 450
 let mobileDragTimer = null
@@ -254,8 +257,9 @@ onUnmounted(() => {
       </div>
       <div v-if="!collapsed" class="quick-picks-viewport">
         <div class="chip-list" :class="{ 'kcal-hidden': !store.showKcal }">
-          <div v-for="family in families" :key="family.id" class="dashboard-food-family">
-            <template v-if="selectedFamilyFood(family)">
+          <template v-for="family in families" :key="family.id">
+            <div v-if="!locked || (selectedFamilyFood(family) && familyQuantity(family) > 0)" class="dashboard-food-family">
+              <template v-if="selectedFamilyFood(family)">
               <div class="dashboard-food-item family-selected-food">
                 <FoodQuantityStepper
                   :name="`${selectedFamilyFood(family).name}${selectedFamilyFood(family).archived ? ' (Hidden)' : ''}`"
@@ -279,13 +283,14 @@ onUnmounted(() => {
                   @toggle="(isOpen) => toggleStepper(`food-${selectedFamilyFood(family).id}`, isOpen)"
                 />
               </div>
-            </template>
-            <button v-else type="button" class="family-chip" :disabled="locked" @click="!locked && openModal(Modals.FOOD_FAMILY_PICKER, { familyId: family.id })">
-              <span class="family-chip-name">{{ family.name }}</span>
-              <span class="family-chip-meta">{{ familyQuantity(family) ? `${familyQuantity(family)} today` : 'choose variant' }}</span>
-            </button>
-          </div>
-          <div v-for="entry in entries.filter((item) => !item.foodId)" :key="entry.id" class="dashboard-food-item"
+              </template>
+              <button v-else type="button" class="family-chip" @click="openModal(Modals.FOOD_FAMILY_PICKER, { familyId: family.id })">
+                <span class="family-chip-name">{{ family.name }}</span>
+                <span class="family-chip-meta">{{ familyQuantity(family) ? `${familyQuantity(family)} today` : 'choose variant' }}</span>
+              </button>
+            </div>
+          </template>
+          <div v-for="entry in entries.filter((item) => !item.foodId && (!locked || (Number(item.qty) || 0) > 0))" :key="entry.id" class="dashboard-food-item"
             :class="{ active: props.activeStepperId === `custom-${entry.id}` }">
             <FoodQuantityStepper
               :name="entry.name || 'Custom'"
@@ -625,15 +630,16 @@ onUnmounted(() => {
   cursor: default;
 }
 
-.dashboard-locked .food-stepper,
-.dashboard-locked .food-stepper-control:hover,
-.dashboard-locked .food-stepper-label:hover {
-  background: var(--surface);
+.dashboard-locked :deep(.food-stepper),
+.dashboard-locked :deep(.food-stepper-control:hover),
+.dashboard-locked :deep(.food-stepper-label:hover) {
+  background: var(--chip-bg);
 }
 
 .dashboard-locked .today-chip,
-.dashboard-locked .food-stepper {
+.dashboard-locked :deep(.food-stepper) {
   pointer-events: none;
+  opacity: 0.65;
 }
 
 .dashboard-food-item {
