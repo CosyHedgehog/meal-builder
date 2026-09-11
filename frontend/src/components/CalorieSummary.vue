@@ -29,6 +29,20 @@ const groupSegments = computed(() => {
 const animatedTotalK = ref(0)
 const animatedDeficit = ref(0)
 const animatedGroupKcal = ref({})
+const animatedGroupSegments = computed(() => {
+  const animatedBarTotal = Math.max(store.maintenanceCal, animatedTotalK.value, 1)
+  let offset = 0
+
+  return groupSegments.value.map((segment) => {
+    const kcal = animatedGroupKcal.value[segment.id] || 0
+    const width = Math.min(100 - offset, (kcal / animatedBarTotal) * 100)
+    offset += width
+    return { ...segment, width }
+  })
+})
+const animatedRestPct = computed(() =>
+  Math.max(0, 100 - animatedGroupSegments.value.reduce((total, segment) => total + segment.width, 0)),
+)
 const animationFrames = new Map()
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
 
@@ -104,9 +118,9 @@ onBeforeUnmount(() => {
 
   <div class="today-status">
     <div class="today-status-bar">
-      <div v-for="segment in groupSegments" :key="segment.id" class="status-seg"
+      <div v-for="segment in animatedGroupSegments" :key="segment.id" class="status-seg"
         :class="`group-${segment.colorIndex % 5}`" :style="{ width: segment.width + '%' }"></div>
-      <div class="status-seg deficit" :style="{ width: restPct + '%' }"></div>
+      <div class="status-seg deficit" :style="{ width: animatedRestPct + '%' }"></div>
     </div>
 
     <div class="today-status-labels">
@@ -167,6 +181,7 @@ onBeforeUnmount(() => {
 
 .status-seg {
   height: 100%;
+  transition: width 520ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .status-seg.meal {
@@ -190,6 +205,12 @@ onBeforeUnmount(() => {
 
 .status-seg.deficit {
   background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-seg {
+    transition: none;
+  }
 }
 
 .today-status-labels {
