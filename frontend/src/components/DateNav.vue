@@ -1,13 +1,22 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { state as store } from '../js/data.js'
-import { prettyDateNoYear, shiftDateStr, todayStr } from '../js/date.js'
+import { parseISODate, prettyDateNoYear, shiftDateStr, todayStr } from '../js/date.js'
 import { setLogDate, triggerDateBoundaryBounce, view } from '../js/ui.js'
 
 const dateInput = ref(null)
 const today = computed(() => todayStr())
 const isToday = computed(() => view.logDate === today.value)
 const label = computed(() => prettyDateNoYear(view.logDate))
+const contextLabel = computed(() => {
+  if (isToday.value) return 'Today'
+
+  const todayDate = parseISODate(today.value)
+  const selectedDate = parseISODate(view.logDate)
+  const daysAgo = Math.round((todayDate - selectedDate) / 86400000)
+
+  return daysAgo === 1 ? 'Yesterday' : `${daysAgo} days ago`
+})
 
 function openPicker() {
   const el = dateInput.value
@@ -44,7 +53,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
     <button type="button" class="date-picker-trigger" aria-label="Choose date" @click="openPicker">
       <span class="today-date">
         {{ label }}
-        <small>{{ isToday ? '' : ' ' }}</small>
+        <small>{{ contextLabel }}</small>
       </span>
       <svg class="date-picker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <rect x="3" y="4" width="18" height="18" rx="2"></rect>
@@ -112,8 +121,8 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   display: block;
   font-family: 'Inter', sans-serif;
   font-size: 12px;
-  font-weight: 400;
-  color: color-mix(in srgb, var(--green) 70%, transparent);
+  font-weight: 700;
+  color: color-mix(in srgb, var(--green) 82%, transparent);
   margin-top: 2px;
 }
 
@@ -252,6 +261,8 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
     position: sticky;
     z-index: 20;
     background: var(--bg);
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr) 32px;
     gap: 16px;
     padding: 12px 0 0;
   }
@@ -276,6 +287,14 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
     right: auto;
   }
 
+  .date-arrow.previous-day {
+    grid-column: 1;
+  }
+
+  .date-arrow.next-day {
+    grid-column: 3;
+  }
+
   .today-date {
     font-family: Georgia, 'Times New Roman', serif;
     font-size: 24px;
@@ -285,10 +304,12 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   .today-date small {
     margin-top: 2px;
     font-size: 12px;
-    font-weight: 400;
+    font-weight: 700;
   }
 
   .date-picker-trigger {
+    grid-column: 2;
+    justify-self: center;
     gap: 6px;
   }
 
@@ -299,9 +320,10 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   }
 
   .date-today-arrow {
-    position: static;
-    flex: 0 0 30px;
-    transform: none;
+    position: absolute;
+    right: 32px;
+    top: calc(50% + 6px);
+    transform: translateY(-50%);
   }
 }
 </style>

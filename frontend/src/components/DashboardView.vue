@@ -115,7 +115,7 @@ function setActiveStepper(stepperId) {
 .home {
   display: flex;
   flex-direction: column;
-  --desktop-nav-height: 40px;
+  --desktop-nav-height: 30px;
   overflow: visible;
   border: 0;
   border-radius: 24px;
