@@ -112,7 +112,7 @@ defineExpose({ closePopover })
           v-if="adjusted" class="one-off-badge">ADJ</span></span>
       <span class="food-stepper-kcal">{{ Math.round(kcal * (quantity || 1)).toLocaleString() }} kcal<span v-if="kcalAdjustment" class="food-stepper-kcal-adjustment"> ({{ kcalAdjustment > 0 ? '+' : '' }}{{ kcalAdjustment.toLocaleString() }})</span></span>
     </button>
-    <button v-if="quantity > 0" type="button" class="food-stepper-quantity" :aria-label="`Customize ${name} quantity`"
+    <button v-if="quantity > 0" :key="quantity" type="button" class="food-stepper-quantity" :aria-label="`Customize ${name} quantity`"
       @click="openQuantityPopover">{{ quantity }}</button>
     <div v-if="open && !locked && (editable || adjustable || familyChangeable)" class="food-adjust-popover"
       :class="[{ 'has-family-change': familyChangeable }, `placement-${popoverPlacement}`, `placement-${popoverVerticalPlacement}`]"
