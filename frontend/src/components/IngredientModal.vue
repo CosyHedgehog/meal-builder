@@ -100,6 +100,11 @@ function chooseUsageFilter(value) {
   usageMenuOpen.value = false
 }
 
+function clearUsageFilter() {
+  usageFilter.value = 'all'
+  usageMenuOpen.value = false
+}
+
 function closeOptions(event) {
   if (event.target.closest('.ingredient-options')) return
   if (event.target.closest('.ingredient-sort-control')) return
@@ -151,19 +156,22 @@ async function removeIngredient(item) {
         </div>
         <div class="ingredient-list-controls">
           <div class="ingredient-sort-control ingredient-filter-control">
-            <button
-              class="ingredient-sort-label"
-              type="button"
-              aria-haspopup="dialog"
-              :aria-expanded="usageMenuOpen"
-              aria-label="Filter ingredients"
-              @click.stop="toggleUsageMenu"
-            >
-              <svg class="ingredient-sort-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M4 5h16l-6 7v5l-4 2v-7L4 5Z" />
-              </svg>
-              <span>{{ usageFilterLabel }}</span>
-            </button>
+              <div class="ingredient-filter-label-row">
+                <button v-if="usageFilter !== 'all'" class="filter-clear-button" type="button" aria-label="Clear ingredient filter" title="Clear ingredient filter" @click.stop="clearUsageFilter">×</button>
+                <button
+                  class="ingredient-sort-label"
+                  type="button"
+                  aria-haspopup="dialog"
+                  :aria-expanded="usageMenuOpen"
+                  aria-label="Filter ingredients"
+                  @click.stop="toggleUsageMenu"
+                >
+                  <svg class="ingredient-sort-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 5h16l-6 7v5l-4 2v-7L4 5Z" />
+                  </svg>
+                  <span>{{ usageFilterLabel }}</span>
+                </button>
+              </div>
             <div v-if="usageMenuOpen" class="ingredient-filter-menu" role="dialog" aria-label="Filter ingredients">
               <strong>Usage</strong>
               <button v-for="option in [{ value: 'all', label: 'All' }, { value: 'in-use', label: 'In use' }, { value: 'unused', label: 'Unused' }]"
@@ -363,6 +371,35 @@ async function removeIngredient(item) {
 
 .ingredient-sort-control {
   position: relative;
+}
+
+.ingredient-filter-label-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.filter-clear-button {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.filter-clear-button:hover,
+.filter-clear-button:focus-visible {
+  background: var(--surface-alt);
+  color: var(--ink);
+  outline: none;
 }
 
 .ingredient-sort-label {

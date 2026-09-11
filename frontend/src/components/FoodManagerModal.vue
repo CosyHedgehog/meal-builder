@@ -243,19 +243,22 @@ async function removeFood(food) {
         <span class="food-list-count" aria-live="polite">{{ foodCountLabel }}</span>
         <div class="food-list-controls">
           <div class="food-sort-control food-filter-control">
-            <button
-              class="food-sort-label"
-              type="button"
-              aria-haspopup="listbox"
-              :aria-expanded="filterMenuOpen"
-              aria-label="Filter foods"
-              @click.stop="toggleFilterMenu"
-            >
-              <svg class="food-filter-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M4 5h16l-6 7v5l-4 2v-7L4 5Z" />
-              </svg>
-              <span>{{ filterSummary }}</span>
-            </button>
+              <div class="food-filter-label-row">
+                <button v-if="selectedGroupIds.length || selectedTypes.length || selectedStatuses.length" class="filter-clear-button" type="button" aria-label="Clear food filters" title="Clear food filters" @click.stop="clearFilters">×</button>
+                <button
+                  class="food-sort-label"
+                  type="button"
+                  aria-haspopup="listbox"
+                  :aria-expanded="filterMenuOpen"
+                  aria-label="Filter foods"
+                  @click.stop="toggleFilterMenu"
+                >
+                  <svg class="food-filter-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 5h16l-6 7v5l-4 2v-7L4 5Z" />
+                  </svg>
+                  <span>{{ filterSummary }}</span>
+                </button>
+              </div>
             <div v-if="filterMenuOpen" class="food-filter-menu" role="dialog" aria-label="Filter foods">
               <div class="food-filter-section">
                 <strong>Groups</strong>
@@ -576,6 +579,35 @@ async function removeFood(food) {
 
 .food-sort-control {
   position: relative;
+}
+
+.food-filter-label-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.filter-clear-button {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.filter-clear-button:hover,
+.filter-clear-button:focus-visible {
+  background: var(--surface-alt);
+  color: var(--ink);
+  outline: none;
 }
 
 .food-sort-label {
