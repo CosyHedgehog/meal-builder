@@ -185,16 +185,25 @@
   z-index: 6;
 }
 
+.food-stepper-wrap.active {
+  z-index: 31;
+}
+
+.food-stepper-wrap.active .food-stepper:hover {
+  transform: none;
+}
+
 .food-stepper {
   display: inline-flex;
-  flex-direction: column;
-  align-items: flex-start;
+  flex-direction: row;
+  align-items: center;
   justify-content: center;
-  min-height: 48px;
+  min-height: 34px;
   max-height: none;
   overflow: visible;
-  border-radius: 12px;
-  padding: 7px 11px;
+  gap: 5px;
+  border-radius: 8px;
+  padding: 6px 9px;
   border: 1px solid transparent;
   background: var(--chip-bg);
   color: var(--ink);
@@ -217,24 +226,46 @@
 }
 
 .food-stepper.selected {
-  border-color: color-mix(in srgb, var(--green) 55%, transparent);
-  background: color-mix(in srgb, var(--green) 16%, transparent);
+  border-color: transparent;
+  background: var(--green-soft);
+  color: var(--green-strong);
 }
 
 .food-stepper-kcal {
-  margin-top: 3px;
+  margin-top: 0;
   color: color-mix(in srgb, var(--ink) 40%, transparent);
   font-size: 11px;
   font-weight: 500;
   line-height: 1;
 }
 
+.food-stepper.selected .food-stepper-kcal {
+  color: color-mix(in srgb, var(--green-strong) 72%, transparent);
+}
+
+.food-stepper-quantity-inline {
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--green);
+  color: var(--bg);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+}
+
 .food-stepper-quantity {
   position: absolute;
-  top: -4px;
-  right: -4px;
+  top: 6px;
+  left: 9px;
   z-index: 2;
   display: inline-flex;
+  width: 14px;
   align-items: center;
   justify-content: center;
   min-width: 16px;
@@ -242,14 +273,19 @@
   margin: 0;
   padding: 0 4px;
   border-radius: 999px;
-  background: var(--green);
-  color: #062119;
+  background: transparent;
+  color: transparent;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 9px;
   font-weight: 700;
   line-height: 1;
   animation: quantity-badge-pop 220ms cubic-bezier(0.22, 1, 0.36, 1);
   vertical-align: -1px;
+}
+
+.food-stepper-quantity:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 1px;
 }
 
 @keyframes quantity-badge-pop {
@@ -275,13 +311,22 @@
 }
 
 .food-stepper-name {
-  padding-right: 2px;
+  min-width: 0;
+  padding-right: 0;
   padding-left: 0;
+  line-height: 1.2;
+}
+
+.food-stepper-mainline {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
 }
 
 .food-quantity-popover {
   position: absolute;
-  z-index: 4;
+  z-index: 8;
   top: calc(100% + 3px);
   left: var(--popover-left, 50%);
   max-width: calc(100vw - 16px);
@@ -340,7 +385,7 @@
   grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
   align-items: center;
   gap: 2px;
-  z-index: 4;
+  z-index: 8;
   bottom: calc(100% + 3px);
   left: 50%;
   width: 108px;
@@ -521,8 +566,28 @@
 }
 
 .chip-list.kcal-hidden .food-stepper {
-  min-height: 40px;
-  max-height: 40px;
+  min-height: 34px;
+  max-height: 34px;
+  padding: 6px 9px;
+}
+
+.chip-list.chips-large .food-stepper,
+.chip-list.chips-large .family-chip {
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 48px;
+  padding: 8px 12px;
+  border-radius: 14px;
+}
+
+.chip-list.chips-large .food-stepper {
+  gap: 4px;
+  font-size: 13.5px;
+}
+
+.chip-list.chips-large .food-stepper-kcal,
+.chip-list.chips-large .family-chip-meta {
+  font-size: 12px;
 }
 
 @media (min-width: 601px) {
@@ -531,10 +596,16 @@
   }
 
   .food-stepper {
-    border-radius: 12px;
-    min-height: 48px;
-    padding: 8px 14px;
+    border-radius: 8px;
+    min-height: 34px;
+    padding: 6px 9px;
     transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+
+  .chip-list.chips-large .food-stepper,
+  .chip-list.chips-large .family-chip {
+    min-height: 48px;
+    padding: 8px 12px;
   }
 
   .food-stepper:hover {
@@ -565,8 +636,14 @@
   }
 
   .food-stepper {
-    min-height: 38px;
+    min-height: 34px;
     padding: 6px 8px;
+  }
+
+  .chip-list.chips-large .food-stepper,
+  .chip-list.chips-large .family-chip {
+    min-height: 48px;
+    padding: 8px 10px;
   }
 
 }

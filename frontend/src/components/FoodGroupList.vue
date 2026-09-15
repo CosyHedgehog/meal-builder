@@ -22,9 +22,7 @@ const displayFoods = computed(() => {
   )
   return [...active, ...archivedButLogged]
 })
-const foodsToShow = computed(() => props.locked
-    ? displayFoods.value.filter((food) => (Number(entryFor(food.id)?.qty) || 0) > 0)
-    : displayFoods.value)
+const foodsToShow = computed(() => displayFoods.value)
 const visibleFoods = computed(() => showAll.value ? foodsToShow.value : foodsToShow.value.slice(0, 20))
 const hasMore = computed(() => !showAll.value && visibleFoods.value.length < foodsToShow.value.length)
 const pendingDrag = { type: '', id: '', pointerId: null, startX: 0, startY: 0, active: false }
@@ -83,7 +81,6 @@ function selectedFamilyFood(family) {
   const loggedVariant = entries.value.find((entry) => variantIds.has(entry.foodId))
   return loggedVariant ? store.foods.find((food) => food.id === loggedVariant.foodId) || null : null
 }
-
 function startPointerDrag(event, type, id) {
   if (event.button !== 0) return
   clearTimeout(mobileDragTimer)
@@ -256,9 +253,9 @@ onUnmounted(() => {
         </span>
       </div>
       <div v-if="!collapsed" class="quick-picks-viewport">
-        <div class="chip-list" :class="{ 'kcal-hidden': !store.showKcal }">
+        <div class="chip-list" :class="{ 'kcal-hidden': !store.showKcal, 'chips-large': store.chipSize === 'large' }">
           <template v-for="family in families" :key="family.id">
-            <div v-if="!locked || (selectedFamilyFood(family) && familyQuantity(family) > 0)" class="dashboard-food-family">
+            <div class="dashboard-food-family">
               <template v-if="selectedFamilyFood(family)">
               <div class="dashboard-food-item family-selected-food">
                 <FoodQuantityStepper
@@ -284,9 +281,9 @@ onUnmounted(() => {
                 />
               </div>
               </template>
-              <button v-else type="button" class="family-chip" @click="openModal(Modals.FOOD_FAMILY_PICKER, { familyId: family.id })">
+              <button v-else type="button" class="family-chip" :disabled="locked" @click="!locked && openModal(Modals.FOOD_FAMILY_PICKER, { familyId: family.id })">
                 <span class="family-chip-name">{{ family.name }}</span>
-                <span class="family-chip-meta">{{ familyQuantity(family) ? `${familyQuantity(family)} today` : 'choose variant' }}</span>
+                <span class="family-chip-meta">{{ familyQuantity(family) ? `${familyQuantity(family)} today` : 'Variant' }}</span>
               </button>
             </div>
           </template>
@@ -375,16 +372,17 @@ onUnmounted(() => {
 
 .family-chip {
   display: inline-flex;
-  min-height: 48px;
-  flex-direction: column;
-  align-items: flex-start;
+  min-height: 34px;
+  flex-direction: row;
+  align-items: center;
   justify-content: center;
-  padding: 7px 11px;
+  gap: 5px;
+  padding: 6px 9px;
   border: 1px solid transparent;
-  border-radius: 12px;
+  border-radius: 8px;
   background: var(--chip-bg);
   color: var(--ink);
-  font-size: 13px;
+  font-size: 12px;
   text-align: left;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
@@ -397,21 +395,21 @@ onUnmounted(() => {
 }
 
 .family-chip-name {
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1;
+  font-size: inherit;
+  font-weight: 400;
+  line-height: 1.2;
 }
 
 .family-chip-meta {
-  margin-top: 2px;
-  color: color-mix(in srgb, var(--ink) 40%, transparent);
+  margin-top: 0;
+  color: var(--orange);
   font-size: 11px;
   line-height: 1;
 }
 
 @media (max-width: 600px) {
   .family-chip {
-    min-height: 38px;
+    min-height: 34px;
     padding: 6px 8px;
   }
 }
@@ -634,6 +632,10 @@ onUnmounted(() => {
 .dashboard-locked :deep(.food-stepper-control:hover),
 .dashboard-locked :deep(.food-stepper-label:hover) {
   background: var(--chip-bg);
+}
+
+.dashboard-locked :deep(.food-stepper.selected) {
+  background: var(--green-soft);
 }
 
 .dashboard-locked .today-chip,

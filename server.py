@@ -38,6 +38,7 @@ DEFAULT_DATA = {
     'logs': {},
     'maintenanceCal': 2200,
     'showKcal': True,
+    'chipSize': 'compact',
     'allowPreviousDayLocking': False,
     'oneClickMode': False
 }
@@ -392,6 +393,7 @@ class Handler(BaseHTTPRequestHandler):
             'logs': data.get('logs',{}),
             'maintenanceCal': data.get('maintenanceCal',2200),
             'showKcal': data.get('showKcal',True),
+            'chipSize': data.get('chipSize','compact'),
             'weightUnit': data.get('weightUnit','kg'),
             'allowPreviousDayLocking': data.get('allowPreviousDayLocking',False),
             'oneClickMode': data.get('oneClickMode',False),

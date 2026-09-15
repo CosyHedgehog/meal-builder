@@ -7,6 +7,7 @@ function uid(prefix) {
 
 export const DEFAULT_MAINTENANCE = 2200
 export const DEFAULT_WEIGHT_UNIT = 'kg'
+export const DEFAULT_CHIP_SIZE = 'compact'
 
 /* ===================== Groups ===================== */
 
@@ -62,6 +63,7 @@ export const state = reactive({
   logs: {}, // 'YYYY-MM-DD' -> { entries: [...] }
   maintenanceCal: DEFAULT_MAINTENANCE,
   showKcal: true,
+  chipSize: DEFAULT_CHIP_SIZE,
   weightUnit: DEFAULT_WEIGHT_UNIT,
   allowPreviousDayLocking: false,
   oneClickMode: false,
@@ -187,6 +189,7 @@ function migrateLegacyPayload(parsed) {
     logs,
     maintenanceCal: parsed.maintenanceCal || DEFAULT_MAINTENANCE,
     showKcal: parsed.showKcal !== false,
+    chipSize: parsed.chipSize === 'large' ? 'large' : DEFAULT_CHIP_SIZE,
     weightUnit: parsed.weightUnit === 'lb' ? 'lb' : DEFAULT_WEIGHT_UNIT,
     allowPreviousDayLocking: false,
     oneClickMode: false,
@@ -205,6 +208,7 @@ export function snapshot() {
     logs: state.logs,
     maintenanceCal: state.maintenanceCal,
     showKcal: state.showKcal,
+    chipSize: state.chipSize,
     weightUnit: state.weightUnit,
     allowPreviousDayLocking: state.allowPreviousDayLocking,
     oneClickMode: state.oneClickMode,
@@ -220,6 +224,7 @@ function applyDefaults() {
   state.logs = {}
   state.maintenanceCal = DEFAULT_MAINTENANCE
   state.showKcal = true
+  state.chipSize = DEFAULT_CHIP_SIZE
   state.weightUnit = DEFAULT_WEIGHT_UNIT
   state.allowPreviousDayLocking = false
   state.oneClickMode = false
@@ -250,6 +255,7 @@ export async function loadData() {
     })
     state.maintenanceCal = normalized.maintenanceCal || DEFAULT_MAINTENANCE
     state.showKcal = normalized.showKcal !== false
+    state.chipSize = normalized.chipSize === 'large' ? 'large' : DEFAULT_CHIP_SIZE
     state.weightUnit = normalized.weightUnit === 'lb' ? 'lb' : DEFAULT_WEIGHT_UNIT
     state.allowPreviousDayLocking = normalized.allowPreviousDayLocking === true
     state.oneClickMode = normalized.oneClickMode === true
@@ -284,6 +290,7 @@ export async function importData(payload) {
   })
   state.maintenanceCal = normalized.maintenanceCal || DEFAULT_MAINTENANCE
   state.showKcal = normalized.showKcal !== false
+  state.chipSize = normalized.chipSize === 'large' ? 'large' : DEFAULT_CHIP_SIZE
   state.weightUnit = normalized.weightUnit === 'lb' ? 'lb' : DEFAULT_WEIGHT_UNIT
   state.allowPreviousDayLocking = normalized.allowPreviousDayLocking === true
   state.oneClickMode = normalized.oneClickMode === true
@@ -494,6 +501,11 @@ export function setMaintenance(value) {
 
 export function setShowKcal(value) {
   state.showKcal = !!value
+  save()
+}
+
+export function setChipSize(value) {
+  state.chipSize = value === 'large' ? 'large' : DEFAULT_CHIP_SIZE
   save()
 }
 

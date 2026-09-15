@@ -6,6 +6,7 @@ import {
   state as store,
   setMaintenance,
   setShowKcal,
+  setChipSize,
   setWeightUnit,
   setAllowPreviousDayLocking,
   setOneClickMode,
@@ -27,6 +28,11 @@ const darkMode = computed({
 const showKcal = computed({
   get: () => store.showKcal,
   set: (value) => setShowKcal(value),
+})
+
+const chipSize = computed({
+  get: () => store.chipSize,
+  set: (value) => setChipSize(value),
 })
 
 const weightUnit = computed({
@@ -116,6 +122,15 @@ function downloadJSON(filename, payload) {
           <div class="settings-row">
             <label>Show kcal on chips</label>
             <ToggleSwitch v-model="showKcal" label="Toggle kcal on chips" />
+          </div>
+          <div class="settings-row">
+            <span class="settings-row-label">Chip size</span>
+            <div class="unit-chips" role="radiogroup" aria-label="Chip size">
+              <button type="button" role="radio" :aria-checked="chipSize === 'compact'"
+                :class="{ active: chipSize === 'compact' }" @click="chipSize = 'compact'">Compact</button>
+              <button type="button" role="radio" :aria-checked="chipSize === 'large'"
+                :class="{ active: chipSize === 'large' }" @click="chipSize = 'large'">Spacious</button>
+            </div>
           </div>
         </div>
       </section>
