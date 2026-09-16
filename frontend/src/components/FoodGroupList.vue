@@ -1,7 +1,7 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import FoodQuantityStepper from './FoodQuantityStepper.vue'
-import { state as store, addLogFood, bumpLogEntry, setLogEntryQty, logEntries, foodsInGroup, foodFamiliesInGroup, foodKcal, entryFoodKcal, reorderFoodWithinGroup, moveFoodToGroupEnd, reorderGroups } from '../js/data.js'
+import { state as store, addLogFood, bumpLogEntry, setLogEntryQty, logEntries, foodFamiliesInGroup, foodKcal, entryFoodKcal, reorderFoodWithinGroup, moveFoodToGroupEnd, reorderGroups, setGroupFoodSort } from '../js/data.js'
 import { view, getCollapseState, setCollapseState, clearDragState } from '../js/ui.js'
 import { Modals, openModal } from '../js/modals.js'
 
@@ -9,22 +9,32 @@ const props = defineProps({ group: { type: Object, required: true }, log: { type
 const emit = defineEmits(['update:activeStepperId'])
 const showAll = ref(false)
 const collapsed = ref(getCollapseState(`group:${props.group.id}`))
-const foods = computed(() => foodsInGroup(props.group.id))
+const sortMenuOpen = ref(false)
+const sortButton = ref(null)
+const sortMenuStyle = ref({})
+const groupSort = computed(() => props.group.foodSort || 'chosen')
+const sortOptions = [
+  { value: 'chosen', label: 'Chosen order' },
+  { value: 'name', label: 'Name' },
+  { value: 'kcal', label: 'Calories' },
+]
 const families = computed(() => foodFamiliesInGroup(props.group.id))
-const familyVariantIds = computed(() => new Set(families.value.flatMap((family) => family.variantFoodIds || [])))
 const entries = computed(() => logEntries(props.log).filter((entry) => entry.groupId === props.group.id))
-// Also show archived foods that are already logged today so the user can still see/adjust them
-const loggedFoodIds = computed(() => new Set(entries.value.map((e) => e.foodId)))
-const displayFoods = computed(() => {
-  const active = foods.value
-  const archivedButLogged = store.foods.filter(
-    (f) => f.archived && f.groupId === props.group.id && loggedFoodIds.value.has(f.id) && !familyVariantIds.value.has(f.id)
-  )
-  return [...active, ...archivedButLogged]
+const hiddenVariantIds = computed(() => new Set(families.value
+  .filter((family) => family.showStandalone !== true)
+  .flatMap((family) => family.variantFoodIds || [])))
+const dashboardItems = computed(() => {
+  const items = store.foods.filter((food) => (
+    food.groupId === props.group.id
+    && (!food.archived || entries.value.some((entry) => entry.foodId === food.id))
+    && (food.mode === 'family' || !hiddenVariantIds.value.has(food.id))
+  ))
+  if (groupSort.value === 'name') return [...items].sort((first, second) => first.name.localeCompare(second.name))
+  if (groupSort.value === 'kcal') return [...items].sort((first, second) => foodKcal(second) - foodKcal(first) || first.name.localeCompare(second.name))
+  return items
 })
-const foodsToShow = computed(() => displayFoods.value)
-const visibleFoods = computed(() => showAll.value ? foodsToShow.value : foodsToShow.value.slice(0, 20))
-const hasMore = computed(() => !showAll.value && visibleFoods.value.length < foodsToShow.value.length)
+const visibleDashboardItems = computed(() => showAll.value ? dashboardItems.value : dashboardItems.value.slice(0, 20))
+const hasMore = computed(() => !showAll.value && visibleDashboardItems.value.length < dashboardItems.value.length)
 const pendingDrag = { type: '', id: '', pointerId: null, startX: 0, startY: 0, active: false }
 const mobileDragDelay = 450
 let mobileDragTimer = null
@@ -60,6 +70,41 @@ function decrement(entry) {
 function toggleCollapsed() {
   collapsed.value = !collapsed.value
   setCollapseState(`group:${props.group.id}`, collapsed.value)
+}
+
+async function toggleSortMenu() {
+  sortMenuOpen.value = !sortMenuOpen.value
+  if (!sortMenuOpen.value || !sortButton.value || window.innerWidth > 600) return
+  await nextTick()
+  const buttonRect = sortButton.value.getBoundingClientRect()
+  const menuWidth = Math.min(150, window.innerWidth - 16)
+  const left = Math.max(8, Math.min(buttonRect.right - menuWidth, window.innerWidth - menuWidth - 8))
+  sortMenuStyle.value = {
+    position: 'fixed',
+    top: `${buttonRect.bottom + 5}px`,
+    left: `${left}px`,
+    right: 'auto',
+    width: `${menuWidth}px`,
+  }
+}
+
+function chooseSort(sortMode) {
+  setGroupFoodSort(props.group.id, sortMode)
+  sortMenuOpen.value = false
+  sortMenuStyle.value = {}
+}
+
+function closeSortMenu(event) {
+  if (!event.target.closest('.group-sort-control')) {
+    sortMenuOpen.value = false
+    sortMenuStyle.value = {}
+  }
+}
+
+function closeSortMenuOnScroll() {
+  if (!sortMenuOpen.value) return
+  sortMenuOpen.value = false
+  sortMenuStyle.value = {}
 }
 
 function toggleStepper(stepperId, isOpen) {
@@ -196,6 +241,8 @@ onMounted(() => {
   document.addEventListener('pointermove', handlePointerMove, { passive: false })
   document.addEventListener('pointerup', handlePointerUp)
   document.addEventListener('pointercancel', cancelPointerDrag)
+  document.addEventListener('click', closeSortMenu)
+  document.addEventListener('scroll', closeSortMenuOnScroll, true)
 })
 
 onUnmounted(() => {
@@ -204,6 +251,8 @@ onUnmounted(() => {
   document.removeEventListener('pointermove', handlePointerMove)
   document.removeEventListener('pointerup', handlePointerUp)
   document.removeEventListener('pointercancel', cancelPointerDrag)
+  document.removeEventListener('click', closeSortMenu)
+  document.removeEventListener('scroll', closeSortMenuOnScroll, true)
 })
 </script>
 
@@ -260,43 +309,50 @@ onUnmounted(() => {
               <path d="M9 6h10M9 12h10M9 18h10" />
             </svg>
           </button>
+          <div class="group-sort-control">
+            <button
+              ref="sortButton"
+              type="button"
+              class="group-sort-button"
+              aria-haspopup="menu"
+              :aria-expanded="sortMenuOpen"
+              :aria-label="`Sort ${group.name} foods`"
+              :title="`Sort ${group.name} foods`"
+              @pointerdown.stop
+              @click.stop="toggleSortMenu"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 6h16M4 12h10M4 18h6" />
+              </svg>
+            </button>
+            <div v-if="sortMenuOpen" class="group-sort-menu" :style="sortMenuStyle" role="menu" :aria-label="`Sort ${group.name} foods`">
+              <button
+                v-for="option in sortOptions"
+                :key="option.value"
+                type="button"
+                role="menuitemradio"
+                :aria-checked="groupSort === option.value"
+                @click.stop="chooseSort(option.value)"
+              >
+                <svg v-if="option.value === 'chosen'" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8 6h12M8 12h12M8 18h12" />
+                  <path d="M3 6h.01M3 12h.01M3 18h.01" />
+                </svg>
+                <svg v-else-if="option.value === 'name'" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 4v16M5 4l-3 3M5 4l3 3M12 7h9M12 12h6M12 17h3" />
+                </svg>
+                <svg v-else viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 19V5M4 5l-2 2M4 5l2 2M10 7h10M10 12h7M10 17h4" />
+                </svg>
+                <span>{{ option.label }}</span>
+                <span v-if="groupSort === option.value" class="group-sort-check" aria-hidden="true">✓</span>
+              </button>
+            </div>
+          </div>
         </span>
       </div>
       <div v-if="!collapsed" class="quick-picks-viewport">
         <div class="chip-list" :class="{ 'kcal-hidden': !store.showKcal, 'chips-large': store.chipSize === 'large' }">
-          <template v-for="family in families" :key="family.id">
-            <div class="dashboard-food-family">
-              <template v-if="selectedFamilyFood(family)">
-              <div class="dashboard-food-item family-selected-food">
-                <FoodQuantityStepper
-                  :name="`${selectedFamilyFood(family).name}${selectedFamilyFood(family).archived ? ' (Hidden)' : ''}`"
-                  :quantity="entryFor(selectedFamilyFood(family).id)?.qty || 0"
-                  :kcal="entryFor(selectedFamilyFood(family).id)?.overrides ? entryFoodKcal(entryFor(selectedFamilyFood(family).id)) : foodKcal(selectedFamilyFood(family))"
-                  :kcal-adjustment="entryFor(selectedFamilyFood(family).id)?.overrides ? entryFoodKcal(entryFor(selectedFamilyFood(family).id)) - foodKcal(selectedFamilyFood(family)) : 0"
-                  :adjusted="!!entryFor(selectedFamilyFood(family).id)?.overrides"
-                  :color-index="store.groups.findIndex((item) => item.id === group.id) % 5"
-                  :locked="locked"
-                  :one-click-mode="store.oneClickMode"
-                  :adjustable="selectedFamilyFood(family).mode !== 'simple' && !!entryFor(selectedFamilyFood(family).id)"
-                  family-changeable
-                  editable
-                  :open="props.activeStepperId === `food-${selectedFamilyFood(family).id}` || view.openFoodStepperId === selectedFamilyFood(family).id"
-                  @decrement="entryFor(selectedFamilyFood(family).id) && decrement(entryFor(selectedFamilyFood(family).id))"
-                  @increment="!locked && addLogFood(view.logDate, group.id, selectedFamilyFood(family).id)"
-                  @set-quantity="setFoodQuantity(selectedFamilyFood(family), $event)"
-                  @edit="openModal(Modals.FOOD_EDITOR, { foodId: selectedFamilyFood(family).id })"
-                  @adjust="openModal(Modals.ADJUST_FOOD, { entryId: entryFor(selectedFamilyFood(family).id)?.id })"
-                  @family-change="openModal(Modals.FOOD_FAMILY_PICKER, { familyId: family.id })"
-                  @toggle="(isOpen) => toggleStepper(`food-${selectedFamilyFood(family).id}`, isOpen)"
-                />
-              </div>
-              </template>
-              <button v-else type="button" class="family-chip" :disabled="locked" @click="!locked && openModal(Modals.FOOD_FAMILY_PICKER, { familyId: family.id })">
-                <span class="family-chip-name">{{ family.name }}</span>
-                <span class="family-chip-meta">{{ familyQuantity(family) ? `${familyQuantity(family)} today` : 'Variant' }}</span>
-              </button>
-            </div>
-          </template>
           <div v-for="entry in entries.filter((item) => !item.foodId && (!locked || (Number(item.qty) || 0) > 0))" :key="entry.id" class="dashboard-food-item"
             :class="{ active: props.activeStepperId === `custom-${entry.id}` }">
             <FoodQuantityStepper
@@ -314,31 +370,70 @@ onUnmounted(() => {
             />
           </div>
           <TransitionGroup name="food-chip" tag="div" class="food-chip-transition">
-            <template v-for="food in visibleFoods" :key="food.id">
-              <div class="dashboard-food-item" :data-food-id="food.id" :class="{ active: props.activeStepperId === `food-${food.id}`, dragging: view.draggedFoodId === food.id, 'drag-over': isSameGroupFoodTarget(food.id) }"
-                @pointerdown="startPointerDrag($event, 'food', food.id)">
+            <template v-for="item in visibleDashboardItems" :key="item.id">
+              <div v-if="item.mode === 'family'" class="dashboard-food-family" :data-food-id="item.id"
+                :class="{ dragging: view.draggedFoodId === item.id, 'drag-over': isSameGroupFoodTarget(item.id) }"
+                @pointerdown="groupSort === 'chosen' && startPointerDrag($event, 'food', item.id)">
+                <template v-if="selectedFamilyFood(item)">
+                  <div class="dashboard-food-item family-selected-food">
+                    <FoodQuantityStepper
+                      :name="`${selectedFamilyFood(item).name}${selectedFamilyFood(item).archived ? ' (Hidden)' : ''}`"
+                      :quantity="entryFor(selectedFamilyFood(item).id)?.qty || 0"
+                      :kcal="entryFor(selectedFamilyFood(item).id)?.overrides ? entryFoodKcal(entryFor(selectedFamilyFood(item).id)) : foodKcal(selectedFamilyFood(item))"
+                      :kcal-adjustment="entryFor(selectedFamilyFood(item).id)?.overrides ? entryFoodKcal(entryFor(selectedFamilyFood(item).id)) - foodKcal(selectedFamilyFood(item)) : 0"
+                      :adjusted="!!entryFor(selectedFamilyFood(item).id)?.overrides"
+                      :color-index="store.groups.findIndex((groupItem) => groupItem.id === group.id) % 5"
+                      :locked="locked"
+                      :one-click-mode="store.oneClickMode"
+                      :adjustable="selectedFamilyFood(item).mode !== 'simple' && !!entryFor(selectedFamilyFood(item).id)"
+                      family-changeable
+                      editable
+                      :open="props.activeStepperId === `food-${selectedFamilyFood(item).id}` || view.openFoodStepperId === selectedFamilyFood(item).id"
+                      @decrement="entryFor(selectedFamilyFood(item).id) && decrement(entryFor(selectedFamilyFood(item).id))"
+                      @increment="!locked && addLogFood(view.logDate, group.id, selectedFamilyFood(item).id)"
+                      @set-quantity="setFoodQuantity(selectedFamilyFood(item), $event)"
+                      @edit="openModal(Modals.FOOD_EDITOR, { foodId: selectedFamilyFood(item).id })"
+                      @adjust="openModal(Modals.ADJUST_FOOD, { entryId: entryFor(selectedFamilyFood(item).id)?.id })"
+                      @family-change="openModal(Modals.FOOD_FAMILY_PICKER, { familyId: item.id })"
+                      @toggle="(isOpen) => toggleStepper(`food-${selectedFamilyFood(item).id}`, isOpen)"
+                    />
+                  </div>
+                </template>
+                <button v-else type="button" class="family-chip" :disabled="locked" @click="!locked && openModal(Modals.FOOD_FAMILY_PICKER, { familyId: item.id })">
+                  <span class="family-chip-name">{{ item.name }}</span>
+                  <span class="family-chip-meta">
+                    <svg v-if="!familyQuantity(item)" class="family-chip-variant-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="m12 2 9 5-9 5-9-5 9-5Z" />
+                      <path d="m3 12 9 5 9-5M3 17l9 5 9-5" />
+                    </svg>
+                    {{ familyQuantity(item) ? `${familyQuantity(item)} today` : 'Variant' }}
+                  </span>
+                </button>
+              </div>
+              <div v-else class="dashboard-food-item" :data-food-id="item.id" :class="{ active: props.activeStepperId === `food-${item.id}`, dragging: view.draggedFoodId === item.id, 'drag-over': isSameGroupFoodTarget(item.id) }"
+                @pointerdown="groupSort === 'chosen' && startPointerDrag($event, 'food', item.id)">
                 <FoodQuantityStepper
-                  :name="food.name"
-                  :quantity="entryFor(food.id)?.qty || 0"
-                  :kcal="entryFor(food.id)?.overrides ? entryFoodKcal(entryFor(food.id)) : foodKcal(food)"
-                  :kcal-adjustment="entryFor(food.id)?.overrides ? entryFoodKcal(entryFor(food.id)) - foodKcal(food) : 0"
-                  :adjusted="!!entryFor(food.id)?.overrides"
-                  :adjustable="food.mode !== 'simple' && !!entryFor(food.id)"
+                  :name="item.name"
+                  :quantity="entryFor(item.id)?.qty || 0"
+                  :kcal="entryFor(item.id)?.overrides ? entryFoodKcal(entryFor(item.id)) : foodKcal(item)"
+                  :kcal-adjustment="entryFor(item.id)?.overrides ? entryFoodKcal(entryFor(item.id)) - foodKcal(item) : 0"
+                  :adjusted="!!entryFor(item.id)?.overrides"
+                  :adjustable="item.mode !== 'simple' && !!entryFor(item.id)"
                   :locked="locked"
                   :one-click-mode="store.oneClickMode"
                   editable
-                  :open="props.activeStepperId === `food-${food.id}`"
-                  @decrement="entryFor(food.id) && decrement(entryFor(food.id))"
-                  @increment="!locked && addLogFood(view.logDate, group.id, food.id)"
-                  @set-quantity="setFoodQuantity(food, $event)"
-                  @edit="openModal(Modals.FOOD_EDITOR, { foodId: food.id })"
-                  @adjust="openModal(Modals.ADJUST_FOOD, { entryId: entryFor(food.id).id })"
-                  @toggle="(isOpen) => toggleStepper(`food-${food.id}`, isOpen)"
+                  :open="props.activeStepperId === `food-${item.id}`"
+                  @decrement="entryFor(item.id) && decrement(entryFor(item.id))"
+                  @increment="!locked && addLogFood(view.logDate, group.id, item.id)"
+                  @set-quantity="setFoodQuantity(item, $event)"
+                  @edit="openModal(Modals.FOOD_EDITOR, { foodId: item.id })"
+                  @adjust="openModal(Modals.ADJUST_FOOD, { entryId: entryFor(item.id).id })"
+                  @toggle="(isOpen) => toggleStepper(`food-${item.id}`, isOpen)"
                 />
               </div>
             </template>
           </TransitionGroup>
-          <div v-if="!foods.length && !families.length" class="empty-group-state">
+          <div v-if="!dashboardItems.length && !families.length" class="empty-group-state">
             <span class="empty-note">No foods in this group yet</span>
             <button v-if="!locked" type="button" class="today-chip chip-add"
               @click="openModal(Modals.FOOD_EDITOR, { groupId: group.id })">
@@ -370,6 +465,22 @@ onUnmounted(() => {
 
 .dashboard-food-family {
   display: inline-flex;
+}
+
+.dashboard-food-family.dragging {
+  opacity: 0.45;
+}
+
+.dashboard-food-family.drag-over {
+  position: relative;
+  z-index: 7;
+}
+
+.dashboard-food-family.drag-over .family-chip,
+.dashboard-food-family.drag-over :deep(.food-stepper) {
+  background: color-mix(in srgb, var(--green-soft) 70%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--green) 28%, transparent);
+  cursor: grabbing;
 }
 
 .family-selected-food {
@@ -413,10 +524,19 @@ onUnmounted(() => {
 }
 
 .family-chip-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   margin-top: 0;
   color: var(--ink-muted);
   font-size: 11px;
   line-height: 1;
+}
+
+.family-chip-variant-icon {
+  width: 12px;
+  height: 12px;
+  flex: none;
 }
 
 @media (max-width: 600px) {
@@ -601,6 +721,96 @@ onUnmounted(() => {
 .group-edit-foods-button:focus-visible {
   background: var(--surface-alt);
   color: var(--green-strong);
+}
+
+.group-sort-control {
+  position: relative;
+}
+
+.group-sort-button {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.group-sort-button svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.group-sort-button:hover,
+.group-sort-button:focus-visible {
+  background: var(--surface-alt);
+  color: var(--green-strong);
+  outline: none;
+}
+
+.group-sort-menu {
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 0;
+  z-index: 20;
+  display: grid;
+  min-width: 150px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 6px 18px rgba(var(--shadow-rgb), 0.18);
+}
+
+.group-sort-menu button {
+  display: grid;
+  grid-template-columns: 18px 1fr 14px;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  padding: 5px 7px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.group-sort-menu button:hover,
+.group-sort-menu button:focus-visible {
+  background: var(--surface-alt);
+  color: var(--green-strong);
+  outline: none;
+}
+
+.group-sort-menu svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.group-sort-check {
+  color: var(--green-strong);
+  font-weight: 700;
+  text-align: center;
 }
 
 .dashboard-locked .today-chip:hover,

@@ -26,7 +26,7 @@ const draft = reactive({
   note: source?.note || '',
   variantFoodIds: source?.variantFoodIds ? [...source.variantFoodIds] : [],
 })
-const sourceFamily = computed(() => source && store.foodFamilies.find((family) => family.variantFoodIds?.includes(source.id)))
+const sourceFamily = computed(() => source && store.foods.find((food) => food.mode === 'family' && food.variantFoodIds?.includes(source.id)))
 const foodMode = ref(source?.mode || (source && source.items.length ? 'ingredients' : 'simple'))
 const foodPurpose = ref(source?.mode === 'family' || props.familyId || sourceFamily.value ? 'variant' : 'simple')
 const nutritionMode = ref(source?.mode || (source && source.items.length ? 'ingredients' : 'simple'))
@@ -50,7 +50,8 @@ const groups = computed(() => store.groups)
 const assignedVariantIds = computed(() => new Set(store.foods
   .filter((food) => food.mode === 'family' && (!source?.id || props.duplicate || food.id !== source.id))
   .flatMap((food) => food.variantFoodIds || [])
-  .concat(store.foodFamilies
+  .concat(store.foods
+    .filter((food) => food.mode === 'family')
     .filter((family) => !source?.id || props.duplicate || family.id !== source.id)
     .flatMap((family) => family.variantFoodIds || []))))
 const availableVariants = computed(() => {

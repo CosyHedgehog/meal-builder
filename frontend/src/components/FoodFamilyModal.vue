@@ -12,7 +12,7 @@ const showStandalone = ref(false)
 const validationMessage = ref('')
 
 const groups = computed(() => store.groups.filter((group) => group.visible !== false))
-const families = computed(() => store.foodFamilies)
+const families = computed(() => store.foods.filter((food) => food.mode === 'family'))
 const availableFoods = computed(() => {
   const search = query.value.trim().toLowerCase()
   return store.foods
