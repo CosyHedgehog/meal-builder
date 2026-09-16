@@ -119,10 +119,24 @@ function handlePointerMove(event) {
   event.preventDefault()
   const target = document.elementFromPoint(event.clientX, event.clientY)
   if (pendingDrag.type === 'group') {
-    view.draggedOverGroupId = target?.closest('[data-group-id]')?.dataset.groupId || ''
+    const targetGroupId = target?.closest('[data-group-id]')?.dataset.groupId || ''
+    if (targetGroupId && targetGroupId !== view.draggedOverGroupId && targetGroupId !== pendingDrag.id) {
+      reorderGroups(pendingDrag.id, targetGroupId)
+    }
+    view.draggedOverGroupId = targetGroupId
   } else {
-    view.draggedOverFoodId = target?.closest('[data-food-id]')?.dataset.foodId || ''
-    view.draggedOverGroupId = target?.closest('[data-group-id]')?.dataset.groupId || ''
+    const targetFoodId = target?.closest('[data-food-id]')?.dataset.foodId || ''
+    const targetGroupId = target?.closest('[data-group-id]')?.dataset.groupId || ''
+    const draggedFood = store.foods.find((item) => item.id === pendingDrag.id)
+    if (targetGroupId && draggedFood?.groupId !== targetGroupId) {
+      moveFoodToGroupEnd(pendingDrag.id, targetGroupId)
+    }
+    const targetFood = store.foods.find((item) => item.id === targetFoodId)
+    if (targetFoodId && targetFoodId !== view.draggedOverFoodId && targetFoodId !== pendingDrag.id && draggedFood?.groupId === targetFood?.groupId) {
+      reorderFoodWithinGroup(pendingDrag.id, targetFoodId)
+    }
+    view.draggedOverFoodId = targetFoodId
+    view.draggedOverGroupId = targetGroupId
   }
 }
 
@@ -131,14 +145,10 @@ function handlePointerUp(event) {
   clearTimeout(mobileDragTimer)
   mobileDragTimer = null
   if (pendingDrag.active) {
-    const targetId = pendingDrag.type === 'group' ? view.draggedOverGroupId : view.draggedOverFoodId
-    if (pendingDrag.type === 'group') reorderGroups(pendingDrag.id, targetId)
-    else {
+    if (pendingDrag.type === 'food') {
       const food = store.foods.find((item) => item.id === pendingDrag.id)
       if (food && view.draggedOverGroupId && food.groupId !== view.draggedOverGroupId) {
         moveFoodToGroupEnd(pendingDrag.id, view.draggedOverGroupId)
-      } else {
-        reorderFoodWithinGroup(pendingDrag.id, targetId)
       }
     }
     suppressClickCleanup?.()
@@ -303,29 +313,31 @@ onUnmounted(() => {
               @toggle="(isOpen) => toggleStepper(`custom-${entry.id}`, isOpen)"
             />
           </div>
-          <template v-for="food in visibleFoods" :key="food.id">
-            <div class="dashboard-food-item" :data-food-id="food.id" :class="{ active: props.activeStepperId === `food-${food.id}`, dragging: view.draggedFoodId === food.id, 'drag-over': isSameGroupFoodTarget(food.id) }"
-              @pointerdown="startPointerDrag($event, 'food', food.id)">
-              <FoodQuantityStepper
-                :name="food.name"
-                :quantity="entryFor(food.id)?.qty || 0"
-                :kcal="entryFor(food.id)?.overrides ? entryFoodKcal(entryFor(food.id)) : foodKcal(food)"
-                :kcal-adjustment="entryFor(food.id)?.overrides ? entryFoodKcal(entryFor(food.id)) - foodKcal(food) : 0"
-                :adjusted="!!entryFor(food.id)?.overrides"
-                :adjustable="food.mode !== 'simple' && !!entryFor(food.id)"
-                :locked="locked"
-                :one-click-mode="store.oneClickMode"
-                editable
-                :open="props.activeStepperId === `food-${food.id}`"
-                @decrement="entryFor(food.id) && decrement(entryFor(food.id))"
-                @increment="!locked && addLogFood(view.logDate, group.id, food.id)"
-                @set-quantity="setFoodQuantity(food, $event)"
-                @edit="openModal(Modals.FOOD_EDITOR, { foodId: food.id })"
-                @adjust="openModal(Modals.ADJUST_FOOD, { entryId: entryFor(food.id).id })"
-                @toggle="(isOpen) => toggleStepper(`food-${food.id}`, isOpen)"
-              />
-            </div>
-          </template>
+          <TransitionGroup name="food-chip" tag="div" class="food-chip-transition">
+            <template v-for="food in visibleFoods" :key="food.id">
+              <div class="dashboard-food-item" :data-food-id="food.id" :class="{ active: props.activeStepperId === `food-${food.id}`, dragging: view.draggedFoodId === food.id, 'drag-over': isSameGroupFoodTarget(food.id) }"
+                @pointerdown="startPointerDrag($event, 'food', food.id)">
+                <FoodQuantityStepper
+                  :name="food.name"
+                  :quantity="entryFor(food.id)?.qty || 0"
+                  :kcal="entryFor(food.id)?.overrides ? entryFoodKcal(entryFor(food.id)) : foodKcal(food)"
+                  :kcal-adjustment="entryFor(food.id)?.overrides ? entryFoodKcal(entryFor(food.id)) - foodKcal(food) : 0"
+                  :adjusted="!!entryFor(food.id)?.overrides"
+                  :adjustable="food.mode !== 'simple' && !!entryFor(food.id)"
+                  :locked="locked"
+                  :one-click-mode="store.oneClickMode"
+                  editable
+                  :open="props.activeStepperId === `food-${food.id}`"
+                  @decrement="entryFor(food.id) && decrement(entryFor(food.id))"
+                  @increment="!locked && addLogFood(view.logDate, group.id, food.id)"
+                  @set-quantity="setFoodQuantity(food, $event)"
+                  @edit="openModal(Modals.FOOD_EDITOR, { foodId: food.id })"
+                  @adjust="openModal(Modals.ADJUST_FOOD, { entryId: entryFor(food.id).id })"
+                  @toggle="(isOpen) => toggleStepper(`food-${food.id}`, isOpen)"
+                />
+              </div>
+            </template>
+          </TransitionGroup>
           <div v-if="!foods.length && !families.length" class="empty-group-state">
             <span class="empty-note">No foods in this group yet</span>
             <button v-if="!locked" type="button" class="today-chip chip-add"
@@ -402,7 +414,7 @@ onUnmounted(() => {
 
 .family-chip-meta {
   margin-top: 0;
-  color: var(--orange);
+  color: var(--ink-muted);
   font-size: 11px;
   line-height: 1;
 }
@@ -467,27 +479,7 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
-.dashboard-food-item.drag-over::after {
-  content: 'Swap with';
-  position: absolute;
-  top: -24px;
-  right: -5px;
-  z-index: 2;
-  padding: 4px 7px;
-  border: 1px solid var(--green);
-  border-radius: 999px;
-  background: var(--surface);
-  color: var(--green);
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1;
-  box-shadow: 0 2px 8px rgba(var(--shadow-rgb), 0.45);
-  pointer-events: none;
-}
-
 .chip-group.food-move-over {
-  outline: 2px dashed var(--green);
-  outline-offset: 0;
   background: color-mix(in srgb, var(--green-soft) 32%, transparent);
 }
 
@@ -520,8 +512,6 @@ onUnmounted(() => {
 }
 
 .dashboard-food-item.drag-over :deep(.food-stepper) {
-  outline: 2px dashed var(--green);
-  outline-offset: 0;
   background: color-mix(in srgb, var(--green-soft) 70%, transparent);
   box-shadow: 0 0 10px color-mix(in srgb, var(--green) 28%, transparent);
   cursor: grabbing;
@@ -648,6 +638,14 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+}
+
+.food-chip-transition {
+  display: contents;
+}
+
+.food-chip-move {
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .dashboard-food-item.active {

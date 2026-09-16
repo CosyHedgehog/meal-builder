@@ -99,10 +99,12 @@ function setActiveStepper(stepperId) {
                 @click="openModal(Modals.GROUP_MANAGER)">Manage groups</button></span>
           </div>
 
-          <section v-for="group in groups" :key="group.id" class="today-group-card">
-            <FoodGroupList :group="group" :log="log" :locked="dayLocked"
-              :active-stepper-id="activeStepperId" @update:active-stepper-id="setActiveStepper" />
-          </section>
+          <TransitionGroup name="group-reorder" tag="div" class="group-reorder-transition">
+            <section v-for="group in groups" :key="group.id" class="today-group-card">
+              <FoodGroupList :group="group" :log="log" :locked="dayLocked"
+                :active-stepper-id="activeStepperId" @update:active-stepper-id="setActiveStepper" />
+            </section>
+          </TransitionGroup>
         </div>
       </div>
     </Transition>
@@ -308,6 +310,14 @@ function setActiveStepper(stepperId) {
   justify-content: flex-end;
   gap: 4px;
   padding: 0;
+}
+
+.group-reorder-transition {
+  display: contents;
+}
+
+.group-reorder-move {
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .desktop-nav-button {

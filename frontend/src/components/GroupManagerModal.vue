@@ -32,15 +32,16 @@ function handleGroupPointerMove(event) {
     draggedGroupId.value = groupDrag.id
   }
   event.preventDefault()
-  draggedOverGroupId.value = document.elementFromPoint(event.clientX, event.clientY)
+  const targetGroupId = document.elementFromPoint(event.clientX, event.clientY)
     ?.closest('.manager-item-row')?.dataset.groupId || ''
+  if (targetGroupId && targetGroupId !== draggedOverGroupId.value && targetGroupId !== groupDrag.id) {
+    reorderGroups(groupDrag.id, targetGroupId)
+  }
+  draggedOverGroupId.value = targetGroupId
 }
 
 function finishGroupDrag(event) {
   if (event.pointerId !== groupDrag.pointerId) return
-  if (groupDrag.active && draggedOverGroupId.value && draggedOverGroupId.value !== groupDrag.id) {
-    reorderGroups(groupDrag.id, draggedOverGroupId.value)
-  }
   cancelGroupDrag()
 }
 
@@ -83,7 +84,7 @@ onUnmounted(() => {
   <BaseModal title="Groups" subtitle="Organize foods into dashboard sections." panel-class="group-manager-modal"
     @close="emit('close')">
     <div class="group-manager-content">
-      <div class="manager-list">
+      <TransitionGroup name="group-manager-reorder" tag="div" class="manager-list">
         <div v-for="item in groups()" :key="item.id" class="manager-item-row" :data-group-id="item.id"
           :class="{ dragging: draggedGroupId === item.id, 'drag-over': draggedOverGroupId === item.id && draggedGroupId !== item.id }">
           <div class="manager-item-wrap" :class="{ 'is-protected': item.id === UNCATEGORIZED_GROUP_ID }">
@@ -124,7 +125,7 @@ onUnmounted(() => {
             <span v-else class="manager-protected" aria-hidden="true"></span>
           </div>
         </div>
-      </div>
+      </TransitionGroup>
       <div class="group-manager-actions input-field">
         <label for="newGroupName">New group</label>
         <div class="inline-form">
@@ -168,6 +169,10 @@ onUnmounted(() => {
 
 .group-manager-content :deep(.manager-item-row) {
   border-bottom: 0;
+}
+
+.group-manager-reorder-move {
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .group-manager-actions {

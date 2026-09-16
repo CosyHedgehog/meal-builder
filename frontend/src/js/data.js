@@ -400,8 +400,10 @@ export function reorderGroups(groupId, targetGroupId) {
   const targetIndex = state.groups.findIndex((group) => group.id === targetGroupId)
   if (fromIndex === -1 || targetIndex === -1) return
   const moved = state.groups[fromIndex]
-  state.groups[fromIndex] = state.groups[targetIndex]
-  state.groups[targetIndex] = moved
+  state.groups.splice(fromIndex, 1)
+  const insertIndex = state.groups.findIndex((group) => group.id === targetGroupId)
+  if (insertIndex === -1) return
+  state.groups.splice(insertIndex + (fromIndex < targetIndex ? 1 : 0), 0, moved)
   save()
 }
 
@@ -410,15 +412,14 @@ export function reorderFoodWithinGroup(foodId, targetFoodId) {
   const food = getFood(foodId)
   const targetFood = getFood(targetFoodId)
   if (!food || !targetFood || food.groupId !== targetFood.groupId) return
-  const groupIndexes = state.foods
-    .map((item, index) => item.groupId === food.groupId && !item.archived ? index : -1)
-    .filter((index) => index !== -1)
   const fromIndex = state.foods.findIndex((item) => item.id === foodId)
   const targetIndex = state.foods.findIndex((item) => item.id === targetFoodId)
-  if (!groupIndexes.includes(fromIndex) || !groupIndexes.includes(targetIndex)) return
+  if (fromIndex === -1 || targetIndex === -1 || food.archived || targetFood.archived) return
   const moved = state.foods[fromIndex]
-  state.foods[fromIndex] = state.foods[targetIndex]
-  state.foods[targetIndex] = moved
+  state.foods.splice(fromIndex, 1)
+  const insertIndex = state.foods.findIndex((item) => item.id === targetFoodId)
+  if (insertIndex === -1) return
+  state.foods.splice(insertIndex + (fromIndex < targetIndex ? 1 : 0), 0, moved)
   save()
 }
 

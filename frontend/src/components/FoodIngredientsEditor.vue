@@ -164,24 +164,29 @@ function handleIngredientPointerMove(event) {
         draggedIngredientId.value = ingredientDrag.id
     }
     event.preventDefault()
-    draggedOverIngredientId.value = document.elementFromPoint(event.clientX, event.clientY)
+    const targetIngredientId = document.elementFromPoint(event.clientX, event.clientY)
         ?.closest('.ingredient-row')?.dataset.ingredientId || ''
+    if (targetIngredientId && targetIngredientId !== draggedOverIngredientId.value && targetIngredientId !== ingredientDrag.id) {
+        reorderIngredientItems(ingredientDrag.id, targetIngredientId)
+    }
+    draggedOverIngredientId.value = targetIngredientId
 }
 
 function finishIngredientDrag(event) {
     if (event.pointerId !== ingredientDrag.pointerId) return
-    if (ingredientDrag.active && draggedOverIngredientId.value && draggedOverIngredientId.value !== ingredientDrag.id) {
-        const fromIndex = props.draft.items.findIndex((item) => item.ingredientId === ingredientDrag.id)
-        const targetIndex = props.draft.items.findIndex((item) => item.ingredientId === draggedOverIngredientId.value)
-        if (fromIndex !== -1 && targetIndex !== -1) {
-            const items = [...props.draft.items]
-            const moved = items[fromIndex]
-            items[fromIndex] = items[targetIndex]
-            items[targetIndex] = moved
-            props.draft.items = items
-        }
-    }
     cancelIngredientDrag()
+}
+
+function reorderIngredientItems(ingredientId, targetIngredientId) {
+    const fromIndex = props.draft.items.findIndex((item) => item.ingredientId === ingredientId)
+    const targetIndex = props.draft.items.findIndex((item) => item.ingredientId === targetIngredientId)
+    if (fromIndex === -1 || targetIndex === -1 || fromIndex === targetIndex) return
+    const items = [...props.draft.items]
+    const [moved] = items.splice(fromIndex, 1)
+    const insertIndex = items.findIndex((item) => item.ingredientId === targetIngredientId)
+    if (insertIndex === -1) return
+    items.splice(insertIndex + (fromIndex < targetIndex ? 1 : 0), 0, moved)
+    props.draft.items = items
 }
 
 function cancelIngredientDrag() {
@@ -219,7 +224,7 @@ async function removeRow(ingredientId) {
                 <strong>No ingredients added</strong>
                 <span>Search or type an ingredient below to add it.</span>
             </div>
-            <div v-if="ingredientRows.length" class="ingredient-list">
+            <TransitionGroup v-if="ingredientRows.length" name="ingredient-reorder" tag="div" class="ingredient-list">
                 <div v-for="row in ingredientRows" :key="row.item.ingredientId" class="ingredient-row"
                     :data-ingredient-id="row.item.ingredientId"
                     :class="{ dragging: draggedIngredientId === row.item.ingredientId, 'drag-over': draggedOverIngredientId === row.item.ingredientId && draggedIngredientId !== row.item.ingredientId }">
@@ -255,7 +260,7 @@ async function removeRow(ingredientId) {
                     <button class="item-remove" :aria-label="`Remove ${row.ingredient?.name || 'ingredient'}`"
                         @click.stop="removeRow(row.item.ingredientId)">×</button>
                 </div>
-            </div>
+            </TransitionGroup>
         </div>
 
         <div class="ingredient-search-heading">
@@ -349,6 +354,12 @@ async function removeRow(ingredientId) {
         </div>
     </section>
 </template>
+
+<style scoped>
+.ingredient-reorder-move {
+    transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+</style>
 
 <style scoped>
 .food-ingredients-section {
@@ -471,8 +482,6 @@ async function removeRow(ingredientId) {
 }
 
 .ingredient-row.drag-over {
-    outline: 2px dashed var(--green);
-    outline-offset: -2px;
     background: color-mix(in srgb, var(--green-soft) 45%, var(--surface));
 }
 
