@@ -110,10 +110,10 @@ defineExpose({ closePopover })
       :aria-label="`${name}, quantity ${quantity}`" @click="openQuantityPopover($event, true)">
         <span class="food-stepper-mainline">
         <span v-if="quantity > 0" class="food-stepper-quantity-inline">{{ quantity }}</span>
-        <span class="food-stepper-name">{{ name }}<span v-if="oneOff" class="one-off-badge">1-off</span><span
-          v-if="adjusted" class="one-off-badge">ADJ</span></span>
+        <span class="food-stepper-name">{{ name }}<span v-if="oneOff" class="one-off-badge">1-off</span></span>
         </span>
-      <span class="food-stepper-kcal">{{ Math.round(kcal * (quantity || 1)).toLocaleString() }} kcal<span v-if="kcalAdjustment" class="food-stepper-kcal-adjustment"> ({{ kcalAdjustment > 0 ? '+' : '' }}{{ kcalAdjustment.toLocaleString() }})</span></span>
+      <span class="food-stepper-kcal">{{ Math.round(kcal * (quantity || 1)).toLocaleString() }} kcal<span
+        v-if="adjusted" class="food-stepper-adjusted-indicator" role="img" aria-label="Adjusted" title="Adjusted"></span></span>
     </button>
     <button v-if="quantity > 0" :key="quantity" type="button" class="food-stepper-quantity" :aria-label="`Customize ${name} quantity`"
       @click="openQuantityPopover">{{ quantity }}</button>
@@ -175,8 +175,14 @@ defineExpose({ closePopover })
 </template>
 
 <style scoped>
-.food-stepper-kcal-adjustment {
-  color: var(--orange);
-  font-weight: 600;
+.food-stepper-adjusted-indicator {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-left: 4px;
+  border-radius: 50%;
+  background: var(--orange);
+  vertical-align: 2px;
 }
+
 </style>
